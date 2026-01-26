@@ -15,7 +15,7 @@ export const SummaryCard: React.FC<SummaryCardProps> = ({ poi, onOpenDetail, isV
 
   if (!poi) return null;
 
-  const theme = getPoiTheme(poi.poiType);
+  const theme = getPoiTheme(poi.poiType, poi.category);
 
   const handleCopyName = async (event: React.MouseEvent<HTMLButtonElement>) => {
     event.stopPropagation();

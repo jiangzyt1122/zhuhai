@@ -1,7 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { POI } from '../types';
-import { ZHUHAI_CENTER } from '../constants';
+import { ZHUHAI_CENTER, COORDINATE_SYSTEM } from '../constants';
 import { getPoiTheme } from './poiTheme';
+import { toAMapLngLat } from '../utils/coords';
 
 declare global {
   interface Window {
@@ -52,8 +53,13 @@ const loadAMap = () => {
   return amapLoaderPromise;
 };
 
-const buildMarkerContent = (poiType: POI['poiType'], isSelected: boolean, isVisited: boolean) => {
-  const theme = getPoiTheme(poiType);
+const buildMarkerContent = (
+  poiType: POI['poiType'],
+  category: string,
+  isSelected: boolean,
+  isVisited: boolean
+) => {
+  const theme = getPoiTheme(poiType, category);
   const size = isSelected ? 28 : 24;
   const checkSize = Math.round(size * 0.7);
   const background = isVisited ? '#16a34a' : theme.marker;
@@ -61,73 +67,6 @@ const buildMarkerContent = (poiType: POI['poiType'], isSelected: boolean, isVisi
   return `<div style="width:${size}px;height:${size}px;border-radius:999px;background:${background};border:2px solid #fff;box-shadow:0 6px 14px rgba(15,23,42,0.2);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:${checkSize}px;line-height:1;">${text}</div>`;
 };
 
-// WGS84 -> GCJ-02 transform (China mainland only)
-const isInChina = (lat: number, lng: number) =>
-  lng > 73.66 && lng < 135.05 && lat > 3.86 && lat < 53.55;
-
-const transformLat = (x: number, y: number) => {
-  let ret =
-    -100.0 +
-    2.0 * x +
-    3.0 * y +
-    0.2 * y * y +
-    0.1 * x * y +
-    0.2 * Math.sqrt(Math.abs(x));
-  ret +=
-    ((20.0 * Math.sin(6.0 * x * Math.PI) + 20.0 * Math.sin(2.0 * x * Math.PI)) * 2.0) /
-    3.0;
-  ret +=
-    ((20.0 * Math.sin(y * Math.PI) + 40.0 * Math.sin((y / 3.0) * Math.PI)) * 2.0) /
-    3.0;
-  ret +=
-    ((160.0 * Math.sin((y / 12.0) * Math.PI) + 320.0 * Math.sin((y * Math.PI) / 30.0)) *
-      2.0) /
-    3.0;
-  return ret;
-};
-
-const transformLng = (x: number, y: number) => {
-  let ret =
-    300.0 +
-    x +
-    2.0 * y +
-    0.1 * x * x +
-    0.1 * x * y +
-    0.1 * Math.sqrt(Math.abs(x));
-  ret +=
-    ((20.0 * Math.sin(6.0 * x * Math.PI) + 20.0 * Math.sin(2.0 * x * Math.PI)) * 2.0) /
-    3.0;
-  ret +=
-    ((20.0 * Math.sin(x * Math.PI) + 40.0 * Math.sin((x / 3.0) * Math.PI)) * 2.0) /
-    3.0;
-  ret +=
-    ((150.0 * Math.sin((x / 12.0) * Math.PI) + 300.0 * Math.sin((x / 30.0) * Math.PI)) *
-      2.0) /
-    3.0;
-  return ret;
-};
-
-const wgs84ToGcj02 = (lat: number, lng: number) => {
-  if (!isInChina(lat, lng)) {
-    return [lat, lng] as const;
-  }
-  const a = 6378245.0;
-  const ee = 0.00669342162296594323;
-  const dLat = transformLat(lng - 105.0, lat - 35.0);
-  const dLng = transformLng(lng - 105.0, lat - 35.0);
-  const radLat = (lat / 180.0) * Math.PI;
-  let magic = Math.sin(radLat);
-  magic = 1 - ee * magic * magic;
-  const sqrtMagic = Math.sqrt(magic);
-  const mgLat = lat + (dLat * 180.0) / (((a * (1 - ee)) / (magic * sqrtMagic)) * Math.PI);
-  const mgLng = lng + (dLng * 180.0) / ((a / sqrtMagic) * Math.cos(radLat) * Math.PI);
-  return [mgLat, mgLng] as const;
-};
-
-const toAMapLngLat = (lat: number, lng: number) => {
-  const [gcjLat, gcjLng] = wgs84ToGcj02(lat, lng);
-  return [gcjLng, gcjLat];
-};
 
 interface POIMapProps {
   pois: POI[];
@@ -153,7 +92,7 @@ export const POIMap: React.FC<POIMapProps> = ({ pois, selectedPOI, visitedIds, o
 
         if (!mapRef.current) {
           const [lat, lng] = ZHUHAI_CENTER;
-          const [centerLng, centerLat] = toAMapLngLat(lat, lng);
+          const [centerLng, centerLat] = toAMapLngLat(lat, lng, COORDINATE_SYSTEM);
           mapRef.current = new AMap.Map(mapContainerRef.current, {
             zoom: 11,
             center: [centerLng, centerLat],
@@ -192,10 +131,14 @@ export const POIMap: React.FC<POIMapProps> = ({ pois, selectedPOI, visitedIds, o
     pois.forEach((poi) => {
       const isVisited = visitedIds.has(poi.id);
       const isSelected = selectedPOI?.id === poi.id;
-      const content = buildMarkerContent(poi.poiType, isSelected, isVisited);
+      const content = buildMarkerContent(poi.poiType, poi.category, isSelected, isVisited);
       const size = isSelected ? 28 : 24;
       const offset = new AMap.Pixel(-size / 2, -size / 2);
-      const [lng, lat] = toAMapLngLat(poi.latitude, poi.longitude);
+      const [lng, lat] = toAMapLngLat(
+        poi.latitude,
+        poi.longitude,
+        poi.coordinateSystem ?? COORDINATE_SYSTEM
+      );
       const zIndex = isSelected ? 200 : 150;
 
       const existing = markerMap.get(poi.id);
@@ -204,6 +147,10 @@ export const POIMap: React.FC<POIMapProps> = ({ pois, selectedPOI, visitedIds, o
         existing.setPosition([lng, lat]);
         existing.setOffset(offset);
         existing.setzIndex(zIndex);
+        if (existing.off) {
+          existing.off('click');
+        }
+        existing.on('click', () => onSelectPOI(poi));
       } else {
         const marker = new AMap.Marker({
           position: [lng, lat],
@@ -229,7 +176,11 @@ export const POIMap: React.FC<POIMapProps> = ({ pois, selectedPOI, visitedIds, o
     if (!mapRef.current || !selectedPOI) {
       return;
     }
-    const [lng, lat] = toAMapLngLat(selectedPOI.latitude, selectedPOI.longitude);
+    const [lng, lat] = toAMapLngLat(
+      selectedPOI.latitude,
+      selectedPOI.longitude,
+      selectedPOI.coordinateSystem ?? COORDINATE_SYSTEM
+    );
     mapRef.current.setZoomAndCenter(15, [lng, lat]);
   }, [selectedPOI]);
 

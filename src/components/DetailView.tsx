@@ -1,5 +1,7 @@
 import React from 'react';
 import { POI } from '../types';
+import { COORDINATE_SYSTEM } from '../constants';
+import { toAMapLngLat } from '../utils/coords';
 import { X, MapPin, Star, Navigation } from 'lucide-react';
 import { getPoiTheme } from './poiTheme';
 
@@ -9,7 +11,7 @@ interface DetailViewProps {
 }
 
 export const DetailView: React.FC<DetailViewProps> = ({ poi, onClose }) => {
-  const theme = getPoiTheme(poi.poiType);
+  const theme = getPoiTheme(poi.poiType, poi.category);
 
   const renderList = (title: string, items?: string[]) => {
     if (!items || items.length === 0) return null;
@@ -35,6 +37,33 @@ export const DetailView: React.FC<DetailViewProps> = ({ poi, onClose }) => {
     );
   };
 
+  const renderLinks = (title: string, links?: string[]) => {
+    if (!links || links.length === 0) return null;
+    return (
+      <div className="mb-5">
+        <h3 className="text-sm font-bold text-gray-900 mb-2">{title}</h3>
+        <ul className="space-y-1 text-sm text-blue-600 underline break-all">
+          {links.map((link, index) => {
+            let label = link;
+            try {
+              const url = new URL(link);
+              label = `${url.host}${url.pathname}`;
+            } catch (error) {
+              // Keep raw link text if URL parsing fails.
+            }
+            return (
+              <li key={`${title}-link-${index}`}>
+                <a href={link} target="_blank" rel="noopener noreferrer">
+                  {label}
+                </a>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+    );
+  };
+
   const primaryStat = (() => {
     if (poi.playTimeHours) {
       return { label: '游玩时长', value: `约 ${poi.playTimeHours} 小时` };
@@ -47,6 +76,12 @@ export const DetailView: React.FC<DetailViewProps> = ({ poi, onClose }) => {
     }
     return { label: '亲子友好', value: '高' };
   })();
+
+  const [displayLng, displayLat] = toAMapLngLat(
+    poi.latitude,
+    poi.longitude,
+    poi.coordinateSystem ?? COORDINATE_SYSTEM
+  );
 
   return (
     <div className="fixed inset-0 z-[1000] bg-white overflow-y-auto animate-in slide-in-from-bottom-full duration-300">
@@ -92,7 +127,7 @@ export const DetailView: React.FC<DetailViewProps> = ({ poi, onClose }) => {
                     Location
                 </div>
                 <div className="text-sm text-gray-700">
-                    {poi.latitude.toFixed(3)}, {poi.longitude.toFixed(3)}
+                    {displayLat.toFixed(3)}, {displayLng.toFixed(3)}
                 </div>
             </div>
         </div>
@@ -106,6 +141,8 @@ export const DetailView: React.FC<DetailViewProps> = ({ poi, onClose }) => {
                 {poi.commend || poi.brief}
             </p>
         </div>
+
+        {renderLinks('参考链接', poi.noteLinks)}
 
         <div className="mb-8">
           {renderParagraph('背景介绍', poi.backgroundIntro)}

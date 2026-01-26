@@ -1,6 +1,16 @@
 import { POIType } from '../types';
 
-export const getPoiTheme = (poiType: POIType) => {
+export const getPoiTheme = (poiType: POIType, category?: string) => {
+  if (category && category.includes('夜市')) {
+    return {
+      badge: 'bg-purple-100 text-purple-700',
+      accent: 'text-purple-600',
+      softBg: 'bg-purple-50',
+      border: 'border-purple-100',
+      marker: '#a855f7'
+    };
+  }
+
   if (poiType === 'restaurant') {
     return {
       badge: 'bg-rose-100 text-rose-700',

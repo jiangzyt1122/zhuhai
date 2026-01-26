@@ -1,6 +1,7 @@
 import { POI } from './types';
 
 export const ZHUHAI_CENTER: [number, number] = [22.2707, 113.5767]; // Near Fisher Girl
+export const COORDINATE_SYSTEM: 'wgs84' | 'gcj02' = 'wgs84';
 
 const parentChildAttractions = [
   {
@@ -262,21 +263,105 @@ const parentChildAttractions = [
   {
     name: '夏湾夜市',
     category: '夜市美食',
-    latitude: 22.223951,
-    longitude: 113.540901,
+    latitude: 22.224222,
+    longitude: 113.54212,
+    coordinateSystem: 'gcj02',
+    noteLinks: [
+      'https://m.dianping.com/ugcdetail/424880888?bizType=29&utm_source=aisearch',
+      'https://m.dianping.com/ugcdetail/3016112502?bizType=1&utm_source=aisearch',
+      'https://m.dianping.com/ugcdetail/452226061?bizType=29&utm_source=aisearch'
+    ],
     whatToPlay: [
-      '吃本地夜市小吃',
-      '体验珠海夜生活'
+      '品尝丰富夜宵美食，如烤串、海鲜、生蚝和砂锅米线',
+      '体验当地最热闹的夜生活氛围',
+      '享受宵夜街散步和社交体验'
     ],
     mustNotMiss: [
-      '烤生蚝',
-      '椒盐濑尿虾',
-      '铁板鱿鱼'
+      '百余摊位汇聚的夜市现场',
+      '现炒小锅菜与爆汁烤生蚝',
+      '当地特色串串与甜品摊'
     ],
     whatToPrepare: [
-      '现金或微信支付',
-      '纸巾',
-      '注意随身物品'
+      '带足现金和手机扫码支付',
+      '戴上口罩与湿巾',
+      '穿舒适鞋子以便走动'
+    ],
+    notesForParents: []
+  },
+  {
+    name: '唐人街夜市',
+    category: '夜市美食',
+    latitude: 22.166577,
+    longitude: 113.413385,
+    coordinateSystem: 'gcj02',
+    noteLinks: [
+      'https://m.dianping.com/ugcdetail/367310095?bizType=29&utm_source=aisearch',
+      'https://m.dianping.com/ugcdetail/2982568340?bizType=1&utm_source=aisearch',
+      'https://m.dianping.com/ugcdetail/3000703433?bizType=1&utm_source=aisearch'
+    ],
+    whatToPlay: [
+      '逛三灶镇最大夜市，探索各地小吃',
+      '尝试卤味、小龙虾、砂锅粥等地道美食',
+      '感受霓虹灯下的夜市特色氛围'
+    ],
+    mustNotMiss: [
+      '地道本地风味串烧和炸物',
+      '特色砂锅粥和卤味组合',
+      '十几种小吃一站吃尽'
+    ],
+    whatToPrepare: [
+      '建议尽早前往占位',
+      '穿着适合傍晚出行的轻便衣着',
+      '带现金及手机扫码支付'
+    ],
+    notesForParents: []
+  },
+  {
+    name: '白藤头夜市',
+    category: '夜市美食',
+    latitude: 22.153623,
+    longitude: 113.367169,
+    coordinateSystem: 'gcj02',
+    noteLinks: [],
+    whatToPlay: [
+      '夜晚到白藤头水产批发市场旁边的海鲜夜市尝鲜',
+      '尝试蒜蓉蒸扇贝、避风塘炒蟹等海鲜烹饪',
+      '体验食客大排档的热闹气氛'
+    ],
+    mustNotMiss: [
+      '现捞现做的海鲜烧烤美味',
+      '各式蝦蟹大排档特色小吃'
+    ],
+    whatToPrepare: [
+      '带足现金备选用餐',
+      '注意晚间人潮与周边环境'
+    ],
+    notesForParents: []
+  },
+  {
+    name: '金鼎夜市',
+    category: '夜市美食',
+    latitude: 22.379728,
+    longitude: 113.541989,
+    coordinateSystem: 'gcj02',
+    noteLinks: [
+      'https://m.dianping.com/ugcdetail/449460629?bizType=29&utm_source=aisearch',
+      'https://m.dianping.com/ugcdetail/454548954?bizType=29&utm_source=aisearch',
+      'https://m.dianping.com/ugcdetail/350813411?bizType=29&utm_source=aisearch'
+    ],
+    whatToPlay: [
+      '在金鼎地区夜市品尝最地道的广式夜市风味',
+      '尝试双皮奶等当地特色甜品',
+      '观赏摊主现场制作食物'
+    ],
+    mustNotMiss: [
+      '炭烤鸡翅与广式甜品摊',
+      '简陋摊档里的传统广式美味'
+    ],
+    whatToPrepare: [
+      '配备现金与扫码支付',
+      '穿着轻便以便慢走观光',
+      '注意个人物品安全'
     ],
     notesForParents: []
   },
@@ -327,6 +412,42 @@ const restaurants = [
       '可提前告知少盐少油',
       '适合孩子尝试原味海鲜',
       '晚餐高峰期建议提前到'
+    ]
+  },
+  {
+    name: '海屿花田海岛花园餐厅（珠海日月贝店）',
+    category: '海景餐厅',
+    latitude: 22.281949,
+    longitude: 113.589728,
+    noteLinks: [
+      'https://m.dianping.com/ugcdetail/2833826697?bizType=1&utm_source=aisearch',
+      'https://m.dianping.com/ugcdetail/2799931656?bizType=1&utm_source=aisearch',
+      'https://m.dianping.com/ugcdetail/455708582?bizType=29&utm_source=aisearch'
+    ],
+    restaurantFeatures: [
+      '日月贝旁海岛花园景观位，环境开阔',
+      '傍晚到夜间灯光氛围适合拍照',
+      '海边微风较大，体验感更佳'
+    ],
+    recommendedDishes: [],
+    whatToPlay: [
+      '在日月贝海边花园环境中用餐，边吃饭边看海景',
+      '傍晚时段拍海景、花园与日月贝同框照片',
+      '夜晚体验灯光点亮后的海岛花园氛围'
+    ],
+    mustNotMiss: [
+      '靠海位置的花园座位区',
+      '日落时段的海景视角',
+      '夜晚灯光与日月贝建筑背景'
+    ],
+    whatToPrepare: [
+      '建议提前预约（周末和傍晚较满）',
+      '给孩子准备外套（海边夜晚风大）',
+      '手机或相机（环境非常适合拍照）'
+    ],
+    notesForParents: [
+      '环境开阔、花园式布局，对3-6岁孩子相对友好，但需注意靠海区域安全',
+      '可优先选择不辣、清淡类菜品，等待时间较长时可让孩子在花园区域短暂活动'
     ]
   },
   {
@@ -515,7 +636,9 @@ const makeBase = (
   id: string,
   poiType: 'attraction' | 'restaurant',
   brief: string,
-  commend: string
+  commend: string,
+  noteLinks: string[] = [],
+  coordinateSystem?: 'wgs84' | 'gcj02'
 ): POI => ({
   id,
   name: item.name,
@@ -526,6 +649,8 @@ const makeBase = (
   longitude: item.longitude,
   brief,
   commend,
+  noteLinks,
+  coordinateSystem,
   image: `https://picsum.photos/seed/poi-${id}/800/400`
 });
 
@@ -536,7 +661,9 @@ export const ZHUHAI_POIS: POI[] = [
       `A${index + 1}`,
       'attraction',
       item.whatToPlay[0] ?? item.name,
-      item.notesForParents.join('；')
+      item.notesForParents.join('；'),
+      item.noteLinks ?? [],
+      item.coordinateSystem
     ),
     playTimeHours: item.playTimeHours,
     whatToPlay: item.whatToPlay,
@@ -550,10 +677,15 @@ export const ZHUHAI_POIS: POI[] = [
       `R${index + 1}`,
       'restaurant',
       item.restaurantFeatures[0] ?? item.name,
-      item.notesForParents.join('；')
+      item.notesForParents.join('；'),
+      item.noteLinks ?? [],
+      item.coordinateSystem
     ),
     restaurantFeatures: item.restaurantFeatures,
     recommendedDishes: item.recommendedDishes,
+    whatToPlay: item.whatToPlay,
+    mustNotMiss: item.mustNotMiss,
+    whatToPrepare: item.whatToPrepare,
     notesForParents: item.notesForParents
   })),
   ...malls.map((item, index) => ({
@@ -562,7 +694,9 @@ export const ZHUHAI_POIS: POI[] = [
       `M${index + 1}`,
       'attraction',
       item.backgroundIntro,
-      item.whyGoodForFamily.join('；')
+      item.whyGoodForFamily.join('；'),
+      item.noteLinks ?? [],
+      item.coordinateSystem
     ),
     backgroundIntro: item.backgroundIntro,
     whyGoodForFamily: item.whyGoodForFamily,
@@ -574,7 +708,9 @@ export const ZHUHAI_POIS: POI[] = [
       `H${index + 1}`,
       'attraction',
       item.backgroundInfo,
-      item.notesForParents.join('；')
+      item.notesForParents.join('；'),
+      item.noteLinks ?? [],
+      item.coordinateSystem
     ),
     backgroundInfo: item.backgroundInfo,
     openTime: item.openTime,
