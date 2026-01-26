@@ -127,6 +127,7 @@ export const POIMap: React.FC<POIMapProps> = ({ pois, selectedPOI, visitedIds, o
     const AMap = window.AMap;
     const markerMap = markersRef.current;
     const poiIds = new Set(pois.map((poi) => poi.id));
+    const poiById = new Map(pois.map((poi) => [poi.id, poi]));
 
     pois.forEach((poi) => {
       const isVisited = visitedIds.has(poi.id);
@@ -147,18 +148,30 @@ export const POIMap: React.FC<POIMapProps> = ({ pois, selectedPOI, visitedIds, o
         existing.setPosition([lng, lat]);
         existing.setOffset(offset);
         existing.setzIndex(zIndex);
+        if (existing.setExtData) {
+          existing.setExtData({ id: poi.id });
+        }
         if (existing.off) {
           existing.off('click');
         }
-        existing.on('click', () => onSelectPOI(poi));
+        existing.on('click', (event: any) => {
+          const id = event?.target?.getExtData?.()?.id ?? poi.id;
+          const target = poiById.get(id) ?? poi;
+          onSelectPOI(target);
+        });
       } else {
         const marker = new AMap.Marker({
           position: [lng, lat],
           content,
           offset,
-          zIndex
+          zIndex,
+          extData: { id: poi.id }
         });
-        marker.on('click', () => onSelectPOI(poi));
+        marker.on('click', (event: any) => {
+          const id = event?.target?.getExtData?.()?.id ?? poi.id;
+          const target = poiById.get(id) ?? poi;
+          onSelectPOI(target);
+        });
         marker.setMap(mapRef.current);
         markerMap.set(poi.id, marker);
       }

@@ -52,7 +52,7 @@ export const SummaryCard: React.FC<SummaryCardProps> = ({ poi, onOpenDetail, isV
       >
         <div className="flex items-start gap-4">
           <div className="w-20 h-20 rounded-xl overflow-hidden flex-shrink-0 bg-gray-100">
-            <img src={poi.image} alt={poi.name} className="w-full h-full object-cover" />
+            <img src={poi.images?.[0] ?? poi.image} alt={poi.name} className="w-full h-full object-cover" />
           </div>
           
           <div className="flex-1 min-w-0">

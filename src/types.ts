@@ -13,6 +13,7 @@ export interface POI {
   brief: string;
   commend: string;
   image: string; // Placeholder URL
+  images?: string[];
   noteLinks: string[];
   coordinateSystem?: 'wgs84' | 'gcj02';
   playTimeHours?: number;

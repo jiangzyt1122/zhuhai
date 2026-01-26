@@ -1,7 +1,13 @@
 import { POI } from './types';
+import { poiImageMap } from './poiImages';
 
 export const ZHUHAI_CENTER: [number, number] = [22.2707, 113.5767]; // Near Fisher Girl
 export const COORDINATE_SYSTEM: 'wgs84' | 'gcj02' = 'wgs84';
+
+const BASE_URL = import.meta.env.BASE_URL || '/';
+const BASE_WITH_SLASH = BASE_URL.endsWith('/') ? BASE_URL : `${BASE_URL}/`;
+const buildImageUrl = (path: string) => encodeURI(`${BASE_WITH_SLASH}${path.replace(/^\/+/, '')}`);
+const getPoiImages = (name: string) => (poiImageMap[name] ?? []).map(buildImageUrl);
 
 const parentChildAttractions = [
   {
@@ -37,6 +43,10 @@ const parentChildAttractions = [
     category: '城市公园',
     latitude: 22.2599753,
     longitude: 113.5677169,
+    noteLinks: [
+      'https://m.dianping.com/ugcdetail/2525767872?bizType=1&utm_source=aisearch',
+      'https://m.dianping.com/ugcdetail/2919686687?bizType=1&utm_source=aisearch'
+    ],
     playTimeHours: 2,
     whatToPlay: [
       '草地自由奔跑',
@@ -90,6 +100,10 @@ const parentChildAttractions = [
     category: '自然岛屿',
     latitude: 22.2812296,
     longitude: 113.5841078,
+    noteLinks: [
+      'https://m.dianping.com/ugcdetail/351262772?bizType=29&utm_source=aisearch',
+      'https://m.dianping.com/ugcdetail/2846126987?bizType=1&utm_source=aisearch'
+    ],
     playTimeHours: 1.5,
     whatToPlay: [
       '走完整个小岛',
@@ -138,35 +152,13 @@ const parentChildAttractions = [
     ]
   },
   {
-    name: '石景山公园',
-    category: '自然景区',
-    latitude: 22.2627411,
-    longitude: 113.5735838,
-    playTimeHours: 2,
-    whatToPlay: [
-      '轻徒步',
-      '看树、石头、台阶',
-      '边走边休息'
-    ],
-    mustNotMiss: [
-      '最平缓的步行路线'
-    ],
-    whatToPrepare: [
-      '防滑鞋',
-      '水',
-      '简单零食'
-    ],
-    notesForParents: [
-      '不追求登顶',
-      '以孩子体力为准',
-      '中途可随时返程'
-    ]
-  },
-  {
     name: '爱情邮局',
     category: '海滨地标',
     latitude: 22.25922,
     longitude: 113.584676,
+    noteLinks: [
+      'https://m.dianping.com/ugcdetail/2538772164?bizType=1&utm_source=aisearch'
+    ],
     whatToPlay: [
       '海边灯塔与木栈道拍照',
       '写明信片寄给自己或家人',
@@ -188,6 +180,10 @@ const parentChildAttractions = [
     category: '观景平台',
     latitude: 22.268018,
     longitude: 113.576968,
+    noteLinks: [
+      'https://m.dianping.com/ugcdetail/2616052907?bizType=1&utm_source=aisearch',
+      'https://m.dianping.com/ugcdetail/323459031?bizType=29&utm_source=aisearch'
+    ],
     whatToPlay: [
       '远眺港珠澳大桥',
       '拍城市+海湾全景'
@@ -206,6 +202,11 @@ const parentChildAttractions = [
     category: '城市沙滩',
     latitude: 22.259419,
     longitude: 113.581974,
+    noteLinks: [
+      'https://m.dianping.com/ugcdetail/2538357227?bizType=1&utm_source=aisearch',
+      'https://m.dianping.com/ugcdetail/396047308?bizType=29&utm_source=aisearch',
+      'https://m.dianping.com/ugcdetail/431304977?bizType=29&utm_source=aisearch'
+    ],
     whatToPlay: [
       '踩沙、拍照',
       '看海、看日落',
@@ -226,6 +227,9 @@ const parentChildAttractions = [
     category: '城市地标建筑',
     latitude: 22.278023,
     longitude: 113.579971,
+    noteLinks: [
+      'https://m.dianping.com/shop/k58gNVidB0pQTboo?utm_source=aisearch'
+    ],
     whatToPlay: [
       '贝壳建筑外观拍照',
       '傍晚到夜间看灯光效果',
@@ -245,6 +249,11 @@ const parentChildAttractions = [
     category: '历史文化街区',
     latitude: 22.274943,
     longitude: 113.530869,
+    noteLinks: [
+      'https://m.dianping.com/ugcdetail/2429810720?bizType=1&utm_source=aisearch',
+      'https://m.dianping.com/ugcdetail/2680884604?bizType=1&utm_source=aisearch',
+      'https://m.dianping.com/ugcdetail/2548362421?bizType=1&utm_source=aisearch'
+    ],
     whatToPlay: [
       '逛老街与文艺小店',
       '咖啡馆休息',
@@ -540,6 +549,11 @@ const malls = [
     category: '综合购物中心',
     latitude: 22.2785517,
     longitude: 113.5745434,
+    noteLinks: [
+      'https://m.dianping.com/ugcdetail/457214216?bizType=29&utm_source=aisearch',
+      'https://m.dianping.com/ugcdetail/378054883?bizType=29&utm_source=aisearch',
+      'https://m.dianping.com/ugcdetail/371210844?bizType=29&utm_source=aisearch'
+    ],
     backgroundIntro: '扬名广场位于珠海老城区，是较早一批成熟商业中心，服务本地居民为主，生活气息浓厚。',
     whyGoodForFamily: [
       '距离居民区近',
@@ -557,6 +571,11 @@ const malls = [
     category: '城市商业街区',
     latitude: 22.2370608,
     longitude: 113.5358704,
+    noteLinks: [
+      'https://m.dianping.com/ugcdetail/2485119959?bizType=1&utm_source=aisearch',
+      'https://m.dianping.com/ugcdetail/2822195968?bizType=1&utm_source=aisearch',
+      'https://m.dianping.com/ugcdetail/352112875?bizType=29&utm_source=aisearch'
+    ],
     backgroundIntro: '富华里是珠海新兴城市商业街区，融合餐饮、咖啡、零售和城市公共空间，更偏生活方式与休闲。',
     whyGoodForFamily: [
       '室外空间多，孩子活动自由',
@@ -577,6 +596,9 @@ const historyCulture = [
     category: '历史文化景区',
     latitude: 22.2450028,
     longitude: 113.5330989,
+    noteLinks: [
+      'https://m.dianping.com/shop/k8i9SsHgzsIRekZy?utm_source=aisearch&poiid=1753672'
+    ],
     backgroundInfo: '圆明新园是以北京圆明园为蓝本修建的大型仿古皇家园林，用于展示中国古代园林建筑与历史文化。',
     openTime: '09:00',
     closeTime: '18:00',
@@ -596,6 +618,11 @@ const historyCulture = [
     category: '博物馆',
     latitude: 22.2960255,
     longitude: 113.5716702,
+    noteLinks: [
+      'https://m.dianping.com/ugcdetail/2734235558?bizType=1&utm_source=aisearch',
+      'https://m.dianping.com/ugcdetail/3044731504?bizType=1&utm_source=aisearch',
+      'https://m.dianping.com/ugcdetail/395621577?bizType=29&utm_source=aisearch'
+    ],
     backgroundInfo: '珠海博物馆展示珠海地区的历史沿革、海洋文化与城市发展，是了解珠海背景的重要公共文化空间。',
     openTime: '09:00',
     closeTime: '17:00',
@@ -615,6 +642,11 @@ const historyCulture = [
     category: '历史街区',
     latitude: 22.3621965,
     longitude: 113.5882707,
+    noteLinks: [
+      'https://m.dianping.com/ugcdetail/429522563?bizType=29&utm_source=aisearch',
+      'https://m.dianping.com/ugcdetail/420947169?bizType=29&utm_source=aisearch',
+      'https://m.dianping.com/ugcdetail/2483573741?bizType=1&utm_source=aisearch'
+    ],
     backgroundInfo: '唐家古镇是珠海保存较完整的历史街区之一，体现了珠海早期渔村与商贸文化。',
     openTime: '全天开放',
     closeTime: '全天开放',
@@ -631,6 +663,9 @@ const historyCulture = [
   }
 ];
 
+const makeId = (prefix: string, name: string) =>
+  `${prefix}-${name.replace(/[()（）\s]/g, '')}`;
+
 const makeBase = (
   item: { name: string; category: string; latitude: number; longitude: number },
   id: string,
@@ -639,7 +674,9 @@ const makeBase = (
   commend: string,
   noteLinks: string[] = [],
   coordinateSystem?: 'wgs84' | 'gcj02'
-): POI => ({
+): POI => {
+  const images = getPoiImages(item.name);
+  return ({
   id,
   name: item.name,
   category: item.category,
@@ -651,14 +688,16 @@ const makeBase = (
   commend,
   noteLinks,
   coordinateSystem,
-  image: `https://picsum.photos/seed/poi-${id}/800/400`
-});
+  image: images[0] ?? `https://picsum.photos/seed/poi-${encodeURIComponent(id)}/800/400`,
+  images
+  });
+};
 
 export const ZHUHAI_POIS: POI[] = [
   ...parentChildAttractions.map((item, index) => ({
     ...makeBase(
       item,
-      `A${index + 1}`,
+      makeId('A', item.name),
       'attraction',
       item.whatToPlay[0] ?? item.name,
       item.notesForParents.join('；'),
@@ -674,7 +713,7 @@ export const ZHUHAI_POIS: POI[] = [
   ...restaurants.map((item, index) => ({
     ...makeBase(
       item,
-      `R${index + 1}`,
+      makeId('R', item.name),
       'restaurant',
       item.restaurantFeatures[0] ?? item.name,
       item.notesForParents.join('；'),
@@ -691,7 +730,7 @@ export const ZHUHAI_POIS: POI[] = [
   ...malls.map((item, index) => ({
     ...makeBase(
       item,
-      `M${index + 1}`,
+      makeId('M', item.name),
       'attraction',
       item.backgroundIntro,
       item.whyGoodForFamily.join('；'),
@@ -705,7 +744,7 @@ export const ZHUHAI_POIS: POI[] = [
   ...historyCulture.map((item, index) => ({
     ...makeBase(
       item,
-      `H${index + 1}`,
+      makeId('H', item.name),
       'attraction',
       item.backgroundInfo,
       item.notesForParents.join('；'),

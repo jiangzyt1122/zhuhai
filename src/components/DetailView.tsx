@@ -77,6 +77,7 @@ export const DetailView: React.FC<DetailViewProps> = ({ poi, onClose }) => {
     return { label: '亲子友好', value: '高' };
   })();
 
+  const gallery = poi.images && poi.images.length > 0 ? poi.images : [poi.image];
   const [displayLng, displayLat] = toAMapLngLat(
     poi.latitude,
     poi.longitude,
@@ -87,7 +88,17 @@ export const DetailView: React.FC<DetailViewProps> = ({ poi, onClose }) => {
     <div className="fixed inset-0 z-[1000] bg-white overflow-y-auto animate-in slide-in-from-bottom-full duration-300">
       {/* Hero Image */}
       <div className="relative h-64 w-full">
-        <img src={poi.image} alt={poi.name} className="w-full h-full object-cover" />
+        <div className="flex h-full w-full overflow-x-auto snap-x snap-mandatory no-scrollbar">
+          {gallery.map((src, index) => (
+            <img
+              key={`${poi.id}-hero-${index}`}
+              src={src}
+              alt={`${poi.name}-${index + 1}`}
+              className="h-full w-full object-cover flex-shrink-0 snap-center"
+              draggable={false}
+            />
+          ))}
+        </div>
         <button 
           onClick={onClose}
           className="absolute top-4 left-4 p-2 bg-white/90 backdrop-blur-sm rounded-full shadow-sm hover:bg-white transition-colors"
