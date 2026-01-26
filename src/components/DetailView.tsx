@@ -118,7 +118,7 @@ export const DetailView: React.FC<DetailViewProps> = ({ poi, onClose }) => {
               </p>
             </div>
           )}
-          {renderList('怎么玩', poi.whatToPlay)}
+          {renderList('什么值得玩', poi.whatToPlay)}
           {renderList('必打卡', poi.mustNotMiss)}
           {renderList('准备清单', poi.whatToPrepare)}
           {renderList('餐厅特点', poi.restaurantFeatures)}
