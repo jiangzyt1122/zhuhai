@@ -2,15 +2,17 @@ import path from 'path';
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
-const repoName = 'zhuhai';
+const baseFromEnv = process.env.VITE_BASE || '/';
+const normalizedBase = baseFromEnv.endsWith('/') ? baseFromEnv : `${baseFromEnv}/`;
 
 export default defineConfig(({ mode }) => {
+  const isOffline = mode === 'offline';
   return {
     root: 'src',
-    base: mode === 'production' ? `/${repoName}/` : '/',
+    base: isOffline ? './' : (mode === 'production' ? normalizedBase : '/'),
     build: {
-      outDir: '..',
-      emptyOutDir: false,
+      outDir: isOffline ? '../offline-dist' : '..',
+      emptyOutDir: isOffline ? true : false,
     },
     server: {
       port: 3000,
