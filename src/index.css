@@ -12,12 +12,4 @@
   scrollbar-width: none;
 }
 
-/* Leaflet z-index fix for bottom sheets */
-.leaflet-pane {
-  z-index: 0 !important;
-}
-
-.leaflet-control-container .leaflet-top,
-.leaflet-control-container .leaflet-bottom {
-  z-index: 10 !important;
-}
+/* AMap sits under overlays; keep map container at base layer */

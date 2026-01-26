@@ -1,124 +1,132 @@
-import React, { useEffect, useRef } from 'react';
-import { MapContainer, TileLayer, Marker, useMap, ZoomControl } from 'react-leaflet';
-import L from 'leaflet';
+import React, { useEffect, useRef, useState } from 'react';
 import { POI } from '../types';
 import { ZHUHAI_CENTER } from '../constants';
 import { getPoiTheme } from './poiTheme';
 
-// Fix for default Leaflet marker icons in React
-import iconUrl from 'leaflet/dist/images/marker-icon.png';
-import iconRetinaUrl from 'leaflet/dist/images/marker-icon-2x.png';
-import shadowUrl from 'leaflet/dist/images/marker-shadow.png';
-
-const DefaultIcon = L.icon({
-  iconUrl: iconUrl,
-  iconRetinaUrl: iconRetinaUrl,
-  shadowUrl: shadowUrl,
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowSize: [41, 41]
-});
-L.Marker.prototype.options.icon = DefaultIcon;
-
-const TILE_SUBDOMAINS = ['a', 'b', 'c'];
-const TILE_URL_TEMPLATE = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
-
-const markerCache = new Map<string, L.DivIcon>();
-const getMarkerIcon = (poiType: POI['poiType'], isSelected: boolean, isVisited: boolean) => {
-  const theme = getPoiTheme(poiType);
-  const key = `${poiType}-${isSelected ? 'selected' : 'default'}-${isVisited ? 'visited' : 'normal'}`;
-  const cached = markerCache.get(key);
-  if (cached) return cached;
-
-  const size = isSelected ? 26 : 22;
-  const checkSize = Math.round(size * 0.7);
-  const html = isVisited
-    ? `<div style=\"width:${size}px;height:${size}px;border-radius:999px;background:#16a34a;border:2px solid #fff;box-shadow:0 6px 14px rgba(15,23,42,0.2);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:${checkSize}px;line-height:1;\">✓</div>`
-    : `<div style=\"width:${size}px;height:${size}px;border-radius:999px;background:${theme.marker};border:2px solid #fff;box-shadow:0 6px 14px rgba(15,23,42,0.2);\"></div>`;
-  const icon = L.divIcon({
-    html,
-    className: 'poi-marker',
-    iconSize: [size, size],
-    iconAnchor: [size / 2, size / 2]
-  });
-  markerCache.set(key, icon);
-  return icon;
-};
-
-const latLngToTile = (latitude: number, longitude: number, zoom: number) => {
-  const latRad = (latitude * Math.PI) / 180;
-  const n = 2 ** zoom;
-  const x = Math.floor(((longitude + 180) / 360) * n);
-  const y = Math.floor(
-    (1 - Math.log(Math.tan(latRad) + 1 / Math.cos(latRad)) / Math.PI) / 2 * n
-  );
-  return { x, y, n };
-};
-
-const buildTileUrl = (z: number, x: number, y: number, index: number) => {
-  const s = TILE_SUBDOMAINS[index % TILE_SUBDOMAINS.length];
-  return TILE_URL_TEMPLATE
-    .replace('{s}', s)
-    .replace('{z}', String(z))
-    .replace('{x}', String(x))
-    .replace('{y}', String(y));
-};
-
-const preloadTilesAround = (
-  latitude: number,
-  longitude: number,
-  zoom: number,
-  radius: number,
-  seen: Set<string>
-) => {
-  const { x: baseX, y: baseY, n } = latLngToTile(latitude, longitude, zoom);
-  let index = 0;
-
-  for (let dx = -radius; dx <= radius; dx += 1) {
-    for (let dy = -radius; dy <= radius; dy += 1) {
-      const x = (baseX + dx + n) % n;
-      const y = baseY + dy;
-
-      if (y < 0 || y >= n) {
-        continue;
-      }
-
-      const url = buildTileUrl(zoom, x, y, index);
-      index += 1;
-
-      if (seen.has(url)) {
-        continue;
-      }
-
-      seen.add(url);
-      const img = new Image();
-      img.decoding = 'async';
-      img.loading = 'eager';
-      img.src = url;
-    }
+declare global {
+  interface Window {
+    AMap?: any;
+    _AMapSecurityConfig?: {
+      securityJsCode: string;
+    };
   }
-};
-
-interface MapControllerProps {
-  selectedPOI: POI | null;
 }
 
-// Component to handle map movement when selection changes
-const MapController: React.FC<MapControllerProps> = ({ selectedPOI }) => {
-  const map = useMap();
+const AMAP_KEY = 'aa21d1cd86a48cf25f67104cfa9766a7';
+const AMAP_SECURITY_CODE = '735f505cc4f123b5d8e38115bb900877';
+const AMAP_VERSION = '2.0';
+const AMAP_SCRIPT_ID = 'amap-js-api';
 
-  useEffect(() => {
-    if (selectedPOI) {
-      map.flyTo([selectedPOI.latitude, selectedPOI.longitude], 15, {
-        duration: 1.5
-      });
-    } else {
-        // Reset view if needed, or keep current
+let amapLoaderPromise: Promise<any> | null = null;
+
+const loadAMap = () => {
+  if (window.AMap) {
+    return Promise.resolve(window.AMap);
+  }
+
+  if (amapLoaderPromise) {
+    return amapLoaderPromise;
+  }
+
+  amapLoaderPromise = new Promise((resolve, reject) => {
+    window._AMapSecurityConfig = {
+      securityJsCode: AMAP_SECURITY_CODE
+    };
+
+    const existing = document.getElementById(AMAP_SCRIPT_ID) as HTMLScriptElement | null;
+    if (existing) {
+      existing.addEventListener('load', () => resolve(window.AMap));
+      existing.addEventListener('error', () => reject(new Error('AMap script failed to load')));
+      return;
     }
-  }, [selectedPOI, map]);
 
-  return null;
+    const script = document.createElement('script');
+    script.id = AMAP_SCRIPT_ID;
+    script.async = true;
+    script.src = `https://webapi.amap.com/maps?v=${AMAP_VERSION}&key=${AMAP_KEY}`;
+    script.onload = () => resolve(window.AMap);
+    script.onerror = () => reject(new Error('AMap script failed to load'));
+    document.head.appendChild(script);
+  });
+
+  return amapLoaderPromise;
+};
+
+const buildMarkerContent = (poiType: POI['poiType'], isSelected: boolean, isVisited: boolean) => {
+  const theme = getPoiTheme(poiType);
+  const size = isSelected ? 28 : 24;
+  const checkSize = Math.round(size * 0.7);
+  const background = isVisited ? '#16a34a' : theme.marker;
+  const text = isVisited ? '✓' : '';
+  return `<div style="width:${size}px;height:${size}px;border-radius:999px;background:${background};border:2px solid #fff;box-shadow:0 6px 14px rgba(15,23,42,0.2);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:${checkSize}px;line-height:1;">${text}</div>`;
+};
+
+// WGS84 -> GCJ-02 transform (China mainland only)
+const isInChina = (lat: number, lng: number) =>
+  lng > 73.66 && lng < 135.05 && lat > 3.86 && lat < 53.55;
+
+const transformLat = (x: number, y: number) => {
+  let ret =
+    -100.0 +
+    2.0 * x +
+    3.0 * y +
+    0.2 * y * y +
+    0.1 * x * y +
+    0.2 * Math.sqrt(Math.abs(x));
+  ret +=
+    ((20.0 * Math.sin(6.0 * x * Math.PI) + 20.0 * Math.sin(2.0 * x * Math.PI)) * 2.0) /
+    3.0;
+  ret +=
+    ((20.0 * Math.sin(y * Math.PI) + 40.0 * Math.sin((y / 3.0) * Math.PI)) * 2.0) /
+    3.0;
+  ret +=
+    ((160.0 * Math.sin((y / 12.0) * Math.PI) + 320.0 * Math.sin((y * Math.PI) / 30.0)) *
+      2.0) /
+    3.0;
+  return ret;
+};
+
+const transformLng = (x: number, y: number) => {
+  let ret =
+    300.0 +
+    x +
+    2.0 * y +
+    0.1 * x * x +
+    0.1 * x * y +
+    0.1 * Math.sqrt(Math.abs(x));
+  ret +=
+    ((20.0 * Math.sin(6.0 * x * Math.PI) + 20.0 * Math.sin(2.0 * x * Math.PI)) * 2.0) /
+    3.0;
+  ret +=
+    ((20.0 * Math.sin(x * Math.PI) + 40.0 * Math.sin((x / 3.0) * Math.PI)) * 2.0) /
+    3.0;
+  ret +=
+    ((150.0 * Math.sin((x / 12.0) * Math.PI) + 300.0 * Math.sin((x / 30.0) * Math.PI)) *
+      2.0) /
+    3.0;
+  return ret;
+};
+
+const wgs84ToGcj02 = (lat: number, lng: number) => {
+  if (!isInChina(lat, lng)) {
+    return [lat, lng] as const;
+  }
+  const a = 6378245.0;
+  const ee = 0.00669342162296594323;
+  const dLat = transformLat(lng - 105.0, lat - 35.0);
+  const dLng = transformLng(lng - 105.0, lat - 35.0);
+  const radLat = (lat / 180.0) * Math.PI;
+  let magic = Math.sin(radLat);
+  magic = 1 - ee * magic * magic;
+  const sqrtMagic = Math.sqrt(magic);
+  const mgLat = lat + (dLat * 180.0) / (((a * (1 - ee)) / (magic * sqrtMagic)) * Math.PI);
+  const mgLng = lng + (dLng * 180.0) / ((a / sqrtMagic) * Math.cos(radLat) * Math.PI);
+  return [mgLat, mgLng] as const;
+};
+
+const toAMapLngLat = (lat: number, lng: number) => {
+  const [gcjLat, gcjLng] = wgs84ToGcj02(lat, lng);
+  return [gcjLng, gcjLat];
 };
 
 interface POIMapProps {
@@ -129,47 +137,105 @@ interface POIMapProps {
 }
 
 export const POIMap: React.FC<POIMapProps> = ({ pois, selectedPOI, visitedIds, onSelectPOI }) => {
-  const preloadedUrlsRef = useRef(new Set<string>());
+  const mapContainerRef = useRef<HTMLDivElement | null>(null);
+  const mapRef = useRef<any>(null);
+  const markersRef = useRef<Map<string, any>>(new Map());
+  const [mapReady, setMapReady] = useState(false);
 
   useEffect(() => {
-    const seen = preloadedUrlsRef.current;
-    const [lat, lng] = ZHUHAI_CENTER;
-    // Keep preloading small to avoid hammering the tile server.
-    preloadTilesAround(lat, lng, 11, 1, seen);
-    preloadTilesAround(lat, lng, 12, 1, seen);
+    let isCancelled = false;
+
+    loadAMap()
+      .then((AMap) => {
+        if (isCancelled || !mapContainerRef.current) {
+          return;
+        }
+
+        if (!mapRef.current) {
+          const [lat, lng] = ZHUHAI_CENTER;
+          const [centerLng, centerLat] = toAMapLngLat(lat, lng);
+          mapRef.current = new AMap.Map(mapContainerRef.current, {
+            zoom: 11,
+            center: [centerLng, centerLat],
+            resizeEnable: true,
+            viewMode: '2D'
+          });
+        }
+        if (!isCancelled) {
+          setMapReady(true);
+        }
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+
+    return () => {
+      isCancelled = true;
+      markersRef.current.forEach((marker) => marker.setMap(null));
+      markersRef.current.clear();
+      if (mapRef.current) {
+        mapRef.current.destroy();
+        mapRef.current = null;
+      }
+    };
   }, []);
+
+  useEffect(() => {
+    if (!mapReady || !mapRef.current || !window.AMap) {
+      return;
+    }
+
+    const AMap = window.AMap;
+    const markerMap = markersRef.current;
+    const poiIds = new Set(pois.map((poi) => poi.id));
+
+    pois.forEach((poi) => {
+      const isVisited = visitedIds.has(poi.id);
+      const isSelected = selectedPOI?.id === poi.id;
+      const content = buildMarkerContent(poi.poiType, isSelected, isVisited);
+      const size = isSelected ? 28 : 24;
+      const offset = new AMap.Pixel(-size / 2, -size / 2);
+      const [lng, lat] = toAMapLngLat(poi.latitude, poi.longitude);
+      const zIndex = isSelected ? 200 : 150;
+
+      const existing = markerMap.get(poi.id);
+      if (existing) {
+        existing.setContent(content);
+        existing.setPosition([lng, lat]);
+        existing.setOffset(offset);
+        existing.setzIndex(zIndex);
+      } else {
+        const marker = new AMap.Marker({
+          position: [lng, lat],
+          content,
+          offset,
+          zIndex
+        });
+        marker.on('click', () => onSelectPOI(poi));
+        marker.setMap(mapRef.current);
+        markerMap.set(poi.id, marker);
+      }
+    });
+
+    Array.from(markerMap.entries()).forEach(([id, marker]) => {
+      if (!poiIds.has(id)) {
+        marker.setMap(null);
+        markerMap.delete(id);
+      }
+    });
+  }, [mapReady, pois, selectedPOI, visitedIds, onSelectPOI]);
+
+  useEffect(() => {
+    if (!mapRef.current || !selectedPOI) {
+      return;
+    }
+    const [lng, lat] = toAMapLngLat(selectedPOI.latitude, selectedPOI.longitude);
+    mapRef.current.setZoomAndCenter(15, [lng, lat]);
+  }, [selectedPOI]);
 
   return (
     <div className="h-full w-full relative z-0">
-      <MapContainer 
-        center={ZHUHAI_CENTER} 
-        zoom={11} 
-        style={{ height: '100%', width: '100%' }}
-        zoomControl={false} // We will add it manually or disable for cleaner mobile look
-      >
-        <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        />
-        <ZoomControl position="topright" />
-        
-        {pois.map((poi) => {
-          const isVisited = visitedIds.has(poi.id);
-          return (
-            <Marker 
-              key={poi.id} 
-              position={[poi.latitude, poi.longitude]}
-              icon={getMarkerIcon(poi.poiType, selectedPOI?.id === poi.id, isVisited)}
-              eventHandlers={{
-                click: () => onSelectPOI(poi),
-              }}
-              opacity={selectedPOI?.id === poi.id ? 1 : 0.8}
-            />
-          );
-        })}
-
-        <MapController selectedPOI={selectedPOI} />
-      </MapContainer>
+      <div ref={mapContainerRef} className="h-full w-full" />
       
       {/* Decorative gradient overlay for top bar readability */}
       <div className="absolute top-0 left-0 w-full h-24 bg-gradient-to-b from-white/80 to-transparent pointer-events-none z-[400]" />
