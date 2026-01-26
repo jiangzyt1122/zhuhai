@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { POI } from '../types';
 import { COORDINATE_SYSTEM } from '../constants';
 import { toAMapLngLat } from '../utils/coords';
-import { X, MapPin, Star, Navigation } from 'lucide-react';
+import { X, MapPin, Star, Navigation, ChevronLeft, ChevronRight } from 'lucide-react';
 import { getPoiTheme } from './poiTheme';
 
 interface DetailViewProps {
@@ -78,25 +78,73 @@ export const DetailView: React.FC<DetailViewProps> = ({ poi, onClose }) => {
   })();
 
   const gallery = poi.images && poi.images.length > 0 ? poi.images : [poi.image];
+  const [isGalleryOpen, setIsGalleryOpen] = useState(false);
+  const [galleryIndex, setGalleryIndex] = useState(0);
+  const galleryRef = useRef<HTMLDivElement | null>(null);
   const [displayLng, displayLat] = toAMapLngLat(
     poi.latitude,
     poi.longitude,
     poi.coordinateSystem ?? COORDINATE_SYSTEM
   );
 
+  useEffect(() => {
+    if (!isGalleryOpen || !galleryRef.current) return;
+    const container = galleryRef.current;
+    const width = container.clientWidth;
+    container.scrollTo({ left: width * galleryIndex, behavior: 'auto' });
+  }, [isGalleryOpen, galleryIndex]);
+
+  const handleOpenGallery = (index: number) => {
+    setGalleryIndex(index);
+    setIsGalleryOpen(true);
+  };
+
+  const handleCloseGallery = () => {
+    setIsGalleryOpen(false);
+  };
+
+  const handlePrev = (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation();
+    setGalleryIndex((prev) => (prev - 1 + gallery.length) % gallery.length);
+  };
+
+  const handleNext = (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation();
+    setGalleryIndex((prev) => (prev + 1) % gallery.length);
+  };
+
+  const handleGalleryScroll = (event: React.UIEvent<HTMLDivElement>) => {
+    const target = event.currentTarget;
+    const width = target.clientWidth || 1;
+    const nextIndex = Math.round(target.scrollLeft / width);
+    if (nextIndex !== galleryIndex) {
+      setGalleryIndex(nextIndex);
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-[1000] bg-white overflow-y-auto animate-in slide-in-from-bottom-full duration-300">
       {/* Hero Image */}
       <div className="relative h-64 w-full">
-        <div className="flex h-full w-full overflow-x-auto snap-x snap-mandatory no-scrollbar">
+        <div
+          className="flex h-full w-full overflow-x-auto snap-x snap-mandatory no-scrollbar"
+          style={{ touchAction: 'pan-x' }}
+        >
           {gallery.map((src, index) => (
-            <img
+            <button
               key={`${poi.id}-hero-${index}`}
-              src={src}
-              alt={`${poi.name}-${index + 1}`}
-              className="h-full w-full object-cover flex-shrink-0 snap-center"
-              draggable={false}
-            />
+              type="button"
+              className="h-full w-full flex-shrink-0 snap-center"
+              onClick={() => handleOpenGallery(index)}
+              aria-label={`查看${poi.name}图片 ${index + 1}`}
+            >
+              <img
+                src={src}
+                alt={`${poi.name}-${index + 1}`}
+                className="h-full w-full object-cover"
+                draggable={false}
+              />
+            </button>
           ))}
         </div>
         <button 
@@ -179,6 +227,72 @@ export const DetailView: React.FC<DetailViewProps> = ({ poi, onClose }) => {
 
         {/* AI Travel Tips removed per request */}
       </div>
+
+      {isGalleryOpen && (
+        <div
+          className="fixed inset-0 z-[1200] bg-black/80 backdrop-blur-sm"
+          onClick={handleCloseGallery}
+        >
+          <div className="absolute top-4 right-4 z-10">
+            <button
+              type="button"
+              className="p-2 bg-white/90 rounded-full shadow-sm hover:bg-white transition-colors"
+              onClick={handleCloseGallery}
+              aria-label="关闭图片"
+            >
+              <X size={20} className="text-gray-800" />
+            </button>
+          </div>
+          {gallery.length > 1 && (
+            <>
+              <button
+                type="button"
+                className="absolute left-4 top-1/2 -translate-y-1/2 z-10 p-2 bg-white/90 rounded-full shadow-sm hover:bg-white transition-colors"
+                onClick={handlePrev}
+                aria-label="上一张"
+              >
+                <ChevronLeft size={22} className="text-gray-800" />
+              </button>
+              <button
+                type="button"
+                className="absolute right-4 top-1/2 -translate-y-1/2 z-10 p-2 bg-white/90 rounded-full shadow-sm hover:bg-white transition-colors"
+                onClick={handleNext}
+                aria-label="下一张"
+              >
+                <ChevronRight size={22} className="text-gray-800" />
+              </button>
+            </>
+          )}
+          <div
+            className="absolute bottom-6 left-1/2 -translate-x-1/2 text-white text-sm"
+          >
+            {galleryIndex + 1} / {gallery.length}
+          </div>
+          <div
+            className="h-full w-full overflow-x-auto snap-x snap-mandatory no-scrollbar"
+            ref={galleryRef}
+            onClick={(event) => event.stopPropagation()}
+            onScroll={handleGalleryScroll}
+            style={{ touchAction: 'pan-x' }}
+          >
+            <div className="flex h-full w-full">
+              {gallery.map((src, index) => (
+                <div
+                  key={`${poi.id}-modal-${index}`}
+                  className="h-full w-full flex-shrink-0 snap-center flex items-center justify-center"
+                >
+                  <img
+                    src={src}
+                    alt={`${poi.name}-full-${index + 1}`}
+                    className="max-h-full max-w-full object-contain"
+                    draggable={false}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

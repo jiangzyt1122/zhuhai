@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { POIMap } from './components/POIMap';
 import { SummaryCard } from './components/SummaryCard';
 import { DetailView } from './components/DetailView';
@@ -9,7 +9,19 @@ import { Search } from 'lucide-react';
 const App: React.FC = () => {
   const [selectedPOI, setSelectedPOI] = useState<POI | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
-  const [visitedIds, setVisitedIds] = useState<Set<string>>(new Set());
+  const poiIdSet = useMemo(() => new Set(ZHUHAI_POIS.map((poi) => poi.id)), []);
+  const [visitedIds, setVisitedIds] = useState<Set<string>>(() => {
+    try {
+      const raw = window.localStorage.getItem('visitedPoiIds');
+      if (!raw) return new Set();
+      const parsed = JSON.parse(raw);
+      if (!Array.isArray(parsed)) return new Set();
+      const filtered = parsed.filter((id) => typeof id === 'string' && poiIdSet.has(id));
+      return new Set(filtered);
+    } catch {
+      return new Set();
+    }
+  });
 
   const handlePOISelect = (poi: POI) => {
     setSelectedPOI(poi);
@@ -37,6 +49,15 @@ const App: React.FC = () => {
       return next;
     });
   };
+
+  useEffect(() => {
+    try {
+      const payload = Array.from(visitedIds);
+      window.localStorage.setItem('visitedPoiIds', JSON.stringify(payload));
+    } catch {
+      // ignore write errors
+    }
+  }, [visitedIds]);
 
   return (
     <div className="relative w-full h-screen overflow-hidden bg-gray-50">
