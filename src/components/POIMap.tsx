@@ -25,14 +25,17 @@ const TILE_SUBDOMAINS = ['a', 'b', 'c'];
 const TILE_URL_TEMPLATE = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
 
 const markerCache = new Map<string, L.DivIcon>();
-const getMarkerIcon = (poiType: POI['poiType'], isSelected: boolean) => {
+const getMarkerIcon = (poiType: POI['poiType'], isSelected: boolean, isVisited: boolean) => {
   const theme = getPoiTheme(poiType);
-  const key = `${poiType}-${isSelected ? 'selected' : 'default'}`;
+  const key = `${poiType}-${isSelected ? 'selected' : 'default'}-${isVisited ? 'visited' : 'normal'}`;
   const cached = markerCache.get(key);
   if (cached) return cached;
 
   const size = isSelected ? 26 : 22;
-  const html = `<div style=\"width:${size}px;height:${size}px;border-radius:999px;background:${theme.marker};border:2px solid #fff;box-shadow:0 6px 14px rgba(15,23,42,0.2);\"></div>`;
+  const checkSize = Math.round(size * 0.7);
+  const html = isVisited
+    ? `<div style=\"width:${size}px;height:${size}px;border-radius:999px;background:#16a34a;border:2px solid #fff;box-shadow:0 6px 14px rgba(15,23,42,0.2);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:${checkSize}px;line-height:1;\">✓</div>`
+    : `<div style=\"width:${size}px;height:${size}px;border-radius:999px;background:${theme.marker};border:2px solid #fff;box-shadow:0 6px 14px rgba(15,23,42,0.2);\"></div>`;
   const icon = L.divIcon({
     html,
     className: 'poi-marker',
@@ -121,10 +124,11 @@ const MapController: React.FC<MapControllerProps> = ({ selectedPOI }) => {
 interface POIMapProps {
   pois: POI[];
   selectedPOI: POI | null;
+  visitedIds: Set<string>;
   onSelectPOI: (poi: POI) => void;
 }
 
-export const POIMap: React.FC<POIMapProps> = ({ pois, selectedPOI, onSelectPOI }) => {
+export const POIMap: React.FC<POIMapProps> = ({ pois, selectedPOI, visitedIds, onSelectPOI }) => {
   const preloadedUrlsRef = useRef(new Set<string>());
 
   useEffect(() => {
@@ -149,17 +153,20 @@ export const POIMap: React.FC<POIMapProps> = ({ pois, selectedPOI, onSelectPOI }
         />
         <ZoomControl position="topright" />
         
-        {pois.map((poi) => (
-          <Marker 
-            key={poi.id} 
-            position={[poi.latitude, poi.longitude]}
-            icon={getMarkerIcon(poi.poiType, selectedPOI?.id === poi.id)}
-            eventHandlers={{
-              click: () => onSelectPOI(poi),
-            }}
-            opacity={selectedPOI?.id === poi.id ? 1 : 0.8}
-          />
-        ))}
+        {pois.map((poi) => {
+          const isVisited = visitedIds.has(poi.id);
+          return (
+            <Marker 
+              key={poi.id} 
+              position={[poi.latitude, poi.longitude]}
+              icon={getMarkerIcon(poi.poiType, selectedPOI?.id === poi.id, isVisited)}
+              eventHandlers={{
+                click: () => onSelectPOI(poi),
+              }}
+              opacity={selectedPOI?.id === poi.id ? 1 : 0.8}
+            />
+          );
+        })}
 
         <MapController selectedPOI={selectedPOI} />
       </MapContainer>

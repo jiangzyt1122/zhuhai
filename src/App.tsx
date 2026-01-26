@@ -9,6 +9,7 @@ import { Search } from 'lucide-react';
 const App: React.FC = () => {
   const [selectedPOI, setSelectedPOI] = useState<POI | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [visitedIds, setVisitedIds] = useState<Set<string>>(new Set());
 
   const handlePOISelect = (poi: POI) => {
     setSelectedPOI(poi);
@@ -23,6 +24,18 @@ const App: React.FC = () => {
 
   const handleCloseDetail = () => {
     setIsDetailOpen(false);
+  };
+
+  const handleToggleVisited = (poiId: string) => {
+    setVisitedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(poiId)) {
+        next.delete(poiId);
+      } else {
+        next.add(poiId);
+      }
+      return next;
+    });
   };
 
   return (
@@ -47,6 +60,7 @@ const App: React.FC = () => {
       <POIMap 
         pois={ZHUHAI_POIS} 
         selectedPOI={selectedPOI}
+        visitedIds={visitedIds}
         onSelectPOI={handlePOISelect}
       />
 
@@ -54,6 +68,8 @@ const App: React.FC = () => {
       <SummaryCard 
         poi={selectedPOI} 
         onOpenDetail={handleOpenDetail}
+        isVisited={selectedPOI ? visitedIds.has(selectedPOI.id) : false}
+        onToggleVisited={handleToggleVisited}
       />
 
       {/* Full Screen Detail View */}

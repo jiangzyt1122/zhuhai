@@ -1,14 +1,16 @@
 import React, { useState } from 'react';
 import { POI } from '../types';
-import { MapPin, Info, Copy, Check } from 'lucide-react';
+import { MapPin, Info, Copy, Check, CheckCircle2 } from 'lucide-react';
 import { getPoiTheme } from './poiTheme';
 
 interface SummaryCardProps {
   poi: POI | null;
   onOpenDetail: () => void;
+  isVisited: boolean;
+  onToggleVisited: (poiId: string) => void;
 }
 
-export const SummaryCard: React.FC<SummaryCardProps> = ({ poi, onOpenDetail }) => {
+export const SummaryCard: React.FC<SummaryCardProps> = ({ poi, onOpenDetail, isVisited, onToggleVisited }) => {
   const [copied, setCopied] = useState(false);
 
   if (!poi) return null;
@@ -37,6 +39,11 @@ export const SummaryCard: React.FC<SummaryCardProps> = ({ poi, onOpenDetail }) =
     }
   };
 
+  const handleToggleVisited = (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation();
+    onToggleVisited(poi.id);
+  };
+
   return (
     <div className="absolute bottom-6 left-4 right-4 z-[500]">
       <div 
@@ -56,15 +63,28 @@ export const SummaryCard: React.FC<SummaryCardProps> = ({ poi, onOpenDetail }) =
                 </span>
                 <h3 className="text-lg font-bold text-gray-900 truncate">{poi.name}</h3>
               </div>
-              <button
-                type="button"
-                onClick={handleCopyName}
-                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border ${theme.border} ${theme.softBg} ${theme.accent} hover:opacity-80 transition`}
-                aria-label={`复制${poi.name}`}
-              >
-                {copied ? <Check size={14} /> : <Copy size={14} />}
-                {copied ? '已复制' : '复制'}
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleToggleVisited}
+                  className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border ${
+                    isVisited ? 'border-green-600 bg-green-50 text-green-700' : 'border-gray-200 bg-gray-50 text-gray-600'
+                  } hover:opacity-80 transition`}
+                  aria-label={`${isVisited ? '取消' : '标记'}已打卡`}
+                >
+                  <CheckCircle2 size={14} />
+                  {isVisited ? '已打卡' : '打卡'}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleCopyName}
+                  className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border ${theme.border} ${theme.softBg} ${theme.accent} hover:opacity-80 transition`}
+                  aria-label={`复制${poi.name}`}
+                >
+                  {copied ? <Check size={14} /> : <Copy size={14} />}
+                  {copied ? '已复制' : '复制'}
+                </button>
+              </div>
             </div>
             
             <div className="flex items-center text-gray-500 text-sm mt-1 mb-2">
