@@ -2,7 +2,7 @@ import path from 'path';
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
-const repoName = 'zhuhai-kids-explore';
+const repoName = 'zhuhai';
 
 export default defineConfig(({ mode }) => {
   return {
