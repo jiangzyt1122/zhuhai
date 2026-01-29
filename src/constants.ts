@@ -966,11 +966,12 @@ const parentChildAttractions = [
   {
     name: '广州大剧院',
     category: '艺术文化',
-    latitude: 23.1175,
-    longitude: 113.3172,
+    latitude: 23.118379,
+    longitude: 113.316286,
     city: '广州',
-    coordinateSystem: 'gcj02',
+    coordinateSystem: 'wgs84',
     autoLocate: true,
+    autoLocateKeyword: '广州大剧院 珠江西路 1号',
     noteLinks: [],
     whatToPlay: [
       '欣赏扎哈·哈迪德现代建筑设计',

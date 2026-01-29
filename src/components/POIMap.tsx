@@ -157,7 +157,8 @@ export const POIMap: React.FC<POIMapProps> = ({ pois, selectedPOI, visitedIds, o
           extensions: 'base'
         });
 
-        const keyword = poi.name.replace(/[()（）]/g, ' ').trim();
+        const rawKeyword = poi.autoLocateKeyword ?? poi.name;
+        const keyword = rawKeyword.replace(/[()（）]/g, ' ').trim();
         placeSearch.search(keyword || poi.name, (status: string, result: any) => {
           geocodeInFlightRef.current.delete(poi.id);
           if (isCancelled || status !== 'complete') {

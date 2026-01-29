@@ -17,6 +17,7 @@ export interface POI {
   noteLinks: string[];
   coordinateSystem?: 'wgs84' | 'gcj02';
   autoLocate?: boolean;
+  autoLocateKeyword?: string;
   playTimeHours?: number;
   whatToPlay?: string[];
   mustNotMiss?: string[];
