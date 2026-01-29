@@ -4,10 +4,7 @@ import { poiImageMap } from './poiImages';
 export const ZHUHAI_CENTER: [number, number] = [23.1291, 113.2644]; // Guangzhou city center
 export const COORDINATE_SYSTEM: 'wgs84' | 'gcj02' = 'wgs84';
 
-const BASE_URL = import.meta.env.BASE_URL || '/';
-const BASE_WITH_SLASH = BASE_URL.endsWith('/') ? BASE_URL : `${BASE_URL}/`;
-const buildImageUrl = (path: string) => encodeURI(`${BASE_WITH_SLASH}${path.replace(/^\/+/, '')}`);
-const getPoiImages = (name: string) => (poiImageMap[name] ?? []).map(buildImageUrl);
+const getPoiImages = (name: string) => poiImageMap[name] ?? [];
 const DEFAULT_CITY = '珠海';
 
 const parentChildAttractions = [
