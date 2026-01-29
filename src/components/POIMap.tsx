@@ -79,7 +79,9 @@ export const POIMap: React.FC<POIMapProps> = ({ pois, selectedPOI, visitedIds, o
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<any>(null);
   const markersRef = useRef<Map<string, any>>(new Map());
+  const geocodeInFlightRef = useRef<Set<string>>(new Set());
   const [mapReady, setMapReady] = useState(false);
+  const [adjustedCoords, setAdjustedCoords] = useState<Record<string, [number, number]>>({});
 
   useEffect(() => {
     let isCancelled = false;
@@ -120,6 +122,64 @@ export const POIMap: React.FC<POIMapProps> = ({ pois, selectedPOI, visitedIds, o
   }, []);
 
   useEffect(() => {
+    if (!mapReady || !window.AMap) {
+      return;
+    }
+
+    let isCancelled = false;
+    const targets = pois.filter((poi) => {
+      if (poi.autoLocate) {
+        return true;
+      }
+      return poi.category.includes('夜市') && poi.address.startsWith('广州');
+    });
+    if (targets.length === 0) {
+      return () => {
+        isCancelled = true;
+      };
+    }
+
+    const AMap = window.AMap;
+    AMap.plugin('AMap.PlaceSearch', () => {
+      if (isCancelled) {
+        return;
+      }
+
+      targets.forEach((poi) => {
+        if (adjustedCoords[poi.id] || geocodeInFlightRef.current.has(poi.id)) {
+          return;
+        }
+        geocodeInFlightRef.current.add(poi.id);
+
+        const placeSearch = new AMap.PlaceSearch({
+          city: '广州',
+          citylimit: true,
+          extensions: 'base'
+        });
+
+        const keyword = poi.name.replace(/[()（）]/g, ' ').trim();
+        placeSearch.search(keyword || poi.name, (status: string, result: any) => {
+          geocodeInFlightRef.current.delete(poi.id);
+          if (isCancelled || status !== 'complete') {
+            return;
+          }
+          const location = result?.poiList?.pois?.[0]?.location;
+          const lng = location?.lng ?? location?.getLng?.();
+          const lat = location?.lat ?? location?.getLat?.();
+          if (typeof lng !== 'number' || typeof lat !== 'number') {
+            return;
+          }
+          setAdjustedCoords((prev) => (prev[poi.id] ? prev : { ...prev, [poi.id]: [lng, lat] }));
+        });
+      });
+    });
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [mapReady, pois, adjustedCoords]);
+
+  useEffect(() => {
     if (!mapReady || !mapRef.current || !window.AMap) {
       return;
     }
@@ -127,7 +187,23 @@ export const POIMap: React.FC<POIMapProps> = ({ pois, selectedPOI, visitedIds, o
     const AMap = window.AMap;
     const markerMap = markersRef.current;
     const poiIds = new Set(pois.map((poi) => poi.id));
-    const poiById = new Map(pois.map((poi) => [poi.id, poi]));
+    const poiById = new Map(
+      pois.map((poi) => {
+        const adjusted = adjustedCoords[poi.id];
+        if (!adjusted) {
+          return [poi.id, poi];
+        }
+        return [
+          poi.id,
+          {
+            ...poi,
+            longitude: adjusted[0],
+            latitude: adjusted[1],
+            coordinateSystem: 'gcj02'
+          }
+        ];
+      })
+    );
 
     pois.forEach((poi) => {
       const isVisited = visitedIds.has(poi.id);
@@ -135,11 +211,10 @@ export const POIMap: React.FC<POIMapProps> = ({ pois, selectedPOI, visitedIds, o
       const content = buildMarkerContent(poi.poiType, poi.category, isSelected, isVisited);
       const size = isSelected ? 28 : 24;
       const offset = new AMap.Pixel(-size / 2, -size / 2);
-      const [lng, lat] = toAMapLngLat(
-        poi.latitude,
-        poi.longitude,
-        poi.coordinateSystem ?? COORDINATE_SYSTEM
-      );
+      const adjusted = adjustedCoords[poi.id];
+      const [lng, lat] = adjusted
+        ? adjusted
+        : toAMapLngLat(poi.latitude, poi.longitude, poi.coordinateSystem ?? COORDINATE_SYSTEM);
       const zIndex = isSelected ? 200 : 150;
 
       const existing = markerMap.get(poi.id);
@@ -183,19 +258,45 @@ export const POIMap: React.FC<POIMapProps> = ({ pois, selectedPOI, visitedIds, o
         markerMap.delete(id);
       }
     });
-  }, [mapReady, pois, selectedPOI, visitedIds, onSelectPOI]);
+  }, [mapReady, pois, selectedPOI, visitedIds, onSelectPOI, adjustedCoords]);
 
   useEffect(() => {
     if (!mapRef.current || !selectedPOI) {
       return;
     }
-    const [lng, lat] = toAMapLngLat(
-      selectedPOI.latitude,
-      selectedPOI.longitude,
-      selectedPOI.coordinateSystem ?? COORDINATE_SYSTEM
-    );
+    const adjusted = adjustedCoords[selectedPOI.id];
+    const [lng, lat] = adjusted
+      ? adjusted
+      : toAMapLngLat(
+          selectedPOI.latitude,
+          selectedPOI.longitude,
+          selectedPOI.coordinateSystem ?? COORDINATE_SYSTEM
+        );
     mapRef.current.setZoomAndCenter(15, [lng, lat]);
-  }, [selectedPOI]);
+  }, [selectedPOI, adjustedCoords]);
+
+  useEffect(() => {
+    if (!selectedPOI) {
+      return;
+    }
+    const adjusted = adjustedCoords[selectedPOI.id];
+    if (!adjusted) {
+      return;
+    }
+    if (
+      selectedPOI.coordinateSystem === 'gcj02' &&
+      selectedPOI.longitude === adjusted[0] &&
+      selectedPOI.latitude === adjusted[1]
+    ) {
+      return;
+    }
+    onSelectPOI({
+      ...selectedPOI,
+      longitude: adjusted[0],
+      latitude: adjusted[1],
+      coordinateSystem: 'gcj02'
+    });
+  }, [selectedPOI, adjustedCoords, onSelectPOI]);
 
   return (
     <div className="h-full w-full relative z-0">

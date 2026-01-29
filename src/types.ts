@@ -16,6 +16,7 @@ export interface POI {
   images?: string[];
   noteLinks: string[];
   coordinateSystem?: 'wgs84' | 'gcj02';
+  autoLocate?: boolean;
   playTimeHours?: number;
   whatToPlay?: string[];
   mustNotMiss?: string[];
