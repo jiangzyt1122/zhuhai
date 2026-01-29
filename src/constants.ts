@@ -777,8 +777,8 @@ const parentChildAttractions = [
   {
     name: '厦滘夜市',
     category: '夜市美食',
-    latitude: 23.0626,
-    longitude: 113.3039,
+    latitude: 23.039515,
+    longitude: 113.320132,
     city: '广州',
     coordinateSystem: 'gcj02',
     noteLinks: [],
@@ -804,8 +804,8 @@ const parentChildAttractions = [
   {
     name: '龙洞夜市',
     category: '夜市美食',
-    latitude: 23.1918,
-    longitude: 113.3535,
+    latitude: 23.195515,
+    longitude: 113.365105,
     city: '广州',
     coordinateSystem: 'gcj02',
     noteLinks: [],
@@ -831,8 +831,8 @@ const parentChildAttractions = [
   {
     name: '永泰夜市',
     category: '夜市美食',
-    latitude: 23.1891,
-    longitude: 113.3064,
+    latitude: 23.228629,
+    longitude: 113.276836,
     city: '广州',
     coordinateSystem: 'gcj02',
     noteLinks: [],
@@ -858,8 +858,8 @@ const parentChildAttractions = [
   {
     name: '西华路夜宵街',
     category: '夜市美食',
-    latitude: 23.1324,
-    longitude: 113.2472,
+    latitude: 23.129748,
+    longitude: 113.252116,
     city: '广州',
     coordinateSystem: 'gcj02',
     noteLinks: [],
@@ -1147,11 +1147,14 @@ const restaurants = [
   {
     name: '广州酒家（文昌总店）',
     category: '粤菜老字号',
-    latitude: 23.1216,
-    longitude: 113.2448,
+    latitude: 23.10336,
+    longitude: 113.248374,
     city: '广州',
     coordinateSystem: 'gcj02',
     autoLocate: true,
+    noteLinks: [
+      'https://m.dianping.com/shopinfo/H4vxgllOulKZ3eDW?msource=Appshare2021&utm_source=shop_share&shoptype=10&shopcategoryid=34283&cityid=4&isoversea=0'
+    ],
     restaurantFeatures: [
       '体验最传统的广式早茶',
       '品尝经典粤菜与点心',
@@ -1186,11 +1189,14 @@ const restaurants = [
   {
     name: '陶陶居（第十甫路总店）',
     category: '粤菜老字号',
-    latitude: 23.1232,
-    longitude: 113.2474,
+    latitude: 23.122166,
+    longitude: 113.260722,
     city: '广州',
     coordinateSystem: 'gcj02',
     autoLocate: true,
+    noteLinks: [
+      'https://m.dianping.com/shopinfo/j1h0w0JYscxJtdBe?msource=Appshare2021&utm_source=shop_share&shoptype=10&shopcategoryid=34282&cityid=4&isoversea=0'
+    ],
     restaurantFeatures: [
       '吃广式点心和传统甜品',
       '体验百年老字号茶楼',
@@ -1223,50 +1229,16 @@ const restaurants = [
     ]
   },
   {
-    name: '炳胜品味（珠江新城店）',
-    category: '高端粤菜',
-    latitude: 23.1195,
-    longitude: 113.3236,
-    city: '广州',
-    coordinateSystem: 'gcj02',
-    autoLocate: true,
-    restaurantFeatures: [
-      '品尝改良版高端粤菜',
-      '商务与家庭聚餐',
-      '搭配珠江新城周边夜景'
-    ],
-    whatToPlay: [
-      '品尝改良版高端粤菜',
-      '商务与家庭聚餐',
-      '搭配珠江新城周边夜景'
-    ],
-    recommendedDishes: [
-      '招牌烧鹅',
-      '豉油皇焗龙虾',
-      '煲仔菜'
-    ],
-    mustNotMiss: [
-      '招牌烧鹅',
-      '豉油皇焗龙虾',
-      '煲仔菜'
-    ],
-    whatToPrepare: [
-      '建议提前订位',
-      '价格中高，适合正餐',
-      '晚餐时段更有氛围'
-    ],
-    notesForParents: [
-      '环境安静、座位舒适，适合爸妈不喜欢吵闹餐厅的情况。'
-    ]
-  },
-  {
-    name: '点都德（德政中路店）',
+    name: '点都德(汇点楼)',
     category: '广式早茶',
-    latitude: 23.1298,
-    longitude: 113.2739,
+    latitude: 23.118945,
+    longitude: 113.331987,
     city: '广州',
     coordinateSystem: 'gcj02',
     autoLocate: true,
+    noteLinks: [
+      'https://m.dianping.com/shopinfo/l4f06KVSqnKKC7NB?msource=Appshare2021&utm_source=shop_share&shoptype=10&shopcategoryid=34282&cityid=4&isoversea=0'
+    ],
     restaurantFeatures: [
       '体验年轻化的广式早茶',
       '点心种类丰富',
@@ -1299,11 +1271,14 @@ const restaurants = [
   {
     name: '泮溪酒家',
     category: '园林粤菜',
-    latitude: 23.1183,
-    longitude: 113.2329,
+    latitude: 23.121321,
+    longitude: 113.236214,
     city: '广州',
     coordinateSystem: 'gcj02',
     autoLocate: true,
+    noteLinks: [
+      'https://m.dianping.com/shopinfo/k6fO8WcRVlYBZAkW?msource=Appshare2021&utm_source=shop_share&shoptype=10&shopcategoryid=34283&cityid=4&isoversea=0'
+    ],
     restaurantFeatures: [
       '在园林式环境中用餐',
       '体验岭南传统宴席氛围',
@@ -1336,11 +1311,14 @@ const restaurants = [
   {
     name: '南园酒家',
     category: '粤菜老字号',
-    latitude: 23.1384,
-    longitude: 113.2576,
+    latitude: 23.099956,
+    longitude: 113.280458,
     city: '广州',
     coordinateSystem: 'gcj02',
     autoLocate: true,
+    noteLinks: [
+      'https://m.dianping.com/shopinfo/l426LpT7gmmW1sEX?msource=Appshare2021&utm_source=shop_share&shoptype=10&shopcategoryid=205&cityid=4&isoversea=0'
+    ],
     restaurantFeatures: [
       '体验老广州宴席文化',
       '适合家庭聚餐',
@@ -1370,43 +1348,7 @@ const restaurants = [
       '老派酒楼风格，口味偏传统，非常适合爸妈。'
     ]
   },
-  {
-    name: '银记肠粉店（文明路总店）',
-    category: '特色小吃',
-    latitude: 23.1269,
-    longitude: 113.2711,
-    city: '广州',
-    coordinateSystem: 'gcj02',
-    autoLocate: true,
-    restaurantFeatures: [
-      '体验地道广州早餐',
-      '快速品尝肠粉与粥品',
-      '感受本地人日常'
-    ],
-    whatToPlay: [
-      '体验地道广州早餐',
-      '快速品尝肠粉与粥品',
-      '感受本地人日常'
-    ],
-    recommendedDishes: [
-      '鲜虾肠粉',
-      '牛肉肠粉',
-      '艇仔粥'
-    ],
-    mustNotMiss: [
-      '鲜虾肠粉',
-      '牛肉肠粉',
-      '艇仔粥'
-    ],
-    whatToPrepare: [
-      '排队速度快',
-      '适合早餐或早午餐',
-      '翻台较快不宜久坐'
-    ],
-    notesForParents: [
-      '价格亲民、口味清淡，适合孩子和长辈，1月早晨吃很舒服。'
-    ]
-  }
+  
 ];
 
 const malls = [
