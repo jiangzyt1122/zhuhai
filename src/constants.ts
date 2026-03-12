@@ -1695,6 +1695,33 @@ const beijingKindergartens = [
     ],
     overallEvaluation:
       '这所园目前更像“需要补调研”的候选点，优势在位置和公办属性，最终判断要更依赖电话沟通和线下核实。'
+  },
+  {
+    shortName: '中科院',
+    image: 'https://p9.itc.cn/q_70/images03/20230629/e42d2298b101408695e2c21189d8df61.png',
+    name: '中科幼教东升幼儿园',
+    category: '单位公办',
+    city: '北京',
+    latitude: 40.050007,
+    longitude: 116.365295,
+    coordinateSystem: 'gcj02' as const,
+    phone: '82612496',
+    contactPerson: '刘老师',
+    noteLinks: [
+      'https://www.caspe.ac.cn/'
+    ],
+    schoolFeatures: [
+      '属于中科幼教体系的单位公办园，位置落在东升片区，和现有几所候选园距离较近。',
+      '具备科研院所系统办园背景，适合与高校系统、公办社区园做横向比较。',
+      '通勤位置较好，适合纳入“离家近的单位公办园”候选池。'
+    ],
+    facultyStrength: [
+      '当前可确认其属于中科幼教系统，但公开网页层面的细化师资数据较少。',
+      '如果重点看师资，建议电话确认教师稳定性、班额和园所教研支持情况。',
+      '从体系背景看，通常会有较稳定的单位办园管理支撑。'
+    ],
+    overallEvaluation:
+      '这所园的核心优势是体系背景和位置，属于值得优先电话了解的近距离候选点；最终判断仍要补足公开师资和招生信息。'
   }
 ];
 
