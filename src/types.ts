@@ -5,6 +5,7 @@ export type POIType = 'attraction' | 'restaurant';
 export interface POI {
   id: string;
   name: string;
+  shortName?: string;
   category: POICategory;
   poiType: POIType;
   address: string;
@@ -32,6 +33,11 @@ export interface POI {
   openTime?: string;
   closeTime?: string;
   recommendedVisitWay?: string[];
+  schoolFeatures?: string[];
+  facultyStrength?: string[];
+  overallEvaluation?: string;
+  phone?: string;
+  contactPerson?: string;
 }
 
 export interface MapViewState {

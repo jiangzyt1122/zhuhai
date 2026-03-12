@@ -6,6 +6,16 @@ import { ZHUHAI_POIS } from './constants';
 import { POI } from './types';
 import { Search } from 'lucide-react';
 
+type POICardPreference = {
+  canAttend: '' | '是' | '否';
+  note: string;
+};
+
+const DEFAULT_CARD_PREFERENCE: POICardPreference = {
+  canAttend: '',
+  note: ''
+};
+
 const App: React.FC = () => {
   const [selectedPOI, setSelectedPOI] = useState<POI | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
@@ -20,6 +30,29 @@ const App: React.FC = () => {
       return new Set(filtered);
     } catch {
       return new Set();
+    }
+  });
+  const [poiCardPreferences, setPoiCardPreferences] = useState<Record<string, POICardPreference>>(() => {
+    try {
+      const raw = window.localStorage.getItem('poiCardPreferences');
+      if (!raw) return {};
+      const parsed = JSON.parse(raw);
+      if (!parsed || typeof parsed !== 'object') return {};
+
+      return Object.fromEntries(
+        Object.entries(parsed).flatMap(([poiId, value]) => {
+          if (!poiIdSet.has(poiId) || !value || typeof value !== 'object') {
+            return [];
+          }
+
+          const candidate = value as Partial<POICardPreference>;
+          const canAttend = candidate.canAttend === '是' || candidate.canAttend === '否' ? candidate.canAttend : '';
+          const note = typeof candidate.note === 'string' ? candidate.note : '';
+          return [[poiId, { canAttend, note }]];
+        })
+      );
+    } catch {
+      return {};
     }
   });
 
@@ -50,6 +83,19 @@ const App: React.FC = () => {
     });
   };
 
+  const handleUpdatePOICardPreference = (
+    poiId: string,
+    nextPreference: Partial<POICardPreference>
+  ) => {
+    setPoiCardPreferences((prev) => ({
+      ...prev,
+      [poiId]: {
+        ...(prev[poiId] ?? DEFAULT_CARD_PREFERENCE),
+        ...nextPreference
+      }
+    }));
+  };
+
   useEffect(() => {
     try {
       const payload = Array.from(visitedIds);
@@ -58,6 +104,14 @@ const App: React.FC = () => {
       // ignore write errors
     }
   }, [visitedIds]);
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem('poiCardPreferences', JSON.stringify(poiCardPreferences));
+    } catch {
+      // ignore write errors
+    }
+  }, [poiCardPreferences]);
 
   return (
     <div className="relative w-full h-screen overflow-hidden bg-gray-50">
@@ -91,6 +145,8 @@ const App: React.FC = () => {
         onOpenDetail={handleOpenDetail}
         isVisited={selectedPOI ? visitedIds.has(selectedPOI.id) : false}
         onToggleVisited={handleToggleVisited}
+        preference={selectedPOI ? poiCardPreferences[selectedPOI.id] ?? DEFAULT_CARD_PREFERENCE : DEFAULT_CARD_PREFERENCE}
+        onUpdatePreference={handleUpdatePOICardPreference}
       />
 
       {/* Full Screen Detail View */}

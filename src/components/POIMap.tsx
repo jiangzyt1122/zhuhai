@@ -1,72 +1,33 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { POI } from '../types';
-import { ZHUHAI_CENTER, COORDINATE_SYSTEM } from '../constants';
+import {
+  DEFAULT_MAP_CENTER,
+  DEFAULT_MAP_CENTER_COORDINATE_SYSTEM,
+  HOME_MARKER,
+  COORDINATE_SYSTEM
+} from '../constants';
 import { getPoiTheme } from './poiTheme';
 import { toAMapLngLat } from '../utils/coords';
+import { loadAMap } from '../utils/amap';
 
-declare global {
-  interface Window {
-    AMap?: any;
-    _AMapSecurityConfig?: {
-      securityJsCode: string;
-    };
-  }
-}
-
-const AMAP_KEY = 'aa21d1cd86a48cf25f67104cfa9766a7';
-const AMAP_SECURITY_CODE = '735f505cc4f123b5d8e38115bb900877';
-const AMAP_VERSION = '2.0';
-const AMAP_SCRIPT_ID = 'amap-js-api';
-
-let amapLoaderPromise: Promise<any> | null = null;
-
-const loadAMap = () => {
-  if (window.AMap) {
-    return Promise.resolve(window.AMap);
-  }
-
-  if (amapLoaderPromise) {
-    return amapLoaderPromise;
-  }
-
-  amapLoaderPromise = new Promise((resolve, reject) => {
-    window._AMapSecurityConfig = {
-      securityJsCode: AMAP_SECURITY_CODE
-    };
-
-    const existing = document.getElementById(AMAP_SCRIPT_ID) as HTMLScriptElement | null;
-    if (existing) {
-      existing.addEventListener('load', () => resolve(window.AMap));
-      existing.addEventListener('error', () => reject(new Error('AMap script failed to load')));
-      return;
-    }
-
-    const script = document.createElement('script');
-    script.id = AMAP_SCRIPT_ID;
-    script.async = true;
-    script.src = `https://webapi.amap.com/maps?v=${AMAP_VERSION}&key=${AMAP_KEY}`;
-    script.onload = () => resolve(window.AMap);
-    script.onerror = () => reject(new Error('AMap script failed to load'));
-    document.head.appendChild(script);
-  });
-
-  return amapLoaderPromise;
-};
-
-const buildMarkerContent = (
-  poiType: POI['poiType'],
-  category: string,
-  isSelected: boolean,
-  isVisited: boolean
-) => {
-  const theme = getPoiTheme(poiType, category);
+const buildMarkerContent = (poi: POI, isSelected: boolean, isVisited: boolean) => {
+  const theme = getPoiTheme(poi.poiType, poi.category);
   const size = isSelected ? 28 : 24;
   const checkSize = Math.round(size * 0.7);
   const background = isVisited ? '#16a34a' : theme.marker;
   const text = isVisited ? '✓' : '';
-  return `<div style="width:${size}px;height:${size}px;border-radius:999px;background:${background};border:2px solid #fff;box-shadow:0 6px 14px rgba(15,23,42,0.2);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:${checkSize}px;line-height:1;">${text}</div>`;
+
+  return `<div style="width:${size}px;height:${size}px;border-radius:999px;background:${background};border:2px solid #fff;box-shadow:0 6px 14px rgba(15,23,42,0.2);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:${checkSize}px;line-height:1;transform:translate(-50%,-50%);">${text}</div>`;
 };
 
+const buildSchoolLabelContent = (poi: POI, isSelected: boolean) => {
+  const theme = getPoiTheme(poi.poiType, poi.category);
+  const labelText = poi.shortName ?? poi.name;
+  return `<div style="color:${theme.marker};font-weight:700;font-size:${isSelected ? 12 : 11}px;line-height:1;white-space:nowrap;text-shadow:0 1px 2px rgba(255,255,255,0.96);">${labelText}</div>`;
+};
+
+const buildHomeMarkerContent = () =>
+  '<div style="width:36px;height:36px;border-radius:999px;background:#2563eb;border:2px solid #fff;box-shadow:0 8px 20px rgba(37,99,235,0.28);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:15px;line-height:1;">家</div>';
 
 interface POIMapProps {
   pois: POI[];
@@ -78,6 +39,7 @@ interface POIMapProps {
 export const POIMap: React.FC<POIMapProps> = ({ pois, selectedPOI, visitedIds, onSelectPOI }) => {
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<any>(null);
+  const homeMarkerRef = useRef<any>(null);
   const markersRef = useRef<Map<string, any>>(new Map());
   const geocodeInFlightRef = useRef<Set<string>>(new Set());
   const [mapReady, setMapReady] = useState(false);
@@ -93,8 +55,12 @@ export const POIMap: React.FC<POIMapProps> = ({ pois, selectedPOI, visitedIds, o
         }
 
         if (!mapRef.current) {
-          const [lat, lng] = ZHUHAI_CENTER;
-          const [centerLng, centerLat] = toAMapLngLat(lat, lng, COORDINATE_SYSTEM);
+          const [lat, lng] = DEFAULT_MAP_CENTER;
+          const [centerLng, centerLat] = toAMapLngLat(
+            lat,
+            lng,
+            DEFAULT_MAP_CENTER_COORDINATE_SYSTEM
+          );
           mapRef.current = new AMap.Map(mapContainerRef.current, {
             zoom: 11,
             center: [centerLng, centerLat],
@@ -114,6 +80,10 @@ export const POIMap: React.FC<POIMapProps> = ({ pois, selectedPOI, visitedIds, o
       isCancelled = true;
       markersRef.current.forEach((marker) => marker.setMap(null));
       markersRef.current.clear();
+      if (homeMarkerRef.current) {
+        homeMarkerRef.current.setMap(null);
+        homeMarkerRef.current = null;
+      }
       if (mapRef.current) {
         mapRef.current.destroy();
         mapRef.current = null;
@@ -186,6 +156,37 @@ export const POIMap: React.FC<POIMapProps> = ({ pois, selectedPOI, visitedIds, o
     }
 
     const AMap = window.AMap;
+    const [lng, lat] = toAMapLngLat(
+      HOME_MARKER.latitude,
+      HOME_MARKER.longitude,
+      HOME_MARKER.coordinateSystem
+    );
+    const offset = new AMap.Pixel(-18, -18);
+
+    if (homeMarkerRef.current) {
+      homeMarkerRef.current.setContent(buildHomeMarkerContent());
+      homeMarkerRef.current.setPosition([lng, lat]);
+      homeMarkerRef.current.setOffset(offset);
+      homeMarkerRef.current.setTitle?.(HOME_MARKER.name);
+      return;
+    }
+
+    homeMarkerRef.current = new AMap.Marker({
+      position: [lng, lat],
+      content: buildHomeMarkerContent(),
+      offset,
+      zIndex: 260,
+      title: HOME_MARKER.name
+    });
+    homeMarkerRef.current.setMap(mapRef.current);
+  }, [mapReady]);
+
+  useEffect(() => {
+    if (!mapReady || !mapRef.current || !window.AMap) {
+      return;
+    }
+
+    const AMap = window.AMap;
     const markerMap = markersRef.current;
     const poiIds = new Set(pois.map((poi) => poi.id));
     const poiById = new Map(
@@ -209,14 +210,21 @@ export const POIMap: React.FC<POIMapProps> = ({ pois, selectedPOI, visitedIds, o
     pois.forEach((poi) => {
       const isVisited = visitedIds.has(poi.id);
       const isSelected = selectedPOI?.id === poi.id;
-      const content = buildMarkerContent(poi.poiType, poi.category, isSelected, isVisited);
-      const size = isSelected ? 28 : 24;
-      const offset = new AMap.Pixel(-size / 2, -size / 2);
+      const isSchoolPOI = Boolean(poi.schoolFeatures || poi.facultyStrength || poi.overallEvaluation);
+      const content = buildMarkerContent(poi, isSelected, isVisited);
+      const offset = new AMap.Pixel(0, 0);
       const adjusted = adjustedCoords[poi.id];
       const [lng, lat] = adjusted
         ? adjusted
         : toAMapLngLat(poi.latitude, poi.longitude, poi.coordinateSystem ?? COORDINATE_SYSTEM);
       const zIndex = isSelected ? 200 : 150;
+      const label = isSchoolPOI
+        ? {
+            content: buildSchoolLabelContent(poi, isSelected),
+            direction: 'right',
+            offset: new AMap.Pixel(10, 0)
+          }
+        : null;
 
       const existing = markerMap.get(poi.id);
       if (existing) {
@@ -224,6 +232,7 @@ export const POIMap: React.FC<POIMapProps> = ({ pois, selectedPOI, visitedIds, o
         existing.setPosition([lng, lat]);
         existing.setOffset(offset);
         existing.setzIndex(zIndex);
+        existing.setLabel?.(label);
         if (existing.setExtData) {
           existing.setExtData({ id: poi.id });
         }
@@ -243,6 +252,7 @@ export const POIMap: React.FC<POIMapProps> = ({ pois, selectedPOI, visitedIds, o
           zIndex,
           extData: { id: poi.id }
         });
+        marker.setLabel?.(label);
         marker.on('click', (event: any) => {
           const id = event?.target?.getExtData?.()?.id ?? poi.id;
           const target = poiById.get(id) ?? poi;

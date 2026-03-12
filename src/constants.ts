@@ -1,7 +1,14 @@
 import { POI } from './types';
 import { poiImageMap } from './poiImages';
 
-export const ZHUHAI_CENTER: [number, number] = [23.1291, 113.2644]; // Guangzhou city center
+export const DEFAULT_MAP_CENTER: [number, number] = [40.040153, 116.369081];
+export const DEFAULT_MAP_CENTER_COORDINATE_SYSTEM: 'wgs84' | 'gcj02' = 'gcj02';
+export const HOME_MARKER = {
+  name: '家',
+  latitude: 40.040153,
+  longitude: 116.369081,
+  coordinateSystem: 'gcj02' as const
+};
 export const COORDINATE_SYSTEM: 'wgs84' | 'gcj02' = 'wgs84';
 
 const getPoiImages = (name: string) => poiImageMap[name] ?? [];
@@ -1488,11 +1495,223 @@ const historyCulture = [
   }
 ];
 
+const beijingKindergartens = [
+  {
+    shortName: '明天九幼',
+    image: 'https://p5.itc.cn/q_70/images03/20230629/115945cbf7bf48a0802b59354d962873.png',
+    name: '明天九幼永泰园',
+    category: '教育部公办',
+    city: '北京',
+    latitude: 40.033377,
+    longitude: 116.35854,
+    coordinateSystem: 'gcj02' as const,
+    phone: '62903154',
+    contactPerson: '张老师',
+    noteLinks: [
+      'https://www.shangnaxue.com/ask/1173472.html',
+      'https://zyk.bjhd.gov.cn/xxfw/zwfw/47f4e4af53ab4996a2f15859d7caec63.htm',
+      'https://www.bjmt.com.cn/index.php?c=show&id=28'
+    ],
+    schoolFeatures: [
+      '隶属海淀区教委的北京明天幼稚集团，可借力集团化办园与教研资源。',
+      '公开资料显示园内设 7 个教学班，位于永泰东里社区，兼具社区配套与教育部门办园属性。',
+      '办园理念强调“每个孩子都是美的种子”，并出现在海淀普惠托育试点名单中。'
+    ],
+    facultyStrength: [
+      '公开招生资料显示教师 100% 为本科及以上学历。',
+      '公开资料显示现有区级学科带头人 2 名、骨干教师 1 名。',
+      '依托明天幼稚集团的托幼一体化探索，整体师资专业化公开度较高。'
+    ],
+    overallEvaluation:
+      '这所园的公开硬信息最完整，师资学历和骨干教师数据都能查到，适合把“公办属性 + 教师配置”作为优先考察点。'
+  },
+  {
+    shortName: '北师龙樾',
+    image: 'https://child.bnu.edu.cn/images/2022-09/fadd69e4bf394789891ebeb3741240cd.jpeg',
+    name: '北京师范大学实验幼儿园(龙樾分园)',
+    category: '单位公办',
+    city: '北京',
+    latitude: 40.044295,
+    longitude: 116.350929,
+    coordinateSystem: 'gcj02' as const,
+    phone: '82833199',
+    contactPerson: '郭老师',
+    noteLinks: [
+      'https://child.bnu.edu.cn/dyjz/xxxqyy/4317903f04d3480fb4f8b3049a3f63b6.htm',
+      'https://child.bnu.edu.cn/szdw/jshfz/999e7bdd7d1448928ec8607db2d79f8c.htm',
+      'https://child.bnu.edu.cn/cydt/yeyxw/24aaf25d1dbf42fdb5eaf8ebf3043ed2.htm'
+    ],
+    schoolFeatures: [
+      '龙樾分园为小区配套全日制公立幼儿园，公开信息显示规划 12 个班，总建筑面积约 4812 平方米。',
+      '园所延续北师大实验幼儿园“以儿童为本”和“和合”文化，强调生活活动教育化、教育活动生活化。',
+      '公开办园质量督导与园所新闻显示，其在自主游戏、幼小衔接和课程展示方面较活跃。'
+    ],
+    facultyStrength: [
+      '北师大实验幼儿园公开介绍显示已形成多园区集团化办园，可共享专家、培训和教研体系。',
+      '官方教师发展资料显示园所建立分层分类培训、园本研修和在职进修奖学金机制。',
+      '2025 学年公开数据中，园内有 276 人次教师获评各类优秀教师，18 个班组获优秀班集体。'
+    ],
+    overallEvaluation:
+      '如果看品牌、课程体系和教研能力，这所园在这批点位里竞争力最强；同时它也是关注度和预期值都更高的一类园。'
+  },
+  {
+    shortName: '海融惠爱',
+    image: 'https://p9.itc.cn/q_70/images03/20230629/e42d2298b101408695e2c21189d8df61.png',
+    name: '海融惠爱幼儿园',
+    category: '单位公办',
+    city: '北京',
+    latitude: 40.048063,
+    longitude: 116.367928,
+    coordinateSystem: 'gcj02' as const,
+    phone: '15600588335',
+    contactPerson: '程老师',
+    noteLinks: [
+      'https://www.bjhd.gov.cn/zjhd/hdyw/202302/t20230206_4603080.shtml',
+      'https://www.sohu.com/a/729597257_121123709',
+      'https://www.sohu.com/a/748812557_121123709'
+    ],
+    schoolFeatures: [
+      '由国有企业承办的公办幼儿园，公开信息显示西三旗园规划 9 个班、约 315 个学位。',
+      '园所宣传强调“惠及民生，爱育幼儿”，西三旗园突出艺术特色，永丰分园突出阅读与养成教育。',
+      '近两年连续出现在海淀新增普惠学位、普惠托育试点和财政补助名单中。'
+    ],
+    facultyStrength: [
+      '公开招聘口径强调“高规格管理团队、高标准师资团队”，说明其组织目标偏规范化办园。',
+      '幼儿教师招聘要求通常为大专及以上、持教师资格证，并强调教科研能力与业务理论水平。',
+      '公开渠道暂未见更细的教师学历占比或骨干教师数量披露，师资透明度一般。'
+    ],
+    overallEvaluation:
+      '优势是新园、公办、普惠、艺术导向明确，基本面稳定；但网上能查到的硬性师资数据不如明天九幼和北师大实验幼儿园充分。'
+  },
+  {
+    shortName: '六一西三旗',
+    image: 'https://p2.itc.cn/q_70/images03/20230629/21b4e9c99b4d43d692e5b3e209b962ce.png',
+    name: '北京市六一幼儿院西三旗院区',
+    category: '教育部公办',
+    city: '北京',
+    latitude: 40.063909,
+    longitude: 116.35847,
+    coordinateSystem: 'gcj02' as const,
+    phone: '62883025',
+    contactPerson: '王老师',
+    noteLinks: [
+      'https://www.bjnews.com.cn/detail/155151915714964.html',
+      'https://www.thepaper.cn/newsDetail_forward_2073832',
+      'https://www.thepaper.cn/newsDetail_forward_20488925'
+    ],
+    schoolFeatures: [
+      '西三旗院区 2014 年开园，承接北京市六一幼儿院“家园之爱”与保教合一传统。',
+      '六一幼儿院本部具有较强历史积淀，是北京市首批示范幼儿园之一，并持续推进自主游戏与托幼一体化。',
+      '公开报道显示西三旗院区参与区级课题成果交流，也承接了本部教育理念在北部片区的延伸。'
+    ],
+    facultyStrength: [
+      '北京市六一幼儿院公开定位包含海淀区学前教育干部教师培训基地和北京市幼儿园教研基地。',
+      '公开报道显示其长期承担示范、培训和辐射任务，说明教师培养与教研体系成熟。',
+      '西三旗院区自身量化师资数据公开不多，但背靠主院的专业支持比较明显。'
+    ],
+    overallEvaluation:
+      '如果更看重成熟公办体系、文化底蕴和教研传统，这所园很有吸引力；不足是西三旗院区单园的量化公开数据相对有限。'
+  },
+  {
+    shortName: '9511',
+    image: 'https://p5.itc.cn/q_70/images03/20230629/115945cbf7bf48a0802b59354d962873.png',
+    name: '9511联合社区幼儿园',
+    category: '单位公办',
+    city: '北京',
+    latitude: 40.059475,
+    longitude: 116.333813,
+    coordinateSystem: 'gcj02' as const,
+    phone: '82929332',
+    contactPerson: '夏老师',
+    noteLinks: [
+      'https://www.bjhd.gov.cn/zjhd/hdyw/202407/t20240718_4673875.shtml',
+      'https://zyk.bjhd.gov.cn/xxfw/zwfw/df4dbb85657b4f2bbad1f20b171f18f8.htm',
+      'https://www.sohu.com/a/826202417_121124216'
+    ],
+    schoolFeatures: [
+      '海淀区公开名录显示其为单位办园，地址位于建材城西路 85 号院。',
+      '2025 年财政补助明细显示该园按 10 个班核拨，且连续出现在托班招生与普惠托育试点名单中。',
+      '整体更像稳定的社区型公办托幼资源点。'
+    ],
+    facultyStrength: [
+      '海淀公开信息能确认其持续招生、托班服务和财政支持，说明基本办园运行稳定。',
+      '公开渠道暂未见教师学历占比、骨干教师数量或系统教研成果披露。',
+      '如果重点看师资，需要后续线下核实园长团队、师生比和教师流动率。'
+    ],
+    overallEvaluation:
+      '这所园的线上透明度最低，但“单位公办 + 10 班规模 + 普惠托育/财政支持”说明基本盘稳定，更适合实地核实而不是只看网上资料。'
+  },
+  {
+    shortName: '北科幼教',
+    image: 'https://p9.itc.cn/q_70/images03/20230629/e42d2298b101408695e2c21189d8df61.png',
+    name: '北京科技大学幼儿教育中心',
+    category: '单位公办',
+    city: '北京',
+    latitude: 40.033399,
+    longitude: 116.366899,
+    coordinateSystem: 'gcj02' as const,
+    phone: '62991349',
+    contactPerson: '乔老师',
+    noteLinks: [
+      'https://ec.ustb.edu.cn/',
+      'https://ec.ustb.edu.cn/zs/index.htm'
+    ],
+    schoolFeatures: [
+      '隶属北京科技大学幼儿教育中心，属于高校系统单位办园资源。',
+      '官网设有独立招生专栏，信息发布和招生通知更新相对规范。',
+      '位置靠近永泰片区，适合与周边社区型公办园一起做通勤对比。'
+    ],
+    facultyStrength: [
+      '当前公开页面可确认其有独立官网和招生信息发布体系。',
+      '暂未检索到更细的教师学历比例或骨干教师数量公开数据。',
+      '如果重点看师资，建议电话进一步确认教师稳定性和班级配置。'
+    ],
+    overallEvaluation:
+      '这是典型的高校系统单位公办园，线上基础信息存在但不算细，比较适合先电话筛选再决定是否重点跟进。'
+  },
+  {
+    shortName: '龙岗路',
+    image: 'https://p2.itc.cn/q_70/images03/20230629/21b4e9c99b4d43d692e5b3e209b962ce.png',
+    name: '北京市海淀区龙岗路幼儿园',
+    category: '单位公办',
+    city: '北京',
+    latitude: 40.031638,
+    longitude: 116.36289,
+    coordinateSystem: 'gcj02' as const,
+    phone: '62923010',
+    contactPerson: '霍老师',
+    noteLinks: [
+      'https://www.shangnaxue.com/school/9518615.html'
+    ],
+    schoolFeatures: [
+      '位于龙岗路附近的单位公办幼儿园，地理位置与永泰片区通勤关联度较高。',
+      '公开招生类信息相对有限，更偏社区配套型园所。',
+      '适合纳入周边公办园横向比较，重点看位置、接送便利度和班级规模。'
+    ],
+    facultyStrength: [
+      '当前公开渠道能确认基础园所信息，但缺少教师学历结构和骨干教师数量披露。',
+      '线上透明度一般，需要后续通过电话或实地补齐师资判断。',
+      '如果关注师资稳定性，建议重点问园长团队、师生比和近年教师流动情况。'
+    ],
+    overallEvaluation:
+      '这所园目前更像“需要补调研”的候选点，优势在位置和公办属性，最终判断要更依赖电话沟通和线下核实。'
+  }
+];
+
 const makeId = (prefix: string, name: string) =>
   `${prefix}-${name.replace(/[()（）\s]/g, '')}`;
 
 const makeBase = (
-  item: { name: string; category: string; latitude: number; longitude: number; city?: string },
+  item: {
+    name: string;
+    shortName?: string;
+    category: string;
+    latitude: number;
+    longitude: number;
+    city?: string;
+    image?: string;
+    images?: string[];
+  },
   id: string,
   poiType: 'attraction' | 'restaurant',
   brief: string,
@@ -1500,10 +1719,12 @@ const makeBase = (
   noteLinks: string[] = [],
   coordinateSystem?: 'wgs84' | 'gcj02'
 ): POI => {
-  const images = getPoiImages(item.name);
+  const localImages = getPoiImages(item.name);
+  const images = localImages.length > 0 ? localImages : item.images ?? (item.image ? [item.image] : []);
   return ({
   id,
   name: item.name,
+  shortName: item.shortName,
   category: item.category,
   poiType,
   address: `${item.city ?? DEFAULT_CITY} · ${item.category}`,
@@ -1513,12 +1734,29 @@ const makeBase = (
   commend,
   noteLinks,
   coordinateSystem,
-  image: images[0] ?? `https://picsum.photos/seed/poi-${encodeURIComponent(id)}/800/400`,
+  image: item.image ?? images[0] ?? `https://picsum.photos/seed/poi-${encodeURIComponent(id)}/800/400`,
   images
   });
 };
 
 export const ZHUHAI_POIS: POI[] = [
+  ...beijingKindergartens.map((item) => ({
+    ...makeBase(
+      item,
+      makeId('K', item.name),
+      'attraction',
+      item.schoolFeatures[0],
+      item.overallEvaluation,
+      item.noteLinks,
+      item.coordinateSystem
+    ),
+    backgroundInfo: undefined,
+    schoolFeatures: item.schoolFeatures,
+    facultyStrength: item.facultyStrength,
+    overallEvaluation: item.overallEvaluation,
+    phone: item.phone,
+    contactPerson: item.contactPerson
+  })),
   ...parentChildAttractions.map((item, index) => ({
     ...makeBase(
       item,

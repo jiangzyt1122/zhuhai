@@ -12,6 +12,7 @@ interface DetailViewProps {
 
 export const DetailView: React.FC<DetailViewProps> = ({ poi, onClose }) => {
   const theme = getPoiTheme(poi.poiType, poi.category);
+  const isSchoolPOI = Boolean(poi.schoolFeatures || poi.facultyStrength || poi.overallEvaluation);
 
   const renderList = (title: string, items?: string[]) => {
     if (!items || items.length === 0) return null;
@@ -37,34 +38,10 @@ export const DetailView: React.FC<DetailViewProps> = ({ poi, onClose }) => {
     );
   };
 
-  const renderLinks = (title: string, links?: string[]) => {
-    if (!links || links.length === 0) return null;
-    return (
-      <div className="mb-5">
-        <h3 className="text-sm font-bold text-gray-900 mb-2">{title}</h3>
-        <ul className="space-y-1 text-sm text-blue-600 underline break-all">
-          {links.map((link, index) => {
-            let label = link;
-            try {
-              const url = new URL(link);
-              label = `${url.host}${url.pathname}`;
-            } catch (error) {
-              // Keep raw link text if URL parsing fails.
-            }
-            return (
-              <li key={`${title}-link-${index}`}>
-                <a href={link} target="_blank" rel="noopener noreferrer">
-                  {label}
-                </a>
-              </li>
-            );
-          })}
-        </ul>
-      </div>
-    );
-  };
-
   const primaryStat = (() => {
+    if (isSchoolPOI) {
+      return { label: '办学性质', value: poi.category };
+    }
     if (poi.playTimeHours) {
       return { label: '游玩时长', value: `约 ${poi.playTimeHours} 小时` };
     }
@@ -178,7 +155,7 @@ export const DetailView: React.FC<DetailViewProps> = ({ poi, onClose }) => {
                     {primaryStat.label}
                 </div>
                 <div className="text-2xl font-black text-gray-800">{primaryStat.value}</div>
-                <div className="text-xs text-gray-500">亲子行程参考</div>
+                <div className="text-xs text-gray-500">{isSchoolPOI ? '学校公开信息' : '亲子行程参考'}</div>
             </div>
              <div className="bg-green-50 p-4 rounded-2xl border border-green-100">
                 <div className="flex items-center gap-2 text-green-800 font-bold mb-1">
@@ -191,21 +168,28 @@ export const DetailView: React.FC<DetailViewProps> = ({ poi, onClose }) => {
             </div>
         </div>
 
-        {/* Why for Kids Section */}
         <div className="mb-8">
             <h2 className="text-xl font-bold text-gray-900 mb-3 flex items-center">
-                亲子要点
+                {isSchoolPOI ? '综合评价' : '亲子要点'}
             </h2>
             <p className="text-gray-700 leading-relaxed bg-gray-50 p-4 rounded-xl border border-gray-100">
-                {poi.commend || poi.brief}
+                {poi.overallEvaluation || poi.commend || poi.brief}
             </p>
         </div>
-
-        {renderLinks('参考链接', poi.noteLinks)}
 
         <div className="mb-8">
           {renderParagraph('背景介绍', poi.backgroundIntro)}
           {renderParagraph('背景信息', poi.backgroundInfo)}
+          {(poi.contactPerson || poi.phone) && (
+            <div className="mb-5">
+              <h3 className="text-sm font-bold text-gray-900 mb-2">联系人</h3>
+              <p className="text-sm text-gray-700 leading-relaxed">
+                {poi.contactPerson ?? '—'} {poi.phone ? `· ${poi.phone}` : ''}
+              </p>
+            </div>
+          )}
+          {renderList('办学特点', poi.schoolFeatures)}
+          {renderList('师资力量', poi.facultyStrength)}
           {(poi.openTime || poi.closeTime) && (
             <div className="mb-5">
               <h3 className="text-sm font-bold text-gray-900 mb-2">开放时间</h3>
@@ -221,8 +205,8 @@ export const DetailView: React.FC<DetailViewProps> = ({ poi, onClose }) => {
           {renderList('推荐菜', poi.recommendedDishes)}
           {renderList('适合亲子', poi.whyGoodForFamily)}
           {renderList('推荐活动', poi.recommendedActivities)}
-          {renderList('参观方式', poi.recommendedVisitWay)}
-          {renderList('家长提示', poi.notesForParents)}
+          {!isSchoolPOI && renderList('参观方式', poi.recommendedVisitWay)}
+          {!isSchoolPOI && renderList('家长提示', poi.notesForParents)}
         </div>
 
         {/* AI Travel Tips removed per request */}
