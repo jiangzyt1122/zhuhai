@@ -12,18 +12,21 @@ import { loadAMap } from '../utils/amap';
 
 const buildMarkerContent = (poi: POI, isSelected: boolean, isVisited: boolean) => {
   const theme = getPoiTheme(poi.poiType, poi.category);
+  const isSchoolPOI = Boolean(poi.schoolFeatures || poi.facultyStrength || poi.overallEvaluation);
   const size = isSelected ? 28 : 24;
   const checkSize = Math.round(size * 0.7);
   const background = isVisited ? '#16a34a' : theme.marker;
   const text = isVisited ? '✓' : '';
+  const labelText = poi.shortName ?? poi.name;
+
+  if (isSchoolPOI) {
+    return `<div style="position:relative;width:0;height:0;overflow:visible;">
+      <div style="position:absolute;left:0;top:0;width:${size}px;height:${size}px;border-radius:999px;background:${background};border:2px solid #fff;box-shadow:0 6px 14px rgba(15,23,42,0.2);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:${checkSize}px;line-height:1;transform:translate(-50%,-50%);">${text}</div>
+      <div style="position:absolute;left:0;top:${Math.round(size / 2) + 4}px;transform:translateX(-50%);color:${background};font-weight:700;font-size:${isSelected ? 12 : 11}px;line-height:1;white-space:nowrap;text-shadow:0 1px 2px rgba(255,255,255,0.96);">${labelText}</div>
+    </div>`;
+  }
 
   return `<div style="width:${size}px;height:${size}px;border-radius:999px;background:${background};border:2px solid #fff;box-shadow:0 6px 14px rgba(15,23,42,0.2);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:${checkSize}px;line-height:1;transform:translate(-50%,-50%);">${text}</div>`;
-};
-
-const buildSchoolLabelContent = (poi: POI, isSelected: boolean) => {
-  const theme = getPoiTheme(poi.poiType, poi.category);
-  const labelText = poi.shortName ?? poi.name;
-  return `<div style="color:${theme.marker};font-weight:700;font-size:${isSelected ? 12 : 11}px;line-height:1;white-space:nowrap;text-shadow:0 1px 2px rgba(255,255,255,0.96);">${labelText}</div>`;
 };
 
 const buildHomeMarkerContent = () =>
@@ -212,7 +215,6 @@ export const POIMap: React.FC<POIMapProps> = ({ pois, selectedPOI, visitedIds, o
     pois.forEach((poi) => {
       const isVisited = visitedIds.has(poi.id);
       const isSelected = selectedPOI?.id === poi.id;
-      const isSchoolPOI = Boolean(poi.schoolFeatures || poi.facultyStrength || poi.overallEvaluation);
       const content = buildMarkerContent(poi, isSelected, isVisited);
       const offset = new AMap.Pixel(0, 0);
       const adjusted = adjustedCoords[poi.id];
@@ -220,13 +222,6 @@ export const POIMap: React.FC<POIMapProps> = ({ pois, selectedPOI, visitedIds, o
         ? adjusted
         : toAMapLngLat(poi.latitude, poi.longitude, poi.coordinateSystem ?? COORDINATE_SYSTEM);
       const zIndex = isSelected ? 200 : 150;
-      const label = isSchoolPOI
-        ? {
-            content: buildSchoolLabelContent(poi, isSelected),
-            direction: 'right',
-            offset: new AMap.Pixel(10, 0)
-          }
-        : null;
 
       const existing = markerMap.get(poi.id);
       if (existing) {
@@ -234,7 +229,6 @@ export const POIMap: React.FC<POIMapProps> = ({ pois, selectedPOI, visitedIds, o
         existing.setPosition([lng, lat]);
         existing.setOffset(offset);
         existing.setzIndex(zIndex);
-        existing.setLabel?.(label);
         if (existing.setExtData) {
           existing.setExtData({ id: poi.id });
         }
@@ -254,7 +248,6 @@ export const POIMap: React.FC<POIMapProps> = ({ pois, selectedPOI, visitedIds, o
           zIndex,
           extData: { id: poi.id }
         });
-        marker.setLabel?.(label);
         marker.on('click', (event: any) => {
           const id = event?.target?.getExtData?.()?.id ?? poi.id;
           const target = poiById.get(id) ?? poi;
