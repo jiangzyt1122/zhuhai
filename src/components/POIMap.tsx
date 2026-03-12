@@ -42,6 +42,7 @@ export const POIMap: React.FC<POIMapProps> = ({ pois, selectedPOI, visitedIds, o
   const homeMarkerRef = useRef<any>(null);
   const markersRef = useRef<Map<string, any>>(new Map());
   const geocodeInFlightRef = useRef<Set<string>>(new Set());
+  const hasAppliedInitialSchoolViewRef = useRef(false);
   const [mapReady, setMapReady] = useState(false);
   const [adjustedCoords, setAdjustedCoords] = useState<Record<string, [number, number]>>({});
 
@@ -88,6 +89,7 @@ export const POIMap: React.FC<POIMapProps> = ({ pois, selectedPOI, visitedIds, o
         mapRef.current.destroy();
         mapRef.current = null;
       }
+      hasAppliedInitialSchoolViewRef.current = false;
     };
   }, []);
 
@@ -270,6 +272,31 @@ export const POIMap: React.FC<POIMapProps> = ({ pois, selectedPOI, visitedIds, o
       }
     });
   }, [mapReady, pois, selectedPOI, visitedIds, onSelectPOI, adjustedCoords]);
+
+  useEffect(() => {
+    if (!mapReady || !mapRef.current || !window.AMap || hasAppliedInitialSchoolViewRef.current) {
+      return;
+    }
+
+    const schoolPois = pois.filter((poi) =>
+      Boolean(poi.schoolFeatures || poi.facultyStrength || poi.overallEvaluation)
+    );
+
+    if (schoolPois.length === 0) {
+      return;
+    }
+
+    const schoolMarkers = schoolPois
+      .map((poi) => markersRef.current.get(poi.id))
+      .filter((marker): marker is any => Boolean(marker));
+
+    if (schoolMarkers.length === 0) {
+      return;
+    }
+
+    mapRef.current.setFitView(schoolMarkers, false, [80, 120, 80, 120]);
+    hasAppliedInitialSchoolViewRef.current = true;
+  }, [mapReady, pois, adjustedCoords]);
 
   useEffect(() => {
     if (!mapRef.current || !selectedPOI) {
