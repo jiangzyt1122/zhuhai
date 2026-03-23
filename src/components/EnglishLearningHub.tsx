@@ -1029,9 +1029,9 @@ export const EnglishLearningHub: React.FC<EnglishLearningHubProps> = ({ onBack }
 
           <div
             data-lookup-modal="true"
-            className="relative z-10 w-full max-w-2xl rounded-[2rem] bg-[#111827] p-5 text-slate-50 shadow-[0_24px_80px_rgba(15,23,42,0.35)] sm:p-6"
+            className="relative z-10 flex h-[min(78dvh,42rem)] w-[min(92vw,48rem)] flex-col overflow-hidden rounded-[2rem] bg-[#111827] p-5 text-slate-50 shadow-[0_24px_80px_rgba(15,23,42,0.35)] sm:p-6"
           >
-            <div className="flex items-center justify-between gap-4">
+            <div className="flex shrink-0 items-center justify-between gap-4">
               <p className="text-sm font-semibold text-amber-200/90">
                 Lookup Panel
               </p>
@@ -1044,100 +1044,98 @@ export const EnglishLearningHub: React.FC<EnglishLearningHubProps> = ({ onBack }
               </button>
             </div>
 
-            {selection ? (
-              <div className="mt-4 rounded-[1.5rem] bg-white/5 p-4 ring-1 ring-white/10">
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
-                  当前选择
-                </p>
-                <p className="mt-3 break-words text-2xl font-black leading-tight text-white">
-                  {selection.query}
-                </p>
-              </div>
-            ) : null}
-
-            {lookupState.status === 'loading' && (
-              <div className="mt-5 flex items-center gap-3 rounded-[1.5rem] bg-white/5 p-4 text-sm text-slate-200 ring-1 ring-white/10">
-                <LoaderCircle size={18} className="animate-spin" />
-                正在查询 “{lookupState.query}”
-              </div>
-            )}
-
-            {lookupState.status === 'error' && (
-              <div className="mt-5 rounded-[1.5rem] bg-rose-500/10 p-4 text-sm leading-7 text-rose-100 ring-1 ring-rose-400/20">
-                <p className="font-semibold text-rose-200">查询失败</p>
-                <p className="mt-2">{lookupState.message}</p>
-                {lookupState.message.includes('纯静态部署') ? (
-                  <p className="mt-3 text-rose-100/80">
-                    现在这类线上静态部署只能直接使用站内词库。若要查整句或未收录内容，需要额外配置可公网访问的词典代理，
-                    然后在前端设置 `VITE_YOUDAO_PROXY_URL`。
-                  </p>
-                ) : lookupState.message.includes('VITE_YOUDAO_APP_KEY') ? (
-                  <p className="mt-3 text-rose-100/80">
-                    当前已切到前端直连 JSONP 模式。要在线上使用整句翻译，需要在构建环境里设置
-                    `VITE_YOUDAO_APP_KEY` 和 `VITE_YOUDAO_APP_SECRET`。
-                  </p>
-                ) : (
-                  <p className="mt-3 text-rose-100/80">
-                    本地代理模式请在运行 `npm run dev` 或 `npm run preview` 的环境里设置
-                    `YOUDAO_APP_KEY` 和 `YOUDAO_APP_SECRET`；如果是静态部署并接受暴露密钥，则改为设置
-                    `VITE_YOUDAO_APP_KEY` 和 `VITE_YOUDAO_APP_SECRET`。
-                  </p>
-                )}
-              </div>
-            )}
-
-            {currentLookup && (
-              <div className="mt-5 space-y-4">
-                <div className="rounded-[1.5rem] bg-white/5 p-4 ring-1 ring-white/10">
-                  <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">
-                    中文释义
-                  </p>
-                  <div className="mt-3 space-y-2 text-sm leading-7 text-slate-100">
-                    {currentLookup.explains.map((explain) => (
-                      <p key={explain} className="rounded-2xl bg-white/5 px-3 py-2">
-                        {explain}
-                      </p>
-                    ))}
+            <div className="mt-4 flex min-h-0 flex-1 flex-col gap-4 overflow-hidden">
+              {selection ? (
+                <div className="shrink-0 rounded-[1.5rem] bg-white/5 p-4 ring-1 ring-white/10">
+                  <div className="max-h-[min(22dvh,10rem)] overflow-y-auto pr-1">
+                    <p className="break-words text-2xl font-black leading-tight text-white">
+                      {selection.query}
+                    </p>
                   </div>
                 </div>
-                <div className="flex flex-col gap-3 sm:flex-row">
-                  <button
-                    type="button"
-                    disabled={audioLoadingId === currentLookup.normalizedQuery}
-                    onClick={() => {
-                      void handlePlayCurrentLookup();
-                    }}
-                    className="inline-flex flex-1 items-center justify-center gap-2 rounded-full border border-white/15 px-4 py-3 text-sm font-semibold text-white transition hover:bg-white/10 disabled:cursor-wait disabled:border-white/5 disabled:text-slate-500"
-                  >
-                    {audioLoadingId === currentLookup.normalizedQuery ? (
-                      <LoaderCircle size={16} className="animate-spin" />
-                    ) : (
-                      <Volume2 size={16} />
-                    )}
-                    发音
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleToggleWordbook}
-                    disabled={isWordbookActionDisabled}
-                    className={`inline-flex flex-1 items-center justify-center gap-2 rounded-full px-4 py-3 text-sm font-semibold transition ${
-                      isWordbookActionDisabled
-                        ? 'cursor-not-allowed bg-slate-700/80 text-slate-400 ring-1 ring-white/10'
-                        : isCurrentLookupSaved
-                        ? 'bg-rose-500/15 text-rose-100 ring-1 ring-rose-400/25 hover:bg-rose-500/20'
-                        : 'bg-amber-300 text-slate-900 hover:bg-amber-200'
-                    }`}
-                  >
-                    <Bookmark size={16} />
-                    {isCurrentLookupSaved ? '取消加入单词本' : '加入单词本'}
-                  </button>
+              ) : null}
+
+              {lookupState.status === 'loading' && (
+                <div className="flex shrink-0 items-center gap-3 rounded-[1.5rem] bg-white/5 p-4 text-sm text-slate-200 ring-1 ring-white/10">
+                  <LoaderCircle size={18} className="animate-spin" />
+                  正在查询 “{lookupState.query}”
                 </div>
-                {isWordbookActionDisabled ? (
-                  <p className="text-sm text-amber-200/90">超过 5 个词的选择不能加入单词本。</p>
-                ) : null}
-                {audioErrorMessage ? <p className="text-sm text-rose-200">{audioErrorMessage}</p> : null}
-              </div>
-            )}
+              )}
+
+              {lookupState.status === 'error' && (
+                <div className="min-h-0 overflow-y-auto rounded-[1.5rem] bg-rose-500/10 p-4 text-sm leading-7 text-rose-100 ring-1 ring-rose-400/20">
+                  <p className="font-semibold text-rose-200">查询失败</p>
+                  <p className="mt-2">{lookupState.message}</p>
+                  {lookupState.message.includes('纯静态部署') ? (
+                    <p className="mt-3 text-rose-100/80">
+                      现在这类线上静态部署只能直接使用站内词库。若要查整句或未收录内容，需要额外配置可公网访问的词典代理，
+                      然后在前端设置 `VITE_YOUDAO_PROXY_URL`。
+                    </p>
+                  ) : lookupState.message.includes('VITE_YOUDAO_APP_KEY') ? (
+                    <p className="mt-3 text-rose-100/80">
+                      当前已切到前端直连 JSONP 模式。要在线上使用整句翻译，需要在构建环境里设置
+                      `VITE_YOUDAO_APP_KEY` 和 `VITE_YOUDAO_APP_SECRET`。
+                    </p>
+                  ) : (
+                    <p className="mt-3 text-rose-100/80">
+                      本地代理模式请在运行 `npm run dev` 或 `npm run preview` 的环境里设置
+                      `YOUDAO_APP_KEY` 和 `YOUDAO_APP_SECRET`；如果是静态部署并接受暴露密钥，则改为设置
+                      `VITE_YOUDAO_APP_KEY` 和 `VITE_YOUDAO_APP_SECRET`。
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {currentLookup && (
+                <>
+                  <div className="min-h-0 flex flex-1 flex-col rounded-[1.5rem] bg-white/5 p-4 ring-1 ring-white/10">
+                    <div className="min-h-0 flex-1 space-y-2 overflow-y-auto pr-1 text-sm leading-7 text-slate-100">
+                      {currentLookup.explains.map((explain) => (
+                        <p key={explain} className="rounded-2xl bg-white/5 px-3 py-2">
+                          {explain}
+                        </p>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="shrink-0 flex flex-col gap-3 sm:flex-row">
+                    <button
+                      type="button"
+                      disabled={audioLoadingId === currentLookup.normalizedQuery}
+                      onClick={() => {
+                        void handlePlayCurrentLookup();
+                      }}
+                      className="inline-flex flex-1 items-center justify-center gap-2 rounded-full border border-white/15 px-4 py-3 text-sm font-semibold text-white transition hover:bg-white/10 disabled:cursor-wait disabled:border-white/5 disabled:text-slate-500"
+                    >
+                      {audioLoadingId === currentLookup.normalizedQuery ? (
+                        <LoaderCircle size={16} className="animate-spin" />
+                      ) : (
+                        <Volume2 size={16} />
+                      )}
+                      发音
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleToggleWordbook}
+                      disabled={isWordbookActionDisabled}
+                      className={`inline-flex flex-1 items-center justify-center gap-2 rounded-full px-4 py-3 text-sm font-semibold transition ${
+                        isWordbookActionDisabled
+                          ? 'cursor-not-allowed bg-slate-700/80 text-slate-400 ring-1 ring-white/10'
+                          : isCurrentLookupSaved
+                          ? 'bg-rose-500/15 text-rose-100 ring-1 ring-rose-400/25 hover:bg-rose-500/20'
+                          : 'bg-amber-300 text-slate-900 hover:bg-amber-200'
+                      }`}
+                    >
+                      <Bookmark size={16} />
+                      {isCurrentLookupSaved ? '取消加入单词本' : '加入单词本'}
+                    </button>
+                  </div>
+                  {isWordbookActionDisabled ? (
+                    <p className="shrink-0 text-sm text-amber-200/90">超过 5 个词的选择不能加入单词本。</p>
+                  ) : null}
+                  {audioErrorMessage ? <p className="shrink-0 text-sm text-rose-200">{audioErrorMessage}</p> : null}
+                </>
+              )}
+            </div>
           </div>
         </div>
       )}
