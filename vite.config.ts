@@ -110,6 +110,7 @@ export default defineConfig(({ mode }) => {
 
   return {
     root: 'src',
+    envDir: __dirname,
     base: isOffline ? './' : (mode === 'production' ? normalizedBase : '/'),
     build: {
       outDir: isOffline ? '../offline-dist' : '..',
