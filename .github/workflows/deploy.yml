@@ -22,8 +22,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      VITE_YOUDAO_APP_KEY: ${{ secrets.YOUDAO_APP_KEY }}
-      VITE_YOUDAO_APP_SECRET: ${{ secrets.YOUDAO_APP_SECRET }}
+      VITE_YOUDAO_APP_KEY: ${{ secrets.YOUDAO_APP_KEY || secrets.YOUDAO_APP_ID || vars.YOUDAO_APP_KEY || vars.YOUDAO_APP_ID }}
+      VITE_YOUDAO_APP_SECRET: ${{ secrets.YOUDAO_APP_SECRET || vars.YOUDAO_APP_SECRET }}
 
     steps:
       - name: Checkout
@@ -43,11 +43,11 @@ jobs:
       - name: Report Youdao JSONP configuration
         run: |
           if [ -z "$VITE_YOUDAO_APP_KEY" ]; then
-            echo "::warning::Missing GitHub secret: YOUDAO_APP_KEY"
+            echo "::warning::Missing GitHub Actions config: YOUDAO_APP_KEY or YOUDAO_APP_ID"
           fi
 
           if [ -z "$VITE_YOUDAO_APP_SECRET" ]; then
-            echo "::warning::Missing GitHub secret: YOUDAO_APP_SECRET"
+            echo "::warning::Missing GitHub Actions config: YOUDAO_APP_SECRET"
           fi
 
           if [ -z "$VITE_YOUDAO_APP_KEY" ] || [ -z "$VITE_YOUDAO_APP_SECRET" ]; then
