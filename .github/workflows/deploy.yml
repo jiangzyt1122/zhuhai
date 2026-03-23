@@ -40,16 +40,18 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Validate Youdao JSONP secrets
+      - name: Report Youdao JSONP configuration
         run: |
           if [ -z "$VITE_YOUDAO_APP_KEY" ]; then
-            echo "Missing GitHub secret: YOUDAO_APP_KEY"
-            exit 1
+            echo "::warning::Missing GitHub secret: YOUDAO_APP_KEY"
           fi
 
           if [ -z "$VITE_YOUDAO_APP_SECRET" ]; then
-            echo "Missing GitHub secret: YOUDAO_APP_SECRET"
-            exit 1
+            echo "::warning::Missing GitHub secret: YOUDAO_APP_SECRET"
+          fi
+
+          if [ -z "$VITE_YOUDAO_APP_KEY" ] || [ -z "$VITE_YOUDAO_APP_SECRET" ]; then
+            echo "::warning::Youdao JSONP is disabled for this build. The site will deploy with the local dictionary only."
           fi
 
       - name: Build site
