@@ -2,6 +2,9 @@ type DictionaryPayload = Record<string, unknown>;
 
 const YOUDAO_PROXY_URL = (import.meta.env.VITE_YOUDAO_PROXY_URL || '/api/youdao/dict').trim();
 const IS_DEFAULT_LOCAL_PROXY = YOUDAO_PROXY_URL === '/api/youdao/dict';
+const YOUDAO_JSONP_APP_KEY = `${import.meta.env.VITE_YOUDAO_APP_KEY || ''}`.trim();
+const YOUDAO_JSONP_APP_SECRET = `${import.meta.env.VITE_YOUDAO_APP_SECRET || ''}`.trim();
+const YOUDAO_ENDPOINT = 'https://openapi.youdao.com/api';
 
 export interface DictionaryLookupResult {
   query: string;
@@ -79,7 +82,113 @@ const pickFirstString = (...values: unknown[]) => {
 const normalizeQuery = (query: string) => cleanString(query.toLowerCase());
 
 const buildStaticProxyUnavailableMessage = () =>
-  '当前站点是纯静态部署，没有可用的词典代理服务。内置词库里的单词和部分词组仍可查询；整句或未收录内容需要额外后端代理。';
+  '当前站点是纯静态部署，没有可用的词典代理服务。可以改为在前端配置 VITE_YOUDAO_APP_KEY / VITE_YOUDAO_APP_SECRET 走 JSONP，或提供额外后端代理。';
+
+const buildInput = (query: string) => {
+  if (query.length <= 20) {
+    return query;
+  }
+
+  return `${query.slice(0, 10)}${query.length}${query.slice(-10)}`;
+};
+
+const sha256Hex = async (value: string) => {
+  const encoded = new TextEncoder().encode(value);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', encoded);
+  return Array.from(new Uint8Array(hashBuffer))
+    .map((byte) => byte.toString(16).padStart(2, '0'))
+    .join('');
+};
+
+const requestYoudaoJsonp = async (query: string) => {
+  const appKey = YOUDAO_JSONP_APP_KEY;
+  const appSecret = YOUDAO_JSONP_APP_SECRET;
+
+  if (!appKey || !appSecret) {
+    throw new Error('未配置 VITE_YOUDAO_APP_KEY 或 VITE_YOUDAO_APP_SECRET。');
+  }
+
+  const salt = crypto.randomUUID();
+  const curtime = `${Math.floor(Date.now() / 1000)}`;
+  const sign = await sha256Hex(`${appKey}${buildInput(query)}${salt}${curtime}${appSecret}`);
+  const callbackName = `youdaoJsonpCallback_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+
+  const params = new URLSearchParams({
+    q: query,
+    from: 'auto',
+    to: 'zh-CHS',
+    appKey,
+    salt,
+    sign,
+    signType: 'v3',
+    curtime,
+    ext: 'mp3',
+    voice: '0',
+    callback: callbackName
+  });
+
+  return new Promise<unknown>((resolve, reject) => {
+    const script = document.createElement('script');
+    const timeoutId = window.setTimeout(() => {
+      cleanup();
+      reject(new Error('有道 JSONP 请求超时。'));
+    }, 10000);
+
+    const cleanup = () => {
+      window.clearTimeout(timeoutId);
+      script.remove();
+      delete (window as Window & Record<string, unknown>)[callbackName];
+    };
+
+    (window as Window & Record<string, unknown>)[callbackName] = (payload: unknown) => {
+      cleanup();
+      resolve(payload);
+    };
+
+    script.src = `${YOUDAO_ENDPOINT}?${params.toString()}`;
+    script.async = true;
+    script.onerror = () => {
+      cleanup();
+      reject(new Error('有道 JSONP 请求失败。'));
+    };
+
+    document.head.appendChild(script);
+  });
+};
+
+const lookupYoudaoWithProxy = async (trimmedQuery: string) => {
+  let response: Response;
+  try {
+    response = await fetch(`${YOUDAO_PROXY_URL}?q=${encodeURIComponent(trimmedQuery)}`, {
+      headers: {
+        Accept: 'application/json'
+      }
+    });
+  } catch {
+    throw new Error(
+      IS_DEFAULT_LOCAL_PROXY ? buildStaticProxyUnavailableMessage() : '词典代理服务当前不可用。'
+    );
+  }
+
+  const payload = await response.json().catch(() => null);
+
+  if (!response.ok) {
+    if (response.status === 404 && IS_DEFAULT_LOCAL_PROXY) {
+      throw new Error(buildStaticProxyUnavailableMessage());
+    }
+
+    const message =
+      (isRecord(payload) && pickFirstString(payload.message, payload.errorMessage)) ||
+      (IS_DEFAULT_LOCAL_PROXY ? buildStaticProxyUnavailableMessage() : '词典服务当前不可用。');
+    throw new Error(message);
+  }
+
+  if (isRecord(payload) && typeof payload.errorCode === 'string' && payload.errorCode !== '0') {
+    throw new Error(YOUDAO_ERROR_MESSAGES[payload.errorCode] ?? `有道返回错误码 ${payload.errorCode}`);
+  }
+
+  return payload;
+};
 
 const findCandidatePayloads = (raw: unknown): DictionaryPayload[] => {
   if (!isRecord(raw)) {
@@ -268,35 +377,23 @@ export const lookupYoudaoDictionary = async (query: string): Promise<DictionaryL
     throw new Error('请选择要查询的单词或词组。');
   }
 
-  let response: Response;
   try {
-    response = await fetch(`${YOUDAO_PROXY_URL}?q=${encodeURIComponent(trimmedQuery)}`, {
-      headers: {
-        Accept: 'application/json'
-      }
-    });
-  } catch {
-    throw new Error(
-      IS_DEFAULT_LOCAL_PROXY ? buildStaticProxyUnavailableMessage() : '词典代理服务当前不可用。'
-    );
-  }
+    const payload =
+      YOUDAO_JSONP_APP_KEY && YOUDAO_JSONP_APP_SECRET
+        ? await requestYoudaoJsonp(trimmedQuery)
+        : await lookupYoudaoWithProxy(trimmedQuery);
 
-  const payload = await response.json().catch(() => null);
-
-  if (!response.ok) {
-    if (response.status === 404 && IS_DEFAULT_LOCAL_PROXY) {
-      throw new Error(buildStaticProxyUnavailableMessage());
+    if (isRecord(payload) && typeof payload.errorCode === 'string' && payload.errorCode !== '0') {
+      throw new Error(YOUDAO_ERROR_MESSAGES[payload.errorCode] ?? `有道返回错误码 ${payload.errorCode}`);
     }
 
-    const message =
-      (isRecord(payload) && pickFirstString(payload.message, payload.errorMessage)) ||
-      (IS_DEFAULT_LOCAL_PROXY ? buildStaticProxyUnavailableMessage() : '词典服务当前不可用。');
-    throw new Error(message);
-  }
+    return parseYoudaoResponse(trimmedQuery, payload);
+  } catch (error) {
+    if (YOUDAO_JSONP_APP_KEY && YOUDAO_JSONP_APP_SECRET) {
+      const message = error instanceof Error ? error.message : '有道 JSONP 请求失败。';
+      throw new Error(message);
+    }
 
-  if (isRecord(payload) && typeof payload.errorCode === 'string' && payload.errorCode !== '0') {
-    throw new Error(YOUDAO_ERROR_MESSAGES[payload.errorCode] ?? `有道返回错误码 ${payload.errorCode}`);
+    throw error;
   }
-
-  return parseYoudaoResponse(trimmedQuery, payload);
 };

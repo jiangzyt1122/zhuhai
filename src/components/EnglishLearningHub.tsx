@@ -1029,10 +1029,16 @@ export const EnglishLearningHub: React.FC<EnglishLearningHubProps> = ({ onBack }
                     现在这类线上静态部署只能直接使用站内词库。若要查整句或未收录内容，需要额外配置可公网访问的词典代理，
                     然后在前端设置 `VITE_YOUDAO_PROXY_URL`。
                   </p>
+                ) : lookupState.message.includes('VITE_YOUDAO_APP_KEY') ? (
+                  <p className="mt-3 text-rose-100/80">
+                    当前已切到前端直连 JSONP 模式。要在线上使用整句翻译，需要在构建环境里设置
+                    `VITE_YOUDAO_APP_KEY` 和 `VITE_YOUDAO_APP_SECRET`。
+                  </p>
                 ) : (
                   <p className="mt-3 text-rose-100/80">
-                    本地调试请在运行 `npm run dev` 或 `npm run preview` 的环境里设置
-                    `YOUDAO_APP_KEY` 和 `YOUDAO_APP_SECRET`；线上静态部署则需要额外的词典代理服务。
+                    本地代理模式请在运行 `npm run dev` 或 `npm run preview` 的环境里设置
+                    `YOUDAO_APP_KEY` 和 `YOUDAO_APP_SECRET`；如果是静态部署并接受暴露密钥，则改为设置
+                    `VITE_YOUDAO_APP_KEY` 和 `VITE_YOUDAO_APP_SECRET`。
                   </p>
                 )}
               </div>
