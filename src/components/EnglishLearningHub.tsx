@@ -274,6 +274,9 @@ export const EnglishLearningHub: React.FC<EnglishLearningHubProps> = ({ onBack }
   const isCurrentLookupSaved = currentLookup
     ? wordbook.some((entry) => entry.id === currentLookup.normalizedQuery)
     : false;
+  const selectionWordCount = selection?.normalizedTokens.length ?? 0;
+  const exceedsWordbookLimit = selectionWordCount > 5;
+  const isWordbookActionDisabled = Boolean(currentLookup && !isCurrentLookupSaved && exceedsWordbookLimit);
   const visibleWordbook = useMemo(() => {
     const filtered = wordbook.filter((entry) => {
       if (masteryFilter === 'mastered') {
@@ -415,8 +418,18 @@ export const EnglishLearningHub: React.FC<EnglishLearningHubProps> = ({ onBack }
     setSelection(buildSelection({ start: wordIndex, end: wordIndex }));
   };
 
+  const clearSelection = () => {
+    dragAnchorRef.current = null;
+    dragRangeRef.current = null;
+    didDragRef.current = false;
+    setPreviewRange(null);
+    setSelection(null);
+    setIsLookupModalOpen(false);
+    setAudioErrorMessage('');
+  };
+
   const handleToggleWordbook = () => {
-    if (!currentLookup) {
+    if (!currentLookup || isWordbookActionDisabled) {
       return;
     }
 
@@ -555,10 +568,35 @@ export const EnglishLearningHub: React.FC<EnglishLearningHubProps> = ({ onBack }
     }
   };
 
+  useEffect(() => {
+    if (!selection || activeTab !== 'reading') {
+      return;
+    }
+
+    const handlePointerDown = (event: PointerEvent) => {
+      const target = event.target;
+      if (!(target instanceof Element)) {
+        clearSelection();
+        return;
+      }
+
+      if (target.closest('[data-word-token="true"], [data-lookup-modal="true"]')) {
+        return;
+      }
+
+      clearSelection();
+    };
+
+    document.addEventListener('pointerdown', handlePointerDown, true);
+    return () => {
+      document.removeEventListener('pointerdown', handlePointerDown, true);
+    };
+  }, [activeTab, selection]);
+
   return (
-    <div className="min-h-screen overflow-y-auto bg-[#f4efe6] text-slate-900">
-      <div className="mx-auto flex min-h-screen max-w-7xl flex-col px-4 py-4 sm:px-6 sm:py-6">
-        <div className="border border-black/5 bg-white/70 p-4 shadow-[0_20px_80px_rgba(148,163,184,0.2)] backdrop-blur-sm sm:p-6">
+    <div className="h-dvh overflow-hidden bg-[#f4efe6] text-slate-900">
+      <div className="mx-auto flex h-full max-w-7xl flex-col px-4 py-3 sm:px-6 sm:py-4">
+        <div className="flex min-h-0 flex-1 flex-col border border-black/5 bg-white/70 p-4 shadow-[0_20px_80px_rgba(148,163,184,0.2)] backdrop-blur-sm sm:p-6">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex items-center gap-3">
               <button
@@ -606,15 +644,15 @@ export const EnglishLearningHub: React.FC<EnglishLearningHubProps> = ({ onBack }
           </div>
 
           {activeTab === 'reading' ? (
-            <div className="mt-8">
-              <section className="border border-slate-200/80 bg-white p-5 shadow-sm sm:p-7">
+            <div className="mt-6 min-h-0 flex-1">
+              <section className="flex h-full min-h-0 flex-col border border-slate-200/80 bg-white p-5 shadow-sm sm:p-7">
                 <div>
                   <h1 className="text-3xl font-black leading-tight text-slate-900 sm:text-4xl">
                     {ARTICLE.title}
                   </h1>
                 </div>
 
-                <div className="mt-6 bg-[#fcfaf4] p-5 ring-1 ring-slate-200/80 sm:p-6">
+                <div className="mt-6 min-h-0 flex-1 overflow-y-auto bg-[#fcfaf4] p-5 ring-1 ring-slate-200/80 sm:p-6">
                   <div className="space-y-5 select-none">
                     {ARTICLE_TOKENS.paragraphTokens.map((paragraphTokens, paragraphIndex) => (
                       <p
@@ -636,6 +674,7 @@ export const EnglishLearningHub: React.FC<EnglishLearningHubProps> = ({ onBack }
                             <button
                               key={token.id}
                               type="button"
+                              data-word-token="true"
                               onMouseDown={() => handleWordMouseDown(token.wordIndex!)}
                               onMouseEnter={() => handleWordMouseEnter(token.wordIndex!)}
                               onClick={() => handleWordClick(token.wordIndex!)}
@@ -656,17 +695,17 @@ export const EnglishLearningHub: React.FC<EnglishLearningHubProps> = ({ onBack }
               </section>
             </div>
           ) : (
-            <div className="mt-8">
-              <div className="overflow-hidden border border-slate-200 bg-white shadow-sm">
+            <div className="mt-6 min-h-0 flex-1">
+              <div className="flex h-full min-h-0 flex-col overflow-hidden border border-slate-200 bg-white shadow-sm">
                 {wordbook.length === 0 ? (
-                  <div className="px-6 py-16 text-center">
+                  <div className="flex flex-1 items-center justify-center px-6 py-16 text-center">
                     <p className="text-lg font-bold text-slate-900">单词本还是空的</p>
                     <p className="mt-3 text-sm leading-6 text-slate-500">
                       先去文章阅读里查一个单词，再把它加入单词本。
                     </p>
                   </div>
                 ) : (
-                  <div>
+                  <div className="flex min-h-0 flex-1 flex-col">
                     <div className="border-b border-slate-200 bg-slate-50/70 px-4 py-4">
                       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                         <div className="flex items-center gap-3">
@@ -709,14 +748,14 @@ export const EnglishLearningHub: React.FC<EnglishLearningHubProps> = ({ onBack }
                     </div>
 
                     {visibleWordbook.length === 0 ? (
-                      <div className="px-6 py-16 text-center">
+                      <div className="flex flex-1 items-center justify-center px-6 py-16 text-center">
                         <p className="text-lg font-bold text-slate-900">当前筛选下没有词条</p>
                         <p className="mt-3 text-sm leading-6 text-slate-500">
                           可以切回全部，或者切换“学会 / 未学会”筛选。
                         </p>
                       </div>
                     ) : (
-                      <>
+                      <div className="min-h-0 flex-1 overflow-y-auto">
                         <div className="sticky top-0 z-10 hidden border-b border-slate-200 bg-white lg:grid lg:grid-cols-[3rem_minmax(10rem,1fr)_minmax(12rem,1fr)_minmax(12rem,1fr)_minmax(12rem,1fr)_8.5rem] lg:gap-4 lg:px-4 lg:py-3">
                           <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">
                             #
@@ -970,7 +1009,7 @@ export const EnglishLearningHub: React.FC<EnglishLearningHubProps> = ({ onBack }
                             </div>
                           ))}
                         </div>
-                      </>
+                      </div>
                     )}
                   </div>
                 )}
@@ -984,18 +1023,21 @@ export const EnglishLearningHub: React.FC<EnglishLearningHubProps> = ({ onBack }
         <div className="fixed inset-0 z-[700] flex items-end justify-center bg-slate-950/45 p-3 sm:items-center sm:p-6">
           <div
             className="absolute inset-0"
-            onClick={() => setIsLookupModalOpen(false)}
+            onClick={clearSelection}
             aria-hidden="true"
           />
 
-          <div className="relative z-10 w-full max-w-2xl rounded-[2rem] bg-[#111827] p-5 text-slate-50 shadow-[0_24px_80px_rgba(15,23,42,0.35)] sm:p-6">
+          <div
+            data-lookup-modal="true"
+            className="relative z-10 w-full max-w-2xl rounded-[2rem] bg-[#111827] p-5 text-slate-50 shadow-[0_24px_80px_rgba(15,23,42,0.35)] sm:p-6"
+          >
             <div className="flex items-center justify-between gap-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-amber-200/80">
+              <p className="text-sm font-semibold text-amber-200/90">
                 Lookup Panel
               </p>
               <button
                 type="button"
-                onClick={() => setIsLookupModalOpen(false)}
+                onClick={clearSelection}
                 className="rounded-full border border-white/10 px-3 py-1.5 text-xs font-semibold text-slate-300 transition hover:bg-white/10"
               >
                 关闭
@@ -1077,8 +1119,11 @@ export const EnglishLearningHub: React.FC<EnglishLearningHubProps> = ({ onBack }
                   <button
                     type="button"
                     onClick={handleToggleWordbook}
+                    disabled={isWordbookActionDisabled}
                     className={`inline-flex flex-1 items-center justify-center gap-2 rounded-full px-4 py-3 text-sm font-semibold transition ${
-                      isCurrentLookupSaved
+                      isWordbookActionDisabled
+                        ? 'cursor-not-allowed bg-slate-700/80 text-slate-400 ring-1 ring-white/10'
+                        : isCurrentLookupSaved
                         ? 'bg-rose-500/15 text-rose-100 ring-1 ring-rose-400/25 hover:bg-rose-500/20'
                         : 'bg-amber-300 text-slate-900 hover:bg-amber-200'
                     }`}
@@ -1087,6 +1132,9 @@ export const EnglishLearningHub: React.FC<EnglishLearningHubProps> = ({ onBack }
                     {isCurrentLookupSaved ? '取消加入单词本' : '加入单词本'}
                   </button>
                 </div>
+                {isWordbookActionDisabled ? (
+                  <p className="text-sm text-amber-200/90">超过 5 个词的选择不能加入单词本。</p>
+                ) : null}
                 {audioErrorMessage ? <p className="text-sm text-rose-200">{audioErrorMessage}</p> : null}
               </div>
             )}

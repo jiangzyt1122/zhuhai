@@ -31,7 +31,7 @@ const portalSections = [
 
 export const EntryPortal: React.FC<EntryPortalProps> = ({ onOpenEnglish, onOpenExplore }) => {
   return (
-    <div className="relative min-h-screen overflow-hidden bg-slate-950 text-white">
+    <div className="relative h-dvh overflow-hidden bg-slate-950 text-white">
       <div className="absolute inset-0 bg-[linear-gradient(135deg,_#020617_0%,_#111827_42%,_#0f172a_100%)]" />
       <div className="portal-ambient" />
       <div className="portal-grid" />
@@ -39,7 +39,7 @@ export const EntryPortal: React.FC<EntryPortalProps> = ({ onOpenEnglish, onOpenE
       <div className="portal-orb portal-orb-two" />
       <div className="portal-orb portal-orb-three" />
 
-      <div className="relative z-10 flex min-h-screen flex-col justify-center px-4 py-8 sm:px-6">
+      <div className="relative z-10 flex h-full flex-col justify-center px-4 py-4 sm:px-6 sm:py-6">
         <div className="text-center">
           <p className="text-xs font-semibold uppercase tracking-[0.35em] text-white/60">
             Choose Your Entry
@@ -52,8 +52,8 @@ export const EntryPortal: React.FC<EntryPortalProps> = ({ onOpenEnglish, onOpenE
           </p>
         </div>
 
-        <div className="mx-auto mt-8 w-full max-w-4xl">
-          <div className="grid grid-cols-2 gap-3 sm:gap-6">
+        <div className="mx-auto mt-6 flex w-full max-w-4xl flex-1 items-center">
+          <div className="grid w-full grid-cols-2 gap-3 sm:gap-6">
             {portalSections.map((section) => {
               const Icon = section.icon;
               const onClick = section.id === 'english' ? onOpenEnglish : onOpenExplore;
@@ -63,7 +63,7 @@ export const EntryPortal: React.FC<EntryPortalProps> = ({ onOpenEnglish, onOpenE
                   key={section.id}
                   type="button"
                   onClick={onClick}
-                  className={`group relative min-h-[250px] overflow-hidden rounded-[2rem] border ${section.border} bg-white/5 p-4 text-left backdrop-blur-md transition duration-300 hover:-translate-y-1 hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/60 sm:min-h-[320px] sm:p-6`}
+                  className={`group relative min-h-[220px] overflow-hidden rounded-[2rem] border ${section.border} bg-white/5 p-4 text-left backdrop-blur-md transition duration-300 hover:-translate-y-1 hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/60 sm:min-h-[280px] sm:p-6`}
                 >
                   <div className={`absolute inset-0 bg-gradient-to-br ${section.accent} opacity-80`} />
                   <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.25),_transparent_35%),radial-gradient(circle_at_bottom_right,_rgba(15,23,42,0.45),_transparent_40%)]" />

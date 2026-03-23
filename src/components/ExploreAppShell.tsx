@@ -117,7 +117,7 @@ export const ExploreAppShell: React.FC<ExploreAppShellProps> = ({ onBack }) => {
   }, [poiCardPreferences]);
 
   return (
-    <div className="relative h-screen w-full overflow-hidden bg-gray-50">
+    <div className="relative h-dvh w-full overflow-hidden bg-gray-50">
       <div className="absolute left-4 right-4 top-4 z-[400] pointer-events-none">
         <div className="flex items-center gap-3 rounded-2xl border border-gray-100/50 bg-white/90 p-3 shadow-lg backdrop-blur-md pointer-events-auto">
           <button
