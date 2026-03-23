@@ -39,6 +39,19 @@ interface POIMapProps {
   onSelectPOI: (poi: POI) => void;
 }
 
+type LngLatTuple = [number, number];
+
+const getPoiLngLat = (
+  poi: POI,
+  adjustedCoords: Record<string, LngLatTuple>
+): LngLatTuple => {
+  const adjusted = adjustedCoords[poi.id];
+  if (adjusted) {
+    return adjusted;
+  }
+  return toAMapLngLat(poi.latitude, poi.longitude, poi.coordinateSystem ?? COORDINATE_SYSTEM);
+};
+
 export const POIMap: React.FC<POIMapProps> = ({ pois, selectedPOI, visitedIds, onSelectPOI }) => {
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<any>(null);
@@ -47,7 +60,7 @@ export const POIMap: React.FC<POIMapProps> = ({ pois, selectedPOI, visitedIds, o
   const geocodeInFlightRef = useRef<Set<string>>(new Set());
   const hasAppliedInitialSchoolViewRef = useRef(false);
   const [mapReady, setMapReady] = useState(false);
-  const [adjustedCoords, setAdjustedCoords] = useState<Record<string, [number, number]>>({});
+  const [adjustedCoords, setAdjustedCoords] = useState<Record<string, LngLatTuple>>({});
 
   useEffect(() => {
     let isCancelled = false;
@@ -194,33 +207,29 @@ export const POIMap: React.FC<POIMapProps> = ({ pois, selectedPOI, visitedIds, o
     const AMap = window.AMap;
     const markerMap = markersRef.current;
     const poiIds = new Set(pois.map((poi) => poi.id));
-    const poiById = new Map(
-      pois.map((poi) => {
-        const adjusted = adjustedCoords[poi.id];
-        if (!adjusted) {
-          return [poi.id, poi];
+    const poiEntries: Array<[string, POI]> = pois.map((poi) => {
+      const adjusted = adjustedCoords[poi.id];
+      if (!adjusted) {
+        return [poi.id, poi];
+      }
+      return [
+        poi.id,
+        {
+          ...poi,
+          longitude: adjusted[0],
+          latitude: adjusted[1],
+          coordinateSystem: 'gcj02'
         }
-        return [
-          poi.id,
-          {
-            ...poi,
-            longitude: adjusted[0],
-            latitude: adjusted[1],
-            coordinateSystem: 'gcj02'
-          }
-        ];
-      })
-    );
+      ];
+    });
+    const poiById = new Map<string, POI>(poiEntries);
 
     pois.forEach((poi) => {
       const isVisited = visitedIds.has(poi.id);
       const isSelected = selectedPOI?.id === poi.id;
       const content = buildMarkerContent(poi, isSelected, isVisited);
       const offset = new AMap.Pixel(0, 0);
-      const adjusted = adjustedCoords[poi.id];
-      const [lng, lat] = adjusted
-        ? adjusted
-        : toAMapLngLat(poi.latitude, poi.longitude, poi.coordinateSystem ?? COORDINATE_SYSTEM);
+      const [lng, lat] = getPoiLngLat(poi, adjustedCoords);
       const zIndex = isSelected ? 200 : 150;
 
       const existing = markerMap.get(poi.id);
@@ -258,7 +267,7 @@ export const POIMap: React.FC<POIMapProps> = ({ pois, selectedPOI, visitedIds, o
       }
     });
 
-    Array.from(markerMap.entries()).forEach(([id, marker]) => {
+    markerMap.forEach((marker, id) => {
       if (!poiIds.has(id)) {
         marker.setMap(null);
         markerMap.delete(id);
@@ -295,14 +304,7 @@ export const POIMap: React.FC<POIMapProps> = ({ pois, selectedPOI, visitedIds, o
     if (!mapRef.current || !selectedPOI) {
       return;
     }
-    const adjusted = adjustedCoords[selectedPOI.id];
-    const [lng, lat] = adjusted
-      ? adjusted
-      : toAMapLngLat(
-          selectedPOI.latitude,
-          selectedPOI.longitude,
-          selectedPOI.coordinateSystem ?? COORDINATE_SYSTEM
-        );
+    const [lng, lat] = getPoiLngLat(selectedPOI, adjustedCoords);
     mapRef.current.setZoomAndCenter(15, [lng, lat]);
   }, [selectedPOI, adjustedCoords]);
 

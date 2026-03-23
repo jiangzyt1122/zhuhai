@@ -22,3 +22,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Local data sources not used by the app
+dict-master/
+DictionaryData-master/

@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "build:dict-index": "node scripts/generate-dictionary-index.mjs",
     "build": "vite build",
     "preview": "vite preview"
   },
