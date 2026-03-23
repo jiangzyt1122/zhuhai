@@ -21,9 +21,19 @@ interface EnglishLearningHubProps {
   onBack: () => void;
 }
 
-type ReadingTab = 'reading' | 'wordbook';
+type EnglishSection = 'articles' | 'wordbooks';
 type MasteryFilter = 'all' | 'mastered' | 'unmastered';
 type WordbookOrder = 'default' | 'random';
+type WordbookScope = 'all' | string;
+
+type ArticleRecord = {
+  id: string;
+  title: string;
+  summary: string;
+  dailyLabel: string;
+  publishedAt: string | null;
+  paragraphs: readonly string[];
+};
 
 type ArticleToken = {
   id: string;
@@ -40,6 +50,7 @@ type WordRange = {
 };
 
 type ArticleSelection = WordRange & {
+  articleId: string;
   query: string;
   normalizedQuery: string;
   normalizedTokens: string[];
@@ -69,16 +80,39 @@ type WordbookEntry = {
 
 const WORDBOOK_STORAGE_KEY = 'englishLearningWordbook/v1';
 
-const ARTICLE = {
-  id: 'pop-mart-labubu-film',
-  title: 'Pop Mart Bets on Labubu Beyond the Blind Box',
-  paragraphs: [
-    "Pop Mart, the Chinese toy manufacturer behind the global Labubu phenomenon, has partnered with Sony Pictures to develop a feature film combining live action and computer-generated animation. The project, currently in early development, will be directed by Paul King, whose impressive portfolio includes Wonka, the Paddington franchise, and the BBC comedy series The Mighty Boosh.",
-    "The Labubu dolls have transformed Pop Mart into a toy-making behemoth valued at nearly $40 billion, surpassing established competitors like Mattel. Part of their appeal lies in the blind box sales model-buyers remain unaware of which specific Labubu they're acquiring until opening the package. This marketing strategy, combined with celebrity endorsements from figures like Rihanna and Blackpink's Lisa, has propelled the toys to international prominence.",
-    "Created over a decade ago by Hong Kong artist Kasing Lung, Labubu is a forest elf inspired by Nordic mythology and featured in Lung's book series, The Monsters. Lung will serve as executive producer, while King will collaborate with Steven Levenson on script development.",
-    `Marketing experts suggest this venture represents a strategic evolution for Pop Mart. "For Gen Z and Millennial consumers, content and commerce are closely intertwined," notes Kim Dayoung from the National University of Singapore. The film could capitalize on the momentum of Chinese animation following recent blockbusters like Ne Zha 2 and Black Myth: Wukong, potentially establishing Pop Mart as a comprehensive entertainment brand rather than merely a toy retailer.`
-  ]
-} as const;
+const ARTICLES: readonly ArticleRecord[] = [
+  {
+    id: 'pop-mart-labubu-film',
+    title: 'Pop Mart Bets on Labubu Beyond the Blind Box',
+    summary:
+      'Pop Mart and Sony Pictures are turning the Labubu phenomenon into a feature film, extending the brand beyond blind box toys.',
+    dailyLabel: '每日一篇 01',
+    publishedAt: null,
+    paragraphs: [
+      "Pop Mart, the Chinese toy manufacturer behind the global Labubu phenomenon, has partnered with Sony Pictures to develop a feature film combining live action and computer-generated animation. The project, currently in early development, will be directed by Paul King, whose impressive portfolio includes Wonka, the Paddington franchise, and the BBC comedy series The Mighty Boosh.",
+      "The Labubu dolls have transformed Pop Mart into a toy-making behemoth valued at nearly $40 billion, surpassing established competitors like Mattel. Part of their appeal lies in the blind box sales model-buyers remain unaware of which specific Labubu they're acquiring until opening the package. This marketing strategy, combined with celebrity endorsements from figures like Rihanna and Blackpink's Lisa, has propelled the toys to international prominence.",
+      "Created over a decade ago by Hong Kong artist Kasing Lung, Labubu is a forest elf inspired by Nordic mythology and featured in Lung's book series, The Monsters. Lung will serve as executive producer, while King will collaborate with Steven Levenson on script development.",
+      `Marketing experts suggest this venture represents a strategic evolution for Pop Mart. "For Gen Z and Millennial consumers, content and commerce are closely intertwined," notes Kim Dayoung from the National University of Singapore. The film could capitalize on the momentum of Chinese animation following recent blockbusters like Ne Zha 2 and Black Myth: Wukong, potentially establishing Pop Mart as a comprehensive entertainment brand rather than merely a toy retailer.`
+    ]
+  },
+  {
+    id: 'appeal-to-nature',
+    title: "Natural Doesn't Always Mean Better: Understanding the Appeal to Nature",
+    summary:
+      'This article explains why “natural” is not automatically safer or better, and why we should question that assumption.',
+    dailyLabel: '每日一篇 02',
+    publishedAt: null,
+    paragraphs: [
+      'Many people think natural things are always good. But this is not true.',
+      'Some natural things can hurt us. Arsenic is natural, but it can kill people. Cyanide is also natural. It comes from some plants like almonds and peaches. These things are dangerous.',
+      'Some man-made things help us. Medicines save lives. Glasses help us see better. Refrigerators keep our food fresh. These things make our lives better.',
+      'When someone says a product is "natural," think carefully. Ask why it is better. Natural does not always mean safe or good.'
+    ]
+  }
+];
+
+const DEFAULT_ARTICLE = ARTICLES[0];
+const ARTICLE_MAP = new Map(ARTICLES.map((article) => [article.id, article]));
 
 const TOKEN_REGEX = /([A-Za-z0-9]+(?:[-'][A-Za-z0-9]+)*)|(\s+)|([^A-Za-z0-9\s]+)/g;
 
@@ -130,20 +164,30 @@ const buildArticleTokens = (paragraphs: readonly string[]) => {
   };
 };
 
-const ARTICLE_TOKENS = buildArticleTokens(ARTICLE.paragraphs);
+const ARTICLE_TOKENS_BY_ID = new Map(
+  ARTICLES.map((article) => [article.id, buildArticleTokens(article.paragraphs)])
+);
 
-const buildSelection = (range: WordRange): ArticleSelection => {
+const getArticleTokens = (articleId: string) =>
+  ARTICLE_TOKENS_BY_ID.get(articleId) ?? ARTICLE_TOKENS_BY_ID.get(DEFAULT_ARTICLE.id)!;
+
+const buildWordbookEntryId = (articleId: string, normalizedQuery: string) =>
+  `${articleId}::${normalizedQuery}`;
+
+const buildSelection = (articleId: string, range: WordRange): ArticleSelection => {
+  const articleTokens = getArticleTokens(articleId);
   const orderedRange = {
     start: Math.min(range.start, range.end),
     end: Math.max(range.start, range.end)
   };
-  const normalizedTokens = ARTICLE_TOKENS.wordTokens
+  const normalizedTokens = articleTokens.wordTokens
     .filter((token) => token.wordIndex >= orderedRange.start && token.wordIndex <= orderedRange.end)
     .map((token) => token.normalized ?? normalizeWord(token.text));
 
   return {
+    articleId,
     ...orderedRange,
-    query: joinWordTokens(ARTICLE_TOKENS.wordTokens, orderedRange),
+    query: joinWordTokens(articleTokens.wordTokens, orderedRange),
     normalizedQuery: normalizedTokens.join(' '),
     normalizedTokens
   };
@@ -167,7 +211,6 @@ const loadWordbook = (): WordbookEntry[] => {
 
       const candidate = item as Partial<WordbookEntry>;
       if (
-        typeof candidate.id !== 'string' ||
         typeof candidate.query !== 'string' ||
         typeof candidate.normalizedQuery !== 'string' ||
         !Array.isArray(candidate.normalizedTokens)
@@ -175,12 +218,18 @@ const loadWordbook = (): WordbookEntry[] => {
         return [];
       }
 
+      const articleId =
+        typeof candidate.articleId === 'string' && ARTICLE_MAP.has(candidate.articleId)
+          ? candidate.articleId
+          : DEFAULT_ARTICLE.id;
+      const normalizedQuery = candidate.normalizedQuery;
+
       return [
         {
-          id: candidate.id,
-          articleId: typeof candidate.articleId === 'string' ? candidate.articleId : ARTICLE.id,
+          id: buildWordbookEntryId(articleId, normalizedQuery),
+          articleId,
           query: candidate.query,
-          normalizedQuery: candidate.normalizedQuery,
+          normalizedQuery,
           normalizedTokens: candidate.normalizedTokens.filter(
             (token): token is string => typeof token === 'string'
           ),
@@ -204,12 +253,15 @@ const loadWordbook = (): WordbookEntry[] => {
   }
 };
 
-const buildUnderlineSet = (entries: WordbookEntry[]) => {
+const buildUnderlineSet = (entries: WordbookEntry[], articleId: string) => {
   const highlightIndices = new Set<number>();
-  const articleWords = ARTICLE_TOKENS.wordTokens.map((token) => token.normalized ?? normalizeWord(token.text));
+  const articleTokens = getArticleTokens(articleId);
+  const articleWords = articleTokens.wordTokens.map(
+    (token) => token.normalized ?? normalizeWord(token.text)
+  );
 
   entries
-    .filter((entry) => entry.articleId === ARTICLE.id)
+    .filter((entry) => entry.articleId === articleId)
     .forEach((entry) => {
       const phrase = entry.normalizedTokens;
       if (phrase.length === 0) {
@@ -249,7 +301,9 @@ const playAudio = async (url: string | null) => {
 };
 
 export const EnglishLearningHub: React.FC<EnglishLearningHubProps> = ({ onBack }) => {
-  const [activeTab, setActiveTab] = useState<ReadingTab>('reading');
+  const [activeSection, setActiveSection] = useState<EnglishSection>('articles');
+  const [openedArticleId, setOpenedArticleId] = useState<string | null>(null);
+  const [wordbookScope, setWordbookScope] = useState<WordbookScope | null>(null);
   const [selection, setSelection] = useState<ArticleSelection | null>(null);
   const [previewRange, setPreviewRange] = useState<WordRange | null>(null);
   const [isLookupModalOpen, setIsLookupModalOpen] = useState(false);
@@ -268,17 +322,58 @@ export const EnglishLearningHub: React.FC<EnglishLearningHubProps> = ({ onBack }
   const dragRangeRef = useRef<WordRange | null>(null);
   const didDragRef = useRef(false);
 
-  const underlineSet = useMemo(() => buildUnderlineSet(wordbook), [wordbook]);
+  const openedArticle = openedArticleId
+    ? ARTICLE_MAP.get(openedArticleId) ?? DEFAULT_ARTICLE
+    : null;
+  const activeReadingArticleId = openedArticle?.id ?? null;
+  const activeReadingTokens = activeReadingArticleId ? getArticleTokens(activeReadingArticleId) : null;
+  const isReadingDetail = activeSection === 'articles' && activeReadingArticleId != null;
+  const isWordbookDetail = activeSection === 'wordbooks' && wordbookScope != null;
+  const underlineSet = useMemo(
+    () =>
+      activeReadingArticleId ? buildUnderlineSet(wordbook, activeReadingArticleId) : new Set<number>(),
+    [wordbook, activeReadingArticleId]
+  );
   const activeRange = previewRange ?? selection;
   const currentLookup = lookupState.status === 'success' ? lookupState.data : null;
-  const isCurrentLookupSaved = currentLookup
-    ? wordbook.some((entry) => entry.id === currentLookup.normalizedQuery)
+  const currentLookupEntryId =
+    currentLookup && selection
+      ? buildWordbookEntryId(selection.articleId, currentLookup.normalizedQuery)
+      : null;
+  const isCurrentLookupSaved = currentLookupEntryId
+    ? wordbook.some((entry) => entry.id === currentLookupEntryId)
     : false;
   const selectionWordCount = selection?.normalizedTokens.length ?? 0;
   const exceedsWordbookLimit = selectionWordCount > 5;
   const isWordbookActionDisabled = Boolean(currentLookup && !isCurrentLookupSaved && exceedsWordbookLimit);
+  const wordbookCountByArticle = useMemo(() => {
+    const next = new Map<string, number>();
+    wordbook.forEach((entry) => {
+      next.set(entry.articleId, (next.get(entry.articleId) ?? 0) + 1);
+    });
+    return next;
+  }, [wordbook]);
+  const wordbookGroups = useMemo(
+    () =>
+      ARTICLES.map((article) => ({
+        article,
+        count: wordbookCountByArticle.get(article.id) ?? 0
+      })),
+    [wordbookCountByArticle]
+  );
+  const scopedWordbook = useMemo(() => {
+    if (wordbookScope == null) {
+      return [];
+    }
+
+    if (wordbookScope === 'all') {
+      return wordbook;
+    }
+
+    return wordbook.filter((entry) => entry.articleId === wordbookScope);
+  }, [wordbook, wordbookScope]);
   const visibleWordbook = useMemo(() => {
-    const filtered = wordbook.filter((entry) => {
+    const filtered = scopedWordbook.filter((entry) => {
       if (masteryFilter === 'mastered') {
         return entry.mastered;
       }
@@ -299,7 +394,18 @@ export const EnglishLearningHub: React.FC<EnglishLearningHubProps> = ({ onBack }
         (orderMap.get(right.id) ?? Number.MAX_SAFE_INTEGER)
       );
     });
-  }, [masteryFilter, randomOrderIds, wordbook, wordbookOrder]);
+  }, [masteryFilter, randomOrderIds, scopedWordbook, wordbookOrder]);
+  const wordbookScopeTitle = useMemo(() => {
+    if (wordbookScope === 'all') {
+      return '汇总单词本';
+    }
+
+    if (wordbookScope && ARTICLE_MAP.has(wordbookScope)) {
+      return ARTICLE_MAP.get(wordbookScope)!.title;
+    }
+
+    return '单词本';
+  }, [wordbookScope]);
 
   useEffect(() => {
     try {
@@ -314,7 +420,7 @@ export const EnglishLearningHub: React.FC<EnglishLearningHubProps> = ({ onBack }
       return;
     }
 
-    const wordIds = wordbook.map((entry) => entry.id);
+    const wordIds = scopedWordbook.map((entry) => entry.id);
     setRandomOrderIds((prev) => {
       const retained = prev.filter((id) => wordIds.includes(id));
       const missing = wordIds.filter((id) => !retained.includes(id));
@@ -322,11 +428,11 @@ export const EnglishLearningHub: React.FC<EnglishLearningHubProps> = ({ onBack }
       const unchanged = nextOrder.length === prev.length && nextOrder.every((id, index) => id === prev[index]);
       return unchanged ? prev : nextOrder;
     });
-  }, [wordbook, wordbookOrder]);
+  }, [scopedWordbook, wordbookOrder]);
 
   useEffect(() => {
     const handleMouseUp = () => {
-      if (dragAnchorRef.current == null) {
+      if (dragAnchorRef.current == null || !activeReadingArticleId) {
         return;
       }
 
@@ -340,14 +446,25 @@ export const EnglishLearningHub: React.FC<EnglishLearningHubProps> = ({ onBack }
       }
 
       didDragRef.current = false;
-      setSelection(buildSelection(draggedRange));
+      setSelection(buildSelection(activeReadingArticleId, draggedRange));
     };
 
     window.addEventListener('mouseup', handleMouseUp);
     return () => {
       window.removeEventListener('mouseup', handleMouseUp);
     };
-  }, []);
+  }, [activeReadingArticleId]);
+
+  useEffect(() => {
+    dragAnchorRef.current = null;
+    dragRangeRef.current = null;
+    didDragRef.current = false;
+    setPreviewRange(null);
+    setSelection(null);
+    setLookupState({ status: 'idle' });
+    setIsLookupModalOpen(false);
+    setAudioErrorMessage('');
+  }, [activeSection, activeReadingArticleId, wordbookScope]);
 
   useEffect(() => {
     if (!selection) {
@@ -383,6 +500,10 @@ export const EnglishLearningHub: React.FC<EnglishLearningHubProps> = ({ onBack }
   }, [selection]);
 
   const handleWordMouseDown = (wordIndex: number) => {
+    if (!activeReadingArticleId) {
+      return;
+    }
+
     dragAnchorRef.current = wordIndex;
     dragRangeRef.current = {
       start: wordIndex,
@@ -410,12 +531,16 @@ export const EnglishLearningHub: React.FC<EnglishLearningHubProps> = ({ onBack }
   };
 
   const handleWordClick = (wordIndex: number) => {
+    if (!activeReadingArticleId) {
+      return;
+    }
+
     if (didDragRef.current) {
       didDragRef.current = false;
       return;
     }
 
-    setSelection(buildSelection({ start: wordIndex, end: wordIndex }));
+    setSelection(buildSelection(activeReadingArticleId, { start: wordIndex, end: wordIndex }));
   };
 
   const clearSelection = () => {
@@ -429,22 +554,25 @@ export const EnglishLearningHub: React.FC<EnglishLearningHubProps> = ({ onBack }
   };
 
   const handleToggleWordbook = () => {
-    if (!currentLookup || isWordbookActionDisabled) {
+    const targetArticleId = selection?.articleId ?? activeReadingArticleId;
+
+    if (!currentLookup || !targetArticleId || isWordbookActionDisabled) {
       return;
     }
 
     setWordbook((prev) => {
-      const exists = prev.some((entry) => entry.id === currentLookup.normalizedQuery);
+      const entryId = buildWordbookEntryId(targetArticleId, currentLookup.normalizedQuery);
+      const exists = prev.some((entry) => entry.id === entryId);
       if (exists) {
-        return prev.filter((entry) => entry.id !== currentLookup.normalizedQuery);
+        return prev.filter((entry) => entry.id !== entryId);
       }
 
       const nextEntry: WordbookEntry = {
-        id: currentLookup.normalizedQuery,
-        articleId: ARTICLE.id,
+        id: entryId,
+        articleId: targetArticleId,
         query: currentLookup.query,
         normalizedQuery: currentLookup.normalizedQuery,
-        normalizedTokens: currentLookup.normalizedQuery.split(' '),
+        normalizedTokens: selection?.normalizedTokens ?? currentLookup.normalizedQuery.split(' '),
         usPhonetic: currentLookup.usPhonetic,
         usSpeech: currentLookup.usSpeech,
         explains: currentLookup.explains,
@@ -513,7 +641,7 @@ export const EnglishLearningHub: React.FC<EnglishLearningHubProps> = ({ onBack }
     }
 
     setWordbookOrder('random');
-    setRandomOrderIds(shuffleIds(wordbook.map((entry) => entry.id)));
+    setRandomOrderIds(shuffleIds(scopedWordbook.map((entry) => entry.id)));
   };
 
   const handleResetWordbookState = () => {
@@ -568,8 +696,32 @@ export const EnglishLearningHub: React.FC<EnglishLearningHubProps> = ({ onBack }
     }
   };
 
+  const handleOpenArticlesHome = () => {
+    setActiveSection('articles');
+    setOpenedArticleId(null);
+    setWordbookScope(null);
+  };
+
+  const handleOpenWordbooksHome = () => {
+    setActiveSection('wordbooks');
+    setOpenedArticleId(null);
+    setWordbookScope(null);
+  };
+
+  const handleOpenArticle = (articleId: string) => {
+    setActiveSection('articles');
+    setOpenedArticleId(articleId);
+    setWordbookScope(null);
+  };
+
+  const handleOpenWordbookScope = (scope: WordbookScope) => {
+    setActiveSection('wordbooks');
+    setOpenedArticleId(null);
+    setWordbookScope(scope);
+  };
+
   useEffect(() => {
-    if (!selection || activeTab !== 'reading') {
+    if (!selection || !isReadingDetail) {
       return;
     }
 
@@ -591,7 +743,548 @@ export const EnglishLearningHub: React.FC<EnglishLearningHubProps> = ({ onBack }
     return () => {
       document.removeEventListener('pointerdown', handlePointerDown, true);
     };
-  }, [activeTab, selection]);
+  }, [isReadingDetail, selection]);
+
+  const renderArticleListView = () => (
+    <div className="mt-6 min-h-0 flex-1">
+      <section className="flex h-full min-h-0 flex-col border border-slate-200/80 bg-white p-5 shadow-sm sm:p-7">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-400">Articles</p>
+            <h1 className="mt-3 text-3xl font-black leading-tight text-slate-900 sm:text-4xl">文章列表</h1>
+            <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-500">
+              先进入文章列表，再打开当天的阅读内容。发布时间字段已经预留，后面可以继续补。
+            </p>
+          </div>
+          <span className="inline-flex h-10 items-center bg-slate-100 px-4 text-sm font-semibold text-slate-600">
+            {ARTICLES.length} 篇
+          </span>
+        </div>
+
+        <div className="mt-6 min-h-0 flex-1 overflow-y-auto">
+          <div className="grid gap-4">
+            {wordbookGroups.map(({ article, count }) => (
+              <button
+                key={article.id}
+                type="button"
+                onClick={() => handleOpenArticle(article.id)}
+                className="border border-slate-200 bg-[#fcfaf4] p-5 text-left transition hover:border-slate-300 hover:bg-[#faf6ec]"
+              >
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2 text-xs font-semibold text-slate-500">
+                      <span className="bg-slate-900 px-2.5 py-1 text-white">{article.dailyLabel}</span>
+                      <span className="bg-slate-100 px-2.5 py-1">
+                        {article.publishedAt ?? '发布时间待记录'}
+                      </span>
+                    </div>
+                    <h2 className="mt-4 text-2xl font-black leading-tight text-slate-900">
+                      {article.title}
+                    </h2>
+                    <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-600">{article.summary}</p>
+                  </div>
+                  <div className="shrink-0">
+                    <span className="inline-flex bg-white px-3 py-2 text-sm font-semibold text-slate-600 ring-1 ring-slate-200">
+                      {count} 个词条
+                    </span>
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+
+  const renderReadingDetailView = () => {
+    if (!openedArticle || !activeReadingTokens) {
+      return null;
+    }
+
+    return (
+      <div className="mt-6 min-h-0 flex-1">
+        <section className="flex h-full min-h-0 flex-col border border-slate-200/80 bg-white p-5 shadow-sm sm:p-7">
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-wrap items-center gap-3">
+              <button
+                type="button"
+                onClick={handleOpenArticlesHome}
+                className="inline-flex items-center gap-2 border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
+              >
+                <ArrowLeft size={16} />
+                返回文章列表
+              </button>
+              <span className="bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-500">
+                {openedArticle.dailyLabel}
+              </span>
+              <span className="bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-500">
+                {openedArticle.publishedAt ?? '发布时间待记录'}
+              </span>
+            </div>
+
+            <div>
+              <h1 className="text-3xl font-black leading-tight text-slate-900 sm:text-4xl">
+                {openedArticle.title}
+              </h1>
+            </div>
+          </div>
+
+          <div className="mt-6 min-h-0 flex-1 overflow-y-auto bg-[#fcfaf4] p-5 ring-1 ring-slate-200/80 sm:p-6">
+            <div className="space-y-5 select-none">
+              {activeReadingTokens.paragraphTokens.map((paragraphTokens, paragraphIndex) => (
+                <p
+                  key={`${openedArticle.id}-paragraph-${paragraphIndex}`}
+                  className="whitespace-pre-wrap text-[1.02rem] leading-8 text-slate-800"
+                >
+                  {paragraphTokens.map((token) => {
+                    if (token.type !== 'word' || token.wordIndex == null) {
+                      return <span key={token.id}>{token.text}</span>;
+                    }
+
+                    const inActiveRange =
+                      activeRange != null &&
+                      token.wordIndex >= activeRange.start &&
+                      token.wordIndex <= activeRange.end;
+                    const isUnderlined = underlineSet.has(token.wordIndex);
+
+                    return (
+                      <button
+                        key={token.id}
+                        type="button"
+                        data-word-token="true"
+                        onMouseDown={() => handleWordMouseDown(token.wordIndex!)}
+                        onMouseEnter={() => handleWordMouseEnter(token.wordIndex!)}
+                        onClick={() => handleWordClick(token.wordIndex!)}
+                        className={`relative inline rounded-md px-0.5 transition ${
+                          inActiveRange
+                            ? 'bg-slate-900 text-white shadow-[0_8px_24px_rgba(15,23,42,0.18)]'
+                            : 'text-slate-900 hover:bg-amber-100/80'
+                        } ${isUnderlined ? 'underline decoration-[1.5px] decoration-dashed decoration-amber-400 underline-offset-[1px]' : ''}`}
+                      >
+                        {token.text}
+                      </button>
+                    );
+                  })}
+                </p>
+              ))}
+            </div>
+          </div>
+        </section>
+      </div>
+    );
+  };
+
+  const renderWordbookListView = () => (
+    <div className="mt-6 min-h-0 flex-1">
+      <section className="flex h-full min-h-0 flex-col border border-slate-200/80 bg-white p-5 shadow-sm sm:p-7">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-400">Wordbooks</p>
+            <h1 className="mt-3 text-3xl font-black leading-tight text-slate-900 sm:text-4xl">单词本列表</h1>
+            <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-500">
+              先进入单词本列表，再查看某篇文章对应的词条。汇总单词本固定放在最上面。
+            </p>
+          </div>
+          <span className="inline-flex h-10 items-center bg-slate-100 px-4 text-sm font-semibold text-slate-600">
+            {wordbook.length} 个词条
+          </span>
+        </div>
+
+        <div className="mt-6 min-h-0 flex-1 overflow-y-auto">
+          <div className="grid gap-4">
+            <button
+              type="button"
+              onClick={() => handleOpenWordbookScope('all')}
+              className="border border-slate-200 bg-[#fcfaf4] p-5 text-left transition hover:border-slate-300 hover:bg-[#faf6ec]"
+            >
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2 text-xs font-semibold text-slate-500">
+                    <span className="bg-slate-900 px-2.5 py-1 text-white">置顶</span>
+                    <span className="bg-slate-100 px-2.5 py-1">全部文章</span>
+                  </div>
+                  <h2 className="mt-4 text-2xl font-black leading-tight text-slate-900">汇总单词本</h2>
+                  <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-600">
+                    查看所有文章累计收录的词条，统一复习和筛选。
+                  </p>
+                </div>
+                <div className="shrink-0">
+                  <span className="inline-flex bg-white px-3 py-2 text-sm font-semibold text-slate-600 ring-1 ring-slate-200">
+                    {wordbook.length} 个词条
+                  </span>
+                </div>
+              </div>
+            </button>
+
+            {wordbookGroups.map(({ article, count }) => (
+              <button
+                key={article.id}
+                type="button"
+                onClick={() => handleOpenWordbookScope(article.id)}
+                className="border border-slate-200 bg-[#fcfaf4] p-5 text-left transition hover:border-slate-300 hover:bg-[#faf6ec]"
+              >
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2 text-xs font-semibold text-slate-500">
+                      <span className="bg-slate-100 px-2.5 py-1">{article.dailyLabel}</span>
+                      <span className="bg-slate-100 px-2.5 py-1">
+                        {article.publishedAt ?? '发布时间待记录'}
+                      </span>
+                    </div>
+                    <h2 className="mt-4 text-2xl font-black leading-tight text-slate-900">
+                      {article.title}
+                    </h2>
+                    <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-600">
+                      查看这篇文章对应的单词本内容。
+                    </p>
+                  </div>
+                  <div className="shrink-0">
+                    <span className="inline-flex bg-white px-3 py-2 text-sm font-semibold text-slate-600 ring-1 ring-slate-200">
+                      {count} 个词条
+                    </span>
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+
+  const renderWordbookDetailView = () => (
+    <div className="mt-6 min-h-0 flex-1">
+      <div className="flex h-full min-h-0 flex-col overflow-hidden border border-slate-200 bg-white shadow-sm">
+        <div className="border-b border-slate-200 bg-slate-50/70 px-4 py-4">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div>
+              <button
+                type="button"
+                onClick={handleOpenWordbooksHome}
+                className="inline-flex items-center gap-2 border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
+              >
+                <ArrowLeft size={16} />
+                返回单词本列表
+              </button>
+              <h1 className="mt-4 text-2xl font-black leading-tight text-slate-900">{wordbookScopeTitle}</h1>
+              <p className="mt-2 text-sm leading-6 text-slate-500">
+                {wordbookScope === 'all'
+                  ? '查看全部文章累计收录的词条。'
+                  : wordbookScope && ARTICLE_MAP.has(wordbookScope)
+                  ? `${ARTICLE_MAP.get(wordbookScope)!.dailyLabel} · ${
+                      ARTICLE_MAP.get(wordbookScope)!.publishedAt ?? '发布时间待记录'
+                    }`
+                  : '按文章查看对应的词条。'}
+              </p>
+            </div>
+
+            <div className="flex flex-wrap gap-2">
+              <span className="bg-white px-2.5 py-1 text-xs font-semibold text-slate-500 ring-1 ring-slate-200">
+                {visibleWordbook.length}/{scopedWordbook.length}
+              </span>
+              <label className="inline-flex items-center gap-2 border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700">
+                <span>状态</span>
+                <select
+                  value={masteryFilter}
+                  onChange={(event) => setMasteryFilter(event.target.value as MasteryFilter)}
+                  className="bg-transparent text-xs font-semibold text-slate-700 outline-none"
+                >
+                  <option value="all">全部</option>
+                  <option value="mastered">只看学会</option>
+                  <option value="unmastered">只看未学会</option>
+                </select>
+              </label>
+              <button
+                type="button"
+                onClick={handleToggleWordbookOrder}
+                className="inline-flex items-center gap-2 border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
+              >
+                <Shuffle size={14} />
+                {wordbookOrder === 'random' ? '默认排序' : '随机顺序'}
+              </button>
+              <button
+                type="button"
+                onClick={handleResetWordbookState}
+                className="inline-flex items-center gap-2 border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
+              >
+                <RotateCcw size={14} />
+                恢复原始状态
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {scopedWordbook.length === 0 ? (
+          <div className="flex flex-1 items-center justify-center px-6 py-16 text-center">
+            <div>
+              <p className="text-lg font-bold text-slate-900">这个单词本还是空的</p>
+              <p className="mt-3 text-sm leading-6 text-slate-500">
+                先去文章阅读里查词，再把词条加入对应文章的单词本。
+              </p>
+            </div>
+          </div>
+        ) : visibleWordbook.length === 0 ? (
+          <div className="flex flex-1 items-center justify-center px-6 py-16 text-center">
+            <div>
+              <p className="text-lg font-bold text-slate-900">当前筛选下没有词条</p>
+              <p className="mt-3 text-sm leading-6 text-slate-500">
+                可以切回全部，或者切换“学会 / 未学会”筛选。
+              </p>
+            </div>
+          </div>
+        ) : (
+          <div className="min-h-0 flex-1 overflow-y-auto">
+            <div className="sticky top-0 z-10 hidden border-b border-slate-200 bg-white lg:grid lg:grid-cols-[3rem_minmax(10rem,1fr)_minmax(12rem,1fr)_minmax(12rem,1fr)_minmax(12rem,1fr)_8.5rem] lg:gap-4 lg:px-4 lg:py-3">
+              <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">#</span>
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">
+                  词条
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setIsEnglishColumnVisible((prev) => !prev)}
+                  className="inline-flex h-7 w-7 items-center justify-center border border-slate-200 bg-white text-slate-500 transition hover:border-slate-300 hover:text-slate-700"
+                  aria-label={isEnglishColumnVisible ? '隐藏英文列' : '显示英文列'}
+                >
+                  {isEnglishColumnVisible ? <EyeOff size={14} /> : <Eye size={14} />}
+                </button>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">
+                  中文释义
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setIsExplainColumnVisible((prev) => !prev)}
+                  className="inline-flex h-7 w-7 items-center justify-center border border-slate-200 bg-white text-slate-500 transition hover:border-slate-300 hover:text-slate-700"
+                  aria-label={isExplainColumnVisible ? '隐藏中文释义列' : '显示中文释义列'}
+                >
+                  {isExplainColumnVisible ? <EyeOff size={14} /> : <Eye size={14} />}
+                </button>
+              </div>
+              <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">
+                手动中文释义
+              </span>
+              <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">
+                英文默写
+              </span>
+              <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">
+                状态
+              </span>
+            </div>
+
+            <div className="divide-y divide-slate-100">
+              {visibleWordbook.map((entry, index) => (
+                <div key={entry.id} className="px-4 py-3">
+                  <div className="hidden lg:grid lg:grid-cols-[3rem_minmax(10rem,1fr)_minmax(12rem,1fr)_minmax(12rem,1fr)_minmax(12rem,1fr)_8.5rem] lg:gap-4 lg:items-start">
+                    <div className="pt-3 text-sm text-slate-400">{index + 1}</div>
+                    <div className="pt-2">
+                      {isEnglishColumnVisible ? (
+                        <p className="break-words text-[15px] font-semibold leading-6 text-slate-900">
+                          {entry.query}
+                        </p>
+                      ) : (
+                        <span className="inline-flex bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-400">
+                          已隐藏
+                        </span>
+                      )}
+                    </div>
+                    <div className="pt-1.5">
+                      {isExplainColumnVisible ? (
+                        <div className="flex min-h-11 items-start gap-3">
+                          <button
+                            type="button"
+                            onClick={() => handleToggleExplainVisibility(entry.id)}
+                            className="inline-flex h-9 w-9 shrink-0 items-center justify-center border border-slate-200 bg-white text-slate-600 transition hover:border-slate-300 hover:bg-slate-50"
+                            aria-label={expandedExplainIds[entry.id] ? '收起释义' : '展开释义'}
+                          >
+                            {expandedExplainIds[entry.id] ? <EyeOff size={14} /> : <Eye size={14} />}
+                          </button>
+                          {expandedExplainIds[entry.id] ? (
+                            <p className="pt-1 text-sm leading-6 text-slate-600">{entry.explains.join('；')}</p>
+                          ) : null}
+                        </div>
+                      ) : (
+                        <span className="inline-flex bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-400">
+                          已隐藏
+                        </span>
+                      )}
+                    </div>
+                    <div className="pt-1.5">
+                      <input
+                        type="text"
+                        value={entry.manualMeaning}
+                        onChange={(event) => handleManualMeaningChange(entry.id, event.target.value)}
+                        placeholder="手动输入中文释义"
+                        className="h-11 w-full border border-slate-200 bg-white px-3 text-sm text-slate-800 outline-none transition focus:border-slate-300"
+                      />
+                    </div>
+                    <div className="pt-1.5">
+                      <input
+                        type="text"
+                        value={entry.manualDictation}
+                        onChange={(event) => handleManualDictationChange(entry.id, event.target.value)}
+                        placeholder="手动填写英文"
+                        className="h-11 w-full border border-slate-200 bg-white px-3 text-sm text-slate-800 outline-none transition focus:border-slate-300"
+                      />
+                    </div>
+                    <div className="pt-1.5">
+                      <button
+                        type="button"
+                        role="switch"
+                        aria-checked={entry.mastered}
+                        onClick={() => handleToggleMastered(entry.id)}
+                        className={`inline-flex items-center gap-3 border px-3 py-2 text-xs font-semibold transition ${
+                          entry.mastered
+                            ? 'border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
+                            : 'border-slate-200 bg-slate-100 text-slate-700 hover:bg-slate-200'
+                        }`}
+                      >
+                        <span>{entry.mastered ? '学会' : '未学会'}</span>
+                        <span
+                          className={`relative h-6 w-11 border transition ${
+                            entry.mastered ? 'bg-emerald-500' : 'bg-slate-300'
+                          }`}
+                        >
+                          <span
+                            className={`absolute top-0.5 h-5 w-5 bg-white shadow-sm transition ${
+                              entry.mastered ? 'left-[1.35rem]' : 'left-0.5'
+                            }`}
+                          />
+                        </span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3 lg:hidden">
+                    <div className="flex items-start gap-3">
+                      <span className="mt-0.5 w-5 text-xs font-medium text-slate-400">{index + 1}</span>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">
+                            词条
+                          </p>
+                          <button
+                            type="button"
+                            onClick={() => setIsEnglishColumnVisible((prev) => !prev)}
+                            className="inline-flex h-7 w-7 items-center justify-center border border-slate-200 bg-white text-slate-500 transition hover:border-slate-300 hover:text-slate-700"
+                            aria-label={isEnglishColumnVisible ? '隐藏英文列' : '显示英文列'}
+                          >
+                            {isEnglishColumnVisible ? <EyeOff size={14} /> : <Eye size={14} />}
+                          </button>
+                        </div>
+                        <div className="mt-2">
+                          {isEnglishColumnVisible ? (
+                            <p className="break-words text-[15px] font-semibold leading-6 text-slate-900">
+                              {entry.query}
+                            </p>
+                          ) : (
+                            <span className="inline-flex bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-400">
+                              已隐藏
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">
+                          中文释义
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => setIsExplainColumnVisible((prev) => !prev)}
+                          className="inline-flex h-7 w-7 items-center justify-center border border-slate-200 bg-white text-slate-500 transition hover:border-slate-300 hover:text-slate-700"
+                          aria-label={isExplainColumnVisible ? '隐藏中文释义列' : '显示中文释义列'}
+                        >
+                          {isExplainColumnVisible ? <EyeOff size={14} /> : <Eye size={14} />}
+                        </button>
+                      </div>
+                      {isExplainColumnVisible ? (
+                        <div className="mt-2 flex min-h-9 items-start gap-3">
+                          <button
+                            type="button"
+                            onClick={() => handleToggleExplainVisibility(entry.id)}
+                            className="inline-flex h-9 w-9 shrink-0 items-center justify-center border border-slate-200 bg-white text-slate-600 transition hover:border-slate-300 hover:bg-slate-50"
+                            aria-label={expandedExplainIds[entry.id] ? '收起释义' : '展开释义'}
+                          >
+                            {expandedExplainIds[entry.id] ? <EyeOff size={14} /> : <Eye size={14} />}
+                          </button>
+                          {expandedExplainIds[entry.id] ? (
+                            <p className="pt-1 text-sm leading-6 text-slate-600">{entry.explains.join('；')}</p>
+                          ) : null}
+                        </div>
+                      ) : (
+                        <div className="mt-2">
+                          <span className="inline-flex bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-400">
+                            已隐藏
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                    <div>
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">
+                        手动中文释义
+                      </p>
+                      <input
+                        type="text"
+                        value={entry.manualMeaning}
+                        onChange={(event) => handleManualMeaningChange(entry.id, event.target.value)}
+                        placeholder="手动输入中文释义"
+                        className="mt-2 h-11 w-full border border-slate-200 bg-white px-3 text-sm text-slate-800 outline-none transition focus:border-slate-300"
+                      />
+                    </div>
+                    <div>
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">
+                        英文默写
+                      </p>
+                      <input
+                        type="text"
+                        value={entry.manualDictation}
+                        onChange={(event) => handleManualDictationChange(entry.id, event.target.value)}
+                        placeholder="手动填写英文"
+                        className="mt-2 h-11 w-full border border-slate-200 bg-white px-3 text-sm text-slate-800 outline-none transition focus:border-slate-300"
+                      />
+                    </div>
+                    <div>
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">
+                        状态
+                      </p>
+                      <button
+                        type="button"
+                        role="switch"
+                        aria-checked={entry.mastered}
+                        onClick={() => handleToggleMastered(entry.id)}
+                        className={`mt-2 inline-flex items-center gap-3 border px-3 py-2 text-xs font-semibold transition ${
+                          entry.mastered
+                            ? 'border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
+                            : 'border-slate-200 bg-slate-100 text-slate-700 hover:bg-slate-200'
+                        }`}
+                      >
+                        <span>{entry.mastered ? '学会' : '未学会'}</span>
+                        <span
+                          className={`relative h-6 w-11 border transition ${
+                            entry.mastered ? 'bg-emerald-500' : 'bg-slate-300'
+                          }`}
+                        >
+                          <span
+                            className={`absolute top-0.5 h-5 w-5 bg-white shadow-sm transition ${
+                              entry.mastered ? 'left-[1.35rem]' : 'left-0.5'
+                            }`}
+                          />
+                        </span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
 
   return (
     <div className="h-dvh overflow-hidden bg-[#f4efe6] text-slate-900">
@@ -615,26 +1308,28 @@ export const EnglishLearningHub: React.FC<EnglishLearningHubProps> = ({ onBack }
             <div className="inline-flex rounded-full border border-slate-200 bg-white p-1 shadow-sm">
               <button
                 type="button"
-                onClick={() => setActiveTab('reading')}
+                onClick={handleOpenArticlesHome}
                 className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition ${
-                  activeTab === 'reading' ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-50'
+                  activeSection === 'articles' ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-50'
                 }`}
               >
                 <BookOpen size={16} />
-                文章阅读
+                文章列表
               </button>
               <button
                 type="button"
-                onClick={() => setActiveTab('wordbook')}
+                onClick={handleOpenWordbooksHome}
                 className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition ${
-                  activeTab === 'wordbook' ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-50'
+                  activeSection === 'wordbooks'
+                    ? 'bg-slate-900 text-white'
+                    : 'text-slate-600 hover:bg-slate-50'
                 }`}
               >
                 <NotebookPen size={16} />
                 单词本
                 <span
                   className={`rounded-full px-2 py-0.5 text-xs ${
-                    activeTab === 'wordbook' ? 'bg-white/15 text-white' : 'bg-slate-100 text-slate-600'
+                    activeSection === 'wordbooks' ? 'bg-white/15 text-white' : 'bg-slate-100 text-slate-600'
                   }`}
                 >
                   {wordbook.length}
@@ -643,383 +1338,17 @@ export const EnglishLearningHub: React.FC<EnglishLearningHubProps> = ({ onBack }
             </div>
           </div>
 
-          {activeTab === 'reading' ? (
-            <div className="mt-6 min-h-0 flex-1">
-              <section className="flex h-full min-h-0 flex-col border border-slate-200/80 bg-white p-5 shadow-sm sm:p-7">
-                <div>
-                  <h1 className="text-3xl font-black leading-tight text-slate-900 sm:text-4xl">
-                    {ARTICLE.title}
-                  </h1>
-                </div>
-
-                <div className="mt-6 min-h-0 flex-1 overflow-y-auto bg-[#fcfaf4] p-5 ring-1 ring-slate-200/80 sm:p-6">
-                  <div className="space-y-5 select-none">
-                    {ARTICLE_TOKENS.paragraphTokens.map((paragraphTokens, paragraphIndex) => (
-                      <p
-                        key={`paragraph-${paragraphIndex}`}
-                        className="whitespace-pre-wrap text-[1.02rem] leading-8 text-slate-800"
-                      >
-                        {paragraphTokens.map((token) => {
-                          if (token.type !== 'word' || token.wordIndex == null) {
-                            return <span key={token.id}>{token.text}</span>;
-                          }
-
-                          const inActiveRange =
-                            activeRange != null &&
-                            token.wordIndex >= activeRange.start &&
-                            token.wordIndex <= activeRange.end;
-                          const isUnderlined = underlineSet.has(token.wordIndex);
-
-                          return (
-                            <button
-                              key={token.id}
-                              type="button"
-                              data-word-token="true"
-                              onMouseDown={() => handleWordMouseDown(token.wordIndex!)}
-                              onMouseEnter={() => handleWordMouseEnter(token.wordIndex!)}
-                              onClick={() => handleWordClick(token.wordIndex!)}
-                              className={`relative inline rounded-md px-0.5 transition ${
-                                inActiveRange
-                                  ? 'bg-slate-900 text-white shadow-[0_8px_24px_rgba(15,23,42,0.18)]'
-                                  : 'text-slate-900 hover:bg-amber-100/80'
-                              } ${isUnderlined ? 'underline decoration-[1.5px] decoration-dashed decoration-amber-400 underline-offset-[1px]' : ''}`}
-                            >
-                              {token.text}
-                            </button>
-                          );
-                        })}
-                      </p>
-                    ))}
-                  </div>
-                </div>
-              </section>
-            </div>
-          ) : (
-            <div className="mt-6 min-h-0 flex-1">
-              <div className="flex h-full min-h-0 flex-col overflow-hidden border border-slate-200 bg-white shadow-sm">
-                {wordbook.length === 0 ? (
-                  <div className="flex flex-1 items-center justify-center px-6 py-16 text-center">
-                    <p className="text-lg font-bold text-slate-900">单词本还是空的</p>
-                    <p className="mt-3 text-sm leading-6 text-slate-500">
-                      先去文章阅读里查一个单词，再把它加入单词本。
-                    </p>
-                  </div>
-                ) : (
-                  <div className="flex min-h-0 flex-1 flex-col">
-                    <div className="border-b border-slate-200 bg-slate-50/70 px-4 py-4">
-                      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                        <div className="flex items-center gap-3">
-                          <p className="text-sm font-semibold text-slate-900">单词本列表</p>
-                          <span className="bg-white px-2.5 py-1 text-xs font-semibold text-slate-500 ring-1 ring-slate-200">
-                            {visibleWordbook.length}/{wordbook.length}
-                          </span>
-                        </div>
-                        <div className="flex flex-wrap gap-2">
-                          <label className="inline-flex items-center gap-2 border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700">
-                            <span>状态</span>
-                            <select
-                              value={masteryFilter}
-                              onChange={(event) => setMasteryFilter(event.target.value as MasteryFilter)}
-                              className="bg-transparent text-xs font-semibold text-slate-700 outline-none"
-                            >
-                              <option value="all">全部</option>
-                              <option value="mastered">只看学会</option>
-                              <option value="unmastered">只看未学会</option>
-                            </select>
-                          </label>
-                          <button
-                            type="button"
-                            onClick={handleToggleWordbookOrder}
-                            className="inline-flex items-center gap-2 border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
-                          >
-                            <Shuffle size={14} />
-                            {wordbookOrder === 'random' ? '默认排序' : '随机顺序'}
-                          </button>
-                          <button
-                            type="button"
-                            onClick={handleResetWordbookState}
-                            className="inline-flex items-center gap-2 border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
-                          >
-                            <RotateCcw size={14} />
-                            恢复原始状态
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-
-                    {visibleWordbook.length === 0 ? (
-                      <div className="flex flex-1 items-center justify-center px-6 py-16 text-center">
-                        <p className="text-lg font-bold text-slate-900">当前筛选下没有词条</p>
-                        <p className="mt-3 text-sm leading-6 text-slate-500">
-                          可以切回全部，或者切换“学会 / 未学会”筛选。
-                        </p>
-                      </div>
-                    ) : (
-                      <div className="min-h-0 flex-1 overflow-y-auto">
-                        <div className="sticky top-0 z-10 hidden border-b border-slate-200 bg-white lg:grid lg:grid-cols-[3rem_minmax(10rem,1fr)_minmax(12rem,1fr)_minmax(12rem,1fr)_minmax(12rem,1fr)_8.5rem] lg:gap-4 lg:px-4 lg:py-3">
-                          <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">
-                            #
-                          </span>
-                          <div className="flex items-center gap-2">
-                            <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">
-                              词条
-                            </span>
-                            <button
-                              type="button"
-                              onClick={() => setIsEnglishColumnVisible((prev) => !prev)}
-                              className="inline-flex h-7 w-7 items-center justify-center border border-slate-200 bg-white text-slate-500 transition hover:border-slate-300 hover:text-slate-700"
-                              aria-label={isEnglishColumnVisible ? '隐藏英文列' : '显示英文列'}
-                            >
-                              {isEnglishColumnVisible ? <EyeOff size={14} /> : <Eye size={14} />}
-                            </button>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">
-                              中文释义
-                            </span>
-                            <button
-                              type="button"
-                              onClick={() => setIsExplainColumnVisible((prev) => !prev)}
-                              className="inline-flex h-7 w-7 items-center justify-center border border-slate-200 bg-white text-slate-500 transition hover:border-slate-300 hover:text-slate-700"
-                              aria-label={isExplainColumnVisible ? '隐藏中文释义列' : '显示中文释义列'}
-                            >
-                              {isExplainColumnVisible ? <EyeOff size={14} /> : <Eye size={14} />}
-                            </button>
-                          </div>
-                          <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">
-                            手动中文释义
-                          </span>
-                          <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">
-                            英文默写
-                          </span>
-                          <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">
-                            状态
-                          </span>
-                        </div>
-
-                        <div className="divide-y divide-slate-100">
-                          {visibleWordbook.map((entry, index) => (
-                            <div key={entry.id} className="px-4 py-3">
-                              <div className="hidden lg:grid lg:grid-cols-[3rem_minmax(10rem,1fr)_minmax(12rem,1fr)_minmax(12rem,1fr)_minmax(12rem,1fr)_8.5rem] lg:gap-4 lg:items-start">
-                                <div className="pt-3 text-sm text-slate-400">{index + 1}</div>
-                                <div className="pt-2">
-                                  {isEnglishColumnVisible ? (
-                                    <p className="break-words text-[15px] font-semibold leading-6 text-slate-900">
-                                      {entry.query}
-                                    </p>
-                                  ) : (
-                                    <span className="inline-flex bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-400">
-                                      已隐藏
-                                    </span>
-                                  )}
-                                </div>
-                                <div className="pt-1.5">
-                                  {isExplainColumnVisible ? (
-                                    <div className="flex min-h-11 items-start gap-3">
-                                      <button
-                                        type="button"
-                                        onClick={() => handleToggleExplainVisibility(entry.id)}
-                                        className="inline-flex h-9 w-9 shrink-0 items-center justify-center border border-slate-200 bg-white text-slate-600 transition hover:border-slate-300 hover:bg-slate-50"
-                                        aria-label={expandedExplainIds[entry.id] ? '收起释义' : '展开释义'}
-                                      >
-                                        {expandedExplainIds[entry.id] ? <EyeOff size={14} /> : <Eye size={14} />}
-                                      </button>
-                                      {expandedExplainIds[entry.id] ? (
-                                        <p className="pt-1 text-sm leading-6 text-slate-600">
-                                          {entry.explains.join('；')}
-                                        </p>
-                                      ) : null}
-                                    </div>
-                                  ) : (
-                                    <span className="inline-flex bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-400">
-                                      已隐藏
-                                    </span>
-                                  )}
-                                </div>
-                                <div className="pt-1.5">
-                                  <input
-                                    type="text"
-                                    value={entry.manualMeaning}
-                                    onChange={(event) => handleManualMeaningChange(entry.id, event.target.value)}
-                                    placeholder="手动输入中文释义"
-                                    className="h-11 w-full border border-slate-200 bg-white px-3 text-sm text-slate-800 outline-none transition focus:border-slate-300"
-                                  />
-                                </div>
-                                <div className="pt-1.5">
-                                  <input
-                                    type="text"
-                                    value={entry.manualDictation}
-                                    onChange={(event) => handleManualDictationChange(entry.id, event.target.value)}
-                                    placeholder="手动填写英文"
-                                    className="h-11 w-full border border-slate-200 bg-white px-3 text-sm text-slate-800 outline-none transition focus:border-slate-300"
-                                  />
-                                </div>
-                                <div className="pt-1.5">
-                                  <button
-                                    type="button"
-                                    role="switch"
-                                    aria-checked={entry.mastered}
-                                    onClick={() => handleToggleMastered(entry.id)}
-                                    className={`inline-flex items-center gap-3 border px-3 py-2 text-xs font-semibold transition ${
-                                      entry.mastered
-                                        ? 'border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
-                                        : 'border-slate-200 bg-slate-100 text-slate-700 hover:bg-slate-200'
-                                    }`}
-                                  >
-                                    <span>{entry.mastered ? '学会' : '未学会'}</span>
-                                    <span
-                                      className={`relative h-6 w-11 border transition ${
-                                        entry.mastered ? 'bg-emerald-500' : 'bg-slate-300'
-                                      }`}
-                                    >
-                                      <span
-                                        className={`absolute top-0.5 h-5 w-5 bg-white shadow-sm transition ${
-                                          entry.mastered ? 'left-[1.35rem]' : 'left-0.5'
-                                        }`}
-                                      />
-                                    </span>
-                                  </button>
-                                </div>
-                              </div>
-
-                              <div className="space-y-3 lg:hidden">
-                                <div className="flex items-start gap-3">
-                                  <span className="mt-0.5 w-5 text-xs font-medium text-slate-400">
-                                    {index + 1}
-                                  </span>
-                                  <div className="min-w-0 flex-1">
-                                    <div className="flex items-center gap-2">
-                                      <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">
-                                        词条
-                                      </p>
-                                      <button
-                                        type="button"
-                                        onClick={() => setIsEnglishColumnVisible((prev) => !prev)}
-                                        className="inline-flex h-7 w-7 items-center justify-center border border-slate-200 bg-white text-slate-500 transition hover:border-slate-300 hover:text-slate-700"
-                                        aria-label={isEnglishColumnVisible ? '隐藏英文列' : '显示英文列'}
-                                      >
-                                        {isEnglishColumnVisible ? <EyeOff size={14} /> : <Eye size={14} />}
-                                      </button>
-                                    </div>
-                                    <div className="mt-2">
-                                      {isEnglishColumnVisible ? (
-                                        <p className="break-words text-[15px] font-semibold leading-6 text-slate-900">
-                                          {entry.query}
-                                        </p>
-                                      ) : (
-                                        <span className="inline-flex bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-400">
-                                          已隐藏
-                                        </span>
-                                      )}
-                                    </div>
-                                  </div>
-                                </div>
-                                <div>
-                                  <div className="flex items-center gap-2">
-                                    <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">
-                                      中文释义
-                                    </p>
-                                    <button
-                                      type="button"
-                                      onClick={() => setIsExplainColumnVisible((prev) => !prev)}
-                                      className="inline-flex h-7 w-7 items-center justify-center border border-slate-200 bg-white text-slate-500 transition hover:border-slate-300 hover:text-slate-700"
-                                      aria-label={isExplainColumnVisible ? '隐藏中文释义列' : '显示中文释义列'}
-                                    >
-                                      {isExplainColumnVisible ? <EyeOff size={14} /> : <Eye size={14} />}
-                                    </button>
-                                  </div>
-                                  {isExplainColumnVisible ? (
-                                    <div className="mt-2 flex min-h-9 items-start gap-3">
-                                      <button
-                                        type="button"
-                                        onClick={() => handleToggleExplainVisibility(entry.id)}
-                                        className="inline-flex h-9 w-9 shrink-0 items-center justify-center border border-slate-200 bg-white text-slate-600 transition hover:border-slate-300 hover:bg-slate-50"
-                                        aria-label={expandedExplainIds[entry.id] ? '收起释义' : '展开释义'}
-                                      >
-                                        {expandedExplainIds[entry.id] ? <EyeOff size={14} /> : <Eye size={14} />}
-                                      </button>
-                                      {expandedExplainIds[entry.id] ? (
-                                        <p className="pt-1 text-sm leading-6 text-slate-600">
-                                          {entry.explains.join('；')}
-                                        </p>
-                                      ) : null}
-                                    </div>
-                                  ) : (
-                                    <div className="mt-2">
-                                      <span className="inline-flex bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-400">
-                                        已隐藏
-                                      </span>
-                                    </div>
-                                  )}
-                                </div>
-                                <div>
-                                  <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">
-                                    手动中文释义
-                                  </p>
-                                  <input
-                                    type="text"
-                                    value={entry.manualMeaning}
-                                    onChange={(event) => handleManualMeaningChange(entry.id, event.target.value)}
-                                    placeholder="手动输入中文释义"
-                                    className="mt-2 h-11 w-full border border-slate-200 bg-white px-3 text-sm text-slate-800 outline-none transition focus:border-slate-300"
-                                  />
-                                </div>
-                                <div>
-                                  <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">
-                                    英文默写
-                                  </p>
-                                  <input
-                                    type="text"
-                                    value={entry.manualDictation}
-                                    onChange={(event) => handleManualDictationChange(entry.id, event.target.value)}
-                                    placeholder="手动填写英文"
-                                    className="mt-2 h-11 w-full border border-slate-200 bg-white px-3 text-sm text-slate-800 outline-none transition focus:border-slate-300"
-                                  />
-                                </div>
-                                <div>
-                                  <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">
-                                    状态
-                                  </p>
-                                  <button
-                                    type="button"
-                                    role="switch"
-                                    aria-checked={entry.mastered}
-                                    onClick={() => handleToggleMastered(entry.id)}
-                                    className={`mt-2 inline-flex items-center gap-3 border px-3 py-2 text-xs font-semibold transition ${
-                                      entry.mastered
-                                        ? 'border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
-                                        : 'border-slate-200 bg-slate-100 text-slate-700 hover:bg-slate-200'
-                                    }`}
-                                  >
-                                    <span>{entry.mastered ? '学会' : '未学会'}</span>
-                                    <span
-                                      className={`relative h-6 w-11 border transition ${
-                                        entry.mastered ? 'bg-emerald-500' : 'bg-slate-300'
-                                      }`}
-                                    >
-                                      <span
-                                        className={`absolute top-0.5 h-5 w-5 bg-white shadow-sm transition ${
-                                          entry.mastered ? 'left-[1.35rem]' : 'left-0.5'
-                                        }`}
-                                      />
-                                    </span>
-                                  </button>
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
+          {activeSection === 'articles'
+            ? isReadingDetail
+              ? renderReadingDetailView()
+              : renderArticleListView()
+            : isWordbookDetail
+            ? renderWordbookDetailView()
+            : renderWordbookListView()}
         </div>
       </div>
 
-      {activeTab === 'reading' && isLookupModalOpen && (
+      {isReadingDetail && isLookupModalOpen && (
         <div className="fixed inset-0 z-[700] flex items-end justify-center bg-slate-950/45 p-3 sm:items-center sm:p-6">
           <div
             className="absolute inset-0"
@@ -1048,7 +1377,7 @@ export const EnglishLearningHub: React.FC<EnglishLearningHubProps> = ({ onBack }
               {selection ? (
                 <div className="shrink-0 rounded-[1.5rem] bg-white/5 p-4 ring-1 ring-white/10">
                   <div className="max-h-[min(22dvh,10rem)] overflow-y-auto pr-1">
-                    <p className="break-words text-2xl font-black leading-tight text-white">
+                    <p className="break-words text-sm leading-7 text-slate-100">
                       {selection.query}
                     </p>
                   </div>
@@ -1089,9 +1418,12 @@ export const EnglishLearningHub: React.FC<EnglishLearningHubProps> = ({ onBack }
               {currentLookup && (
                 <>
                   <div className="min-h-0 flex flex-1 flex-col rounded-[1.5rem] bg-white/5 p-4 ring-1 ring-white/10">
-                    <div className="min-h-0 flex-1 space-y-2 overflow-y-auto pr-1 text-sm leading-7 text-slate-100">
+                    <div className="min-h-0 flex-1 space-y-2 overflow-y-auto pr-1">
                       {currentLookup.explains.map((explain) => (
-                        <p key={explain} className="rounded-2xl bg-white/5 px-3 py-2">
+                        <p
+                          key={explain}
+                          className="break-words rounded-2xl bg-white/5 px-3 py-2 text-sm leading-7 text-slate-100"
+                        >
                           {explain}
                         </p>
                       ))}
