@@ -1,7 +1,0 @@
-{
-  "name": "youdao-vercel-proxy",
-  "private": true,
-  "version": "1.0.0",
-  "description": "Serverless proxy for signing Youdao translation API requests.",
-  "license": "UNLICENSED"
-}
