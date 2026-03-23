@@ -8,14 +8,16 @@ import {
   LoaderCircle,
   NotebookPen,
   RotateCcw,
-  Shuffle,
-  Volume2
+  Shuffle
 } from 'lucide-react';
 import { DictionaryLookupResult } from '../services/youdaoDictionary';
+import { lookupLearningDictionary } from '../services/learningDictionary';
 import {
-  lookupLearningDictionary,
-  lookupLearningPronunciation
-} from '../services/learningDictionary';
+  LEARNING_ARTICLES,
+  type ArticleLevelRecord,
+  type ArticleLevelValue,
+  type ArticleRecord
+} from '../data/englishLearningArticles';
 
 interface EnglishLearningHubProps {
   onBack: () => void;
@@ -25,15 +27,8 @@ type EnglishSection = 'articles' | 'wordbooks';
 type MasteryFilter = 'all' | 'mastered' | 'unmastered';
 type WordbookOrder = 'default' | 'random';
 type WordbookScope = 'all' | string;
-
-type ArticleRecord = {
-  id: string;
-  title: string;
-  summary: string;
-  dailyLabel: string;
-  publishedAt: string | null;
-  paragraphs: readonly string[];
-};
+type QuizSelections = Record<string, number>;
+type QuizSubmissions = Record<string, boolean>;
 
 type ArticleToken = {
   id: string;
@@ -51,6 +46,7 @@ type WordRange = {
 
 type ArticleSelection = WordRange & {
   articleId: string;
+  articleLevel: ArticleLevelValue;
   query: string;
   normalizedQuery: string;
   normalizedTokens: string[];
@@ -79,37 +75,7 @@ type WordbookEntry = {
 };
 
 const WORDBOOK_STORAGE_KEY = 'englishLearningWordbook/v1';
-
-const ARTICLES: readonly ArticleRecord[] = [
-  {
-    id: 'pop-mart-labubu-film',
-    title: 'Pop Mart Bets on Labubu Beyond the Blind Box',
-    summary:
-      'Pop Mart and Sony Pictures are turning the Labubu phenomenon into a feature film, extending the brand beyond blind box toys.',
-    dailyLabel: '每日一篇 01',
-    publishedAt: null,
-    paragraphs: [
-      "Pop Mart, the Chinese toy manufacturer behind the global Labubu phenomenon, has partnered with Sony Pictures to develop a feature film combining live action and computer-generated animation. The project, currently in early development, will be directed by Paul King, whose impressive portfolio includes Wonka, the Paddington franchise, and the BBC comedy series The Mighty Boosh.",
-      "The Labubu dolls have transformed Pop Mart into a toy-making behemoth valued at nearly $40 billion, surpassing established competitors like Mattel. Part of their appeal lies in the blind box sales model-buyers remain unaware of which specific Labubu they're acquiring until opening the package. This marketing strategy, combined with celebrity endorsements from figures like Rihanna and Blackpink's Lisa, has propelled the toys to international prominence.",
-      "Created over a decade ago by Hong Kong artist Kasing Lung, Labubu is a forest elf inspired by Nordic mythology and featured in Lung's book series, The Monsters. Lung will serve as executive producer, while King will collaborate with Steven Levenson on script development.",
-      `Marketing experts suggest this venture represents a strategic evolution for Pop Mart. "For Gen Z and Millennial consumers, content and commerce are closely intertwined," notes Kim Dayoung from the National University of Singapore. The film could capitalize on the momentum of Chinese animation following recent blockbusters like Ne Zha 2 and Black Myth: Wukong, potentially establishing Pop Mart as a comprehensive entertainment brand rather than merely a toy retailer.`
-    ]
-  },
-  {
-    id: 'appeal-to-nature',
-    title: "Natural Doesn't Always Mean Better: Understanding the Appeal to Nature",
-    summary:
-      'This article explains why “natural” is not automatically safer or better, and why we should question that assumption.',
-    dailyLabel: '每日一篇 02',
-    publishedAt: null,
-    paragraphs: [
-      'Many people think natural things are always good. But this is not true.',
-      'Some natural things can hurt us. Arsenic is natural, but it can kill people. Cyanide is also natural. It comes from some plants like almonds and peaches. These things are dangerous.',
-      'Some man-made things help us. Medicines save lives. Glasses help us see better. Refrigerators keep our food fresh. These things make our lives better.',
-      'When someone says a product is "natural," think carefully. Ask why it is better. Natural does not always mean safe or good.'
-    ]
-  }
-];
+const ARTICLES: readonly ArticleRecord[] = LEARNING_ARTICLES;
 
 const DEFAULT_ARTICLE = ARTICLES[0];
 const ARTICLE_MAP = new Map(ARTICLES.map((article) => [article.id, article]));
@@ -165,17 +131,38 @@ const buildArticleTokens = (paragraphs: readonly string[]) => {
 };
 
 const ARTICLE_TOKENS_BY_ID = new Map(
-  ARTICLES.map((article) => [article.id, buildArticleTokens(article.paragraphs)])
+  ARTICLES.map((article) => [
+    article.id,
+    new Map(article.levels.map((levelRecord) => [levelRecord.level, buildArticleTokens(levelRecord.paragraphs)]))
+  ])
 );
 
-const getArticleTokens = (articleId: string) =>
-  ARTICLE_TOKENS_BY_ID.get(articleId) ?? ARTICLE_TOKENS_BY_ID.get(DEFAULT_ARTICLE.id)!;
+const getArticleLevelRecord = (article: ArticleRecord, articleLevel: ArticleLevelValue): ArticleLevelRecord =>
+  article.levels.find((levelRecord) => levelRecord.level === articleLevel) ?? article.levels[0];
+
+const getDefaultArticleTitle = (article: ArticleRecord) => getArticleLevelRecord(article, 1).title;
+
+const getArticleTokens = (articleId: string, articleLevel: ArticleLevelValue) => {
+  const articleLevels = ARTICLE_TOKENS_BY_ID.get(articleId);
+  const article = ARTICLE_MAP.get(articleId) ?? DEFAULT_ARTICLE;
+  const fallbackLevel = article.levels[0]?.level ?? 1;
+
+  return (
+    articleLevels?.get(articleLevel) ??
+    articleLevels?.get(fallbackLevel) ??
+    ARTICLE_TOKENS_BY_ID.get(DEFAULT_ARTICLE.id)?.get(DEFAULT_ARTICLE.levels[0]?.level ?? 1)!
+  );
+};
 
 const buildWordbookEntryId = (articleId: string, normalizedQuery: string) =>
   `${articleId}::${normalizedQuery}`;
 
-const buildSelection = (articleId: string, range: WordRange): ArticleSelection => {
-  const articleTokens = getArticleTokens(articleId);
+const buildSelection = (
+  articleId: string,
+  articleLevel: ArticleLevelValue,
+  range: WordRange
+): ArticleSelection => {
+  const articleTokens = getArticleTokens(articleId, articleLevel);
   const orderedRange = {
     start: Math.min(range.start, range.end),
     end: Math.max(range.start, range.end)
@@ -186,6 +173,7 @@ const buildSelection = (articleId: string, range: WordRange): ArticleSelection =
 
   return {
     articleId,
+    articleLevel,
     ...orderedRange,
     query: joinWordTokens(articleTokens.wordTokens, orderedRange),
     normalizedQuery: normalizedTokens.join(' '),
@@ -253,9 +241,13 @@ const loadWordbook = (): WordbookEntry[] => {
   }
 };
 
-const buildUnderlineSet = (entries: WordbookEntry[], articleId: string) => {
+const buildUnderlineSet = (
+  entries: WordbookEntry[],
+  articleId: string,
+  articleLevel: ArticleLevelValue
+) => {
   const highlightIndices = new Set<number>();
-  const articleTokens = getArticleTokens(articleId);
+  const articleTokens = getArticleTokens(articleId, articleLevel);
   const articleWords = articleTokens.wordTokens.map(
     (token) => token.normalized ?? normalizeWord(token.text)
   );
@@ -292,18 +284,33 @@ const shuffleIds = (ids: string[]) => {
   return next;
 };
 
-const playAudio = async (url: string | null) => {
-  if (!url) {
-    return;
+const buildQuizSelectionKey = (
+  articleId: string,
+  articleLevel: ArticleLevelValue,
+  questionIndex: number
+) => `${articleId}:${articleLevel}:${questionIndex}`;
+
+const getQuizAnswerIndex = (question: ArticleLevelRecord['quiz'][number]) => {
+  const numericIndex = Number(question.answer);
+  if (
+    Number.isInteger(numericIndex) &&
+    numericIndex >= 1 &&
+    numericIndex <= question.options.length
+  ) {
+    return numericIndex - 1;
   }
-  const audio = new Audio(url);
-  await audio.play();
+
+  const normalizedAnswer = normalizeWord(question.answer);
+  const optionIndex = question.options.findIndex((option) => normalizeWord(option) === normalizedAnswer);
+  return optionIndex >= 0 ? optionIndex : null;
 };
 
 export const EnglishLearningHub: React.FC<EnglishLearningHubProps> = ({ onBack }) => {
   const [activeSection, setActiveSection] = useState<EnglishSection>('articles');
   const [openedArticleId, setOpenedArticleId] = useState<string | null>(null);
+  const [activeArticleLevel, setActiveArticleLevel] = useState<ArticleLevelValue>(1);
   const [wordbookScope, setWordbookScope] = useState<WordbookScope | null>(null);
+  const [wordbookReturnArticleId, setWordbookReturnArticleId] = useState<string | null>(null);
   const [selection, setSelection] = useState<ArticleSelection | null>(null);
   const [previewRange, setPreviewRange] = useState<WordRange | null>(null);
   const [isLookupModalOpen, setIsLookupModalOpen] = useState(false);
@@ -315,9 +322,8 @@ export const EnglishLearningHub: React.FC<EnglishLearningHubProps> = ({ onBack }
   const [masteryFilter, setMasteryFilter] = useState<MasteryFilter>('all');
   const [wordbookOrder, setWordbookOrder] = useState<WordbookOrder>('default');
   const [randomOrderIds, setRandomOrderIds] = useState<string[]>([]);
-  const [audioUrlCache, setAudioUrlCache] = useState<Record<string, string | null>>({});
-  const [audioLoadingId, setAudioLoadingId] = useState<string | null>(null);
-  const [audioErrorMessage, setAudioErrorMessage] = useState('');
+  const [quizSelections, setQuizSelections] = useState<QuizSelections>({});
+  const [quizSubmissions, setQuizSubmissions] = useState<QuizSubmissions>({});
   const dragAnchorRef = useRef<number | null>(null);
   const dragRangeRef = useRef<WordRange | null>(null);
   const didDragRef = useRef(false);
@@ -326,16 +332,54 @@ export const EnglishLearningHub: React.FC<EnglishLearningHubProps> = ({ onBack }
     ? ARTICLE_MAP.get(openedArticleId) ?? DEFAULT_ARTICLE
     : null;
   const activeReadingArticleId = openedArticle?.id ?? null;
-  const activeReadingTokens = activeReadingArticleId ? getArticleTokens(activeReadingArticleId) : null;
+  const activeReadingLevelRecord = openedArticle
+    ? getArticleLevelRecord(openedArticle, activeArticleLevel)
+    : null;
+  const activeReadingTokens =
+    activeReadingArticleId && activeReadingLevelRecord
+      ? getArticleTokens(activeReadingArticleId, activeReadingLevelRecord.level)
+      : null;
   const isReadingDetail = activeSection === 'articles' && activeReadingArticleId != null;
   const isWordbookDetail = activeSection === 'wordbooks' && wordbookScope != null;
   const underlineSet = useMemo(
     () =>
-      activeReadingArticleId ? buildUnderlineSet(wordbook, activeReadingArticleId) : new Set<number>(),
-    [wordbook, activeReadingArticleId]
+      activeReadingArticleId && activeReadingLevelRecord
+        ? buildUnderlineSet(wordbook, activeReadingArticleId, activeReadingLevelRecord.level)
+        : new Set<number>(),
+    [wordbook, activeReadingArticleId, activeReadingLevelRecord]
   );
   const activeRange = previewRange ?? selection;
   const currentLookup = lookupState.status === 'success' ? lookupState.data : null;
+  const activeQuiz = activeReadingLevelRecord?.quiz ?? [];
+  const activeQuizSubmissionKey =
+    openedArticle && activeReadingLevelRecord
+      ? `${openedArticle.id}:${activeReadingLevelRecord.level}`
+      : null;
+  const activeQuizSubmitted = activeQuizSubmissionKey ? quizSubmissions[activeQuizSubmissionKey] === true : false;
+  const activeQuizSelections = useMemo(
+    () =>
+      !openedArticle || !activeReadingLevelRecord
+        ? []
+        : activeQuiz.map(
+            (_question, questionIndex) =>
+              quizSelections[
+                buildQuizSelectionKey(openedArticle.id, activeReadingLevelRecord.level, questionIndex)
+              ] ?? null
+          ),
+    [activeQuiz, activeReadingLevelRecord, openedArticle, quizSelections]
+  );
+  const activeQuizCorrectCount = useMemo(
+    () =>
+      activeQuiz.reduce((count, question, questionIndex) => {
+        const selectedIndex = activeQuizSelections[questionIndex];
+        const correctIndex = getQuizAnswerIndex(question);
+        return count + (selectedIndex != null && correctIndex === selectedIndex ? 1 : 0);
+      }, 0),
+    [activeQuiz, activeQuizSelections]
+  );
+  const activeQuizAnsweredCount = activeQuizSelections.filter((value) => value != null).length;
+  const activeQuizAllAnswered =
+    activeQuiz.length > 0 && activeQuizAnsweredCount === activeQuiz.length;
   const currentLookupEntryId =
     currentLookup && selection
       ? buildWordbookEntryId(selection.articleId, currentLookup.normalizedQuery)
@@ -401,7 +445,7 @@ export const EnglishLearningHub: React.FC<EnglishLearningHubProps> = ({ onBack }
     }
 
     if (wordbookScope && ARTICLE_MAP.has(wordbookScope)) {
-      return ARTICLE_MAP.get(wordbookScope)!.title;
+      return getDefaultArticleTitle(ARTICLE_MAP.get(wordbookScope)!);
     }
 
     return '单词本';
@@ -441,19 +485,19 @@ export const EnglishLearningHub: React.FC<EnglishLearningHubProps> = ({ onBack }
       dragRangeRef.current = null;
       setPreviewRange(null);
 
-      if (!draggedRange || !didDragRef.current) {
+      if (!draggedRange || !didDragRef.current || !activeReadingLevelRecord) {
         return;
       }
 
       didDragRef.current = false;
-      setSelection(buildSelection(activeReadingArticleId, draggedRange));
+      setSelection(buildSelection(activeReadingArticleId, activeReadingLevelRecord.level, draggedRange));
     };
 
     window.addEventListener('mouseup', handleMouseUp);
     return () => {
       window.removeEventListener('mouseup', handleMouseUp);
     };
-  }, [activeReadingArticleId]);
+  }, [activeReadingArticleId, activeReadingLevelRecord]);
 
   useEffect(() => {
     dragAnchorRef.current = null;
@@ -463,21 +507,18 @@ export const EnglishLearningHub: React.FC<EnglishLearningHubProps> = ({ onBack }
     setSelection(null);
     setLookupState({ status: 'idle' });
     setIsLookupModalOpen(false);
-    setAudioErrorMessage('');
-  }, [activeSection, activeReadingArticleId, wordbookScope]);
+  }, [activeArticleLevel, activeSection, activeReadingArticleId, wordbookScope]);
 
   useEffect(() => {
     if (!selection) {
       setLookupState({ status: 'idle' });
       setIsLookupModalOpen(false);
-      setAudioErrorMessage('');
       return;
     }
 
     let cancelled = false;
     setIsLookupModalOpen(true);
     setLookupState({ status: 'loading', query: selection.query });
-    setAudioErrorMessage('');
 
     lookupLearningDictionary(selection.query)
       .then((data) => {
@@ -540,7 +581,16 @@ export const EnglishLearningHub: React.FC<EnglishLearningHubProps> = ({ onBack }
       return;
     }
 
-    setSelection(buildSelection(activeReadingArticleId, { start: wordIndex, end: wordIndex }));
+    if (!activeReadingLevelRecord) {
+      return;
+    }
+
+    setSelection(
+      buildSelection(activeReadingArticleId, activeReadingLevelRecord.level, {
+        start: wordIndex,
+        end: wordIndex
+      })
+    );
   };
 
   const clearSelection = () => {
@@ -550,7 +600,6 @@ export const EnglishLearningHub: React.FC<EnglishLearningHubProps> = ({ onBack }
     setPreviewRange(null);
     setSelection(null);
     setIsLookupModalOpen(false);
-    setAudioErrorMessage('');
   };
 
   const handleToggleWordbook = () => {
@@ -661,63 +710,76 @@ export const EnglishLearningHub: React.FC<EnglishLearningHubProps> = ({ onBack }
     );
   };
 
-  const handlePlayCurrentLookup = async () => {
-    if (!currentLookup) {
-      return;
-    }
-
-    const cacheKey = currentLookup.normalizedQuery;
-    const cachedUrl = audioUrlCache[cacheKey];
-    if (cachedUrl) {
-      setAudioErrorMessage('');
-      await playAudio(cachedUrl);
-      return;
-    }
-
-    setAudioLoadingId(cacheKey);
-    setAudioErrorMessage('');
-
-    try {
-      const nextUrl = await lookupLearningPronunciation(currentLookup.query, currentLookup.source);
-      setAudioUrlCache((prev) => ({
-        ...prev,
-        [cacheKey]: nextUrl
-      }));
-
-      if (!nextUrl) {
-        throw new Error('当前内容没有可用发音。');
-      }
-
-      await playAudio(nextUrl);
-    } catch (error) {
-      setAudioErrorMessage(error instanceof Error ? error.message : '获取发音失败。');
-    } finally {
-      setAudioLoadingId(null);
-    }
-  };
-
   const handleOpenArticlesHome = () => {
     setActiveSection('articles');
     setOpenedArticleId(null);
+    setActiveArticleLevel(1);
     setWordbookScope(null);
+    setWordbookReturnArticleId(null);
   };
 
   const handleOpenWordbooksHome = () => {
     setActiveSection('wordbooks');
     setOpenedArticleId(null);
+    setActiveArticleLevel(1);
     setWordbookScope(null);
+    setWordbookReturnArticleId(null);
   };
 
   const handleOpenArticle = (articleId: string) => {
     setActiveSection('articles');
     setOpenedArticleId(articleId);
+    setActiveArticleLevel(1);
     setWordbookScope(null);
+    setWordbookReturnArticleId(null);
   };
 
-  const handleOpenWordbookScope = (scope: WordbookScope) => {
+  const handleSwitchArticleLevel = (level: ArticleLevelValue) => {
+    setActiveArticleLevel(level);
+  };
+
+  const handleSelectQuizOption = (questionIndex: number, optionIndex: number) => {
+    if (!openedArticle || !activeReadingLevelRecord) {
+      return;
+    }
+
+    const nextSubmissionKey = `${openedArticle.id}:${activeReadingLevelRecord.level}`;
+    setQuizSelections((prev) => ({
+      ...prev,
+      [buildQuizSelectionKey(openedArticle.id, activeReadingLevelRecord.level, questionIndex)]: optionIndex
+    }));
+    setQuizSubmissions((prev) => ({
+      ...prev,
+      [nextSubmissionKey]: false
+    }));
+  };
+
+  const handleSubmitQuiz = () => {
+    if (!activeQuizSubmissionKey || !activeQuizAllAnswered) {
+      return;
+    }
+
+    setQuizSubmissions((prev) => ({
+      ...prev,
+      [activeQuizSubmissionKey]: true
+    }));
+  };
+
+  const handleOpenWordbookScope = (scope: WordbookScope, returnArticleId: string | null = null) => {
     setActiveSection('wordbooks');
-    setOpenedArticleId(null);
+    setOpenedArticleId(returnArticleId);
     setWordbookScope(scope);
+    setWordbookReturnArticleId(returnArticleId);
+  };
+
+  const handleReturnToArticle = () => {
+    if (!wordbookReturnArticleId) {
+      return;
+    }
+
+    setActiveSection('articles');
+    setOpenedArticleId(wordbookReturnArticleId);
+    setWordbookScope(null);
   };
 
   useEffect(() => {
@@ -772,16 +834,12 @@ export const EnglishLearningHub: React.FC<EnglishLearningHubProps> = ({ onBack }
               >
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                   <div className="min-w-0">
-                    <div className="flex flex-wrap items-center gap-2 text-xs font-semibold text-slate-500">
-                      <span className="bg-slate-900 px-2.5 py-1 text-white">{article.dailyLabel}</span>
-                      <span className="bg-slate-100 px-2.5 py-1">
-                        {article.publishedAt ?? '发布时间待记录'}
-                      </span>
+                    <div className="text-xs font-semibold text-slate-500">
+                      {article.publishedAt ?? '发布时间待记录'}
                     </div>
                     <h2 className="mt-4 text-2xl font-black leading-tight text-slate-900">
-                      {article.title}
+                      {getDefaultArticleTitle(article)}
                     </h2>
-                    <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-600">{article.summary}</p>
                   </div>
                   <div className="shrink-0">
                     <span className="inline-flex bg-white px-3 py-2 text-sm font-semibold text-slate-600 ring-1 ring-slate-200">
@@ -798,77 +856,198 @@ export const EnglishLearningHub: React.FC<EnglishLearningHubProps> = ({ onBack }
   );
 
   const renderReadingDetailView = () => {
-    if (!openedArticle || !activeReadingTokens) {
+    if (!openedArticle || !activeReadingTokens || !activeReadingLevelRecord) {
       return null;
     }
 
     return (
       <div className="mt-6 min-h-0 flex-1">
         <section className="flex h-full min-h-0 flex-col border border-slate-200/80 bg-white p-5 shadow-sm sm:p-7">
-          <div className="flex flex-col gap-4">
-            <div className="flex flex-wrap items-center gap-3">
-              <button
-                type="button"
-                onClick={handleOpenArticlesHome}
-                className="inline-flex items-center gap-2 border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
-              >
-                <ArrowLeft size={16} />
-                返回文章列表
-              </button>
-              <span className="bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-500">
-                {openedArticle.dailyLabel}
-              </span>
-              <span className="bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-500">
-                {openedArticle.publishedAt ?? '发布时间待记录'}
-              </span>
-            </div>
-
-            <div>
-              <h1 className="text-3xl font-black leading-tight text-slate-900 sm:text-4xl">
-                {openedArticle.title}
-              </h1>
-            </div>
+          <div className="shrink-0">
+            <h1 className="text-3xl font-black leading-tight text-slate-900 sm:text-4xl">
+              {activeReadingLevelRecord.title}
+            </h1>
           </div>
 
-          <div className="mt-6 min-h-0 flex-1 overflow-y-auto bg-[#fcfaf4] p-5 ring-1 ring-slate-200/80 sm:p-6">
-            <div className="space-y-5 select-none">
-              {activeReadingTokens.paragraphTokens.map((paragraphTokens, paragraphIndex) => (
-                <p
-                  key={`${openedArticle.id}-paragraph-${paragraphIndex}`}
-                  className="whitespace-pre-wrap text-[1.02rem] leading-8 text-slate-800"
-                >
-                  {paragraphTokens.map((token) => {
-                    if (token.type !== 'word' || token.wordIndex == null) {
-                      return <span key={token.id}>{token.text}</span>;
-                    }
+          <div className="mt-6 grid min-h-0 flex-1 gap-6 xl:grid-cols-[minmax(0,1fr)_21rem]">
+            <div className="min-h-0 overflow-y-auto border border-slate-200/80 bg-[#fcfaf4] p-5 sm:p-6">
+              <div className="space-y-5 select-none">
+                {activeReadingTokens.paragraphTokens.map((paragraphTokens, paragraphIndex) => (
+                  <p
+                    key={`${openedArticle.id}-paragraph-${paragraphIndex}`}
+                    className="whitespace-pre-wrap text-[1.02rem] leading-8 text-slate-800"
+                  >
+                    {paragraphTokens.map((token) => {
+                      if (token.type !== 'word' || token.wordIndex == null) {
+                        return <span key={token.id}>{token.text}</span>;
+                      }
 
-                    const inActiveRange =
-                      activeRange != null &&
-                      token.wordIndex >= activeRange.start &&
-                      token.wordIndex <= activeRange.end;
-                    const isUnderlined = underlineSet.has(token.wordIndex);
+                      const inActiveRange =
+                        activeRange != null &&
+                        token.wordIndex >= activeRange.start &&
+                        token.wordIndex <= activeRange.end;
+                      const isUnderlined = underlineSet.has(token.wordIndex);
 
-                    return (
-                      <button
-                        key={token.id}
-                        type="button"
-                        data-word-token="true"
-                        onMouseDown={() => handleWordMouseDown(token.wordIndex!)}
-                        onMouseEnter={() => handleWordMouseEnter(token.wordIndex!)}
-                        onClick={() => handleWordClick(token.wordIndex!)}
-                        className={`relative inline rounded-md px-0.5 transition ${
-                          inActiveRange
-                            ? 'bg-slate-900 text-white shadow-[0_8px_24px_rgba(15,23,42,0.18)]'
-                            : 'text-slate-900 hover:bg-amber-100/80'
-                        } ${isUnderlined ? 'underline decoration-[1.5px] decoration-dashed decoration-amber-400 underline-offset-[1px]' : ''}`}
-                      >
-                        {token.text}
-                      </button>
-                    );
-                  })}
-                </p>
-              ))}
+                      return (
+                        <button
+                          key={token.id}
+                          type="button"
+                          data-word-token="true"
+                          onMouseDown={() => handleWordMouseDown(token.wordIndex!)}
+                          onMouseEnter={() => handleWordMouseEnter(token.wordIndex!)}
+                          onClick={() => handleWordClick(token.wordIndex!)}
+                          className={`relative inline px-0.5 transition ${
+                            inActiveRange
+                              ? 'bg-slate-900 text-white shadow-[0_8px_24px_rgba(15,23,42,0.18)]'
+                              : 'text-slate-900 hover:bg-amber-100/80'
+                          } ${isUnderlined ? 'underline decoration-[1.5px] decoration-dashed decoration-amber-400 underline-offset-[1px]' : ''}`}
+                        >
+                          {token.text}
+                        </button>
+                      );
+                    })}
+                  </p>
+                ))}
+              </div>
             </div>
+
+            <aside className="min-h-0 overflow-y-auto">
+              <div className="flex flex-col gap-5">
+                <section className="border border-slate-200 bg-white">
+                  <div className="border-b border-slate-200 px-4 py-3">
+                    <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">
+                      Audio
+                    </p>
+                  </div>
+                  <div className="p-4">
+                    {activeReadingLevelRecord.audio ? (
+                      <audio
+                        key={`${openedArticle.id}-audio-${activeReadingLevelRecord.level}`}
+                        controls
+                        preload="none"
+                        src={activeReadingLevelRecord.audio}
+                        className="w-full"
+                      />
+                    ) : (
+                      <p className="text-sm leading-6 text-slate-500">当前 level 暂无音频。</p>
+                    )}
+                  </div>
+                </section>
+
+                <section className="border border-slate-200 bg-white">
+                  <div className="border-b border-slate-200 px-4 py-3">
+                    <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Quiz</p>
+                  </div>
+
+                  {activeQuiz.length === 0 ? (
+                    <div className="px-4 py-6">
+                      <p className="text-sm leading-6 text-slate-500">当前 level 暂无题目。</p>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="divide-y divide-slate-200">
+                        {activeQuiz.map((question, questionIndex) => {
+                          const selectedIndex = activeQuizSelections[questionIndex];
+                          const correctIndex = getQuizAnswerIndex(question);
+                          const isSelected = (optionIndex: number) => selectedIndex === optionIndex;
+
+                          return (
+                            <div key={`${openedArticle.id}-quiz-${activeReadingLevelRecord.level}-${questionIndex}`} className="px-4 py-5">
+                              <div className="flex gap-3">
+                                <span className="pt-0.5 text-2xl font-light text-slate-300">
+                                  {questionIndex + 1}
+                                </span>
+                                <div className="min-w-0 flex-1">
+                                  <h2 className="text-[1.15rem] font-medium leading-8 text-slate-900">
+                                    {question.question}
+                                  </h2>
+                                  <div className="mt-4 space-y-3">
+                                    {question.options.map((option, optionIndex) => {
+                                      const isCorrect = correctIndex === optionIndex;
+                                      const showCorrect = activeQuizSubmitted && isCorrect;
+                                      const showIncorrect =
+                                        activeQuizSubmitted && isSelected(optionIndex) && !isCorrect;
+                                      const showSelected = !activeQuizSubmitted && isSelected(optionIndex);
+
+                                      return (
+                                        <button
+                                          key={`${openedArticle.id}-quiz-option-${questionIndex}-${optionIndex}`}
+                                          type="button"
+                                          onClick={() => handleSelectQuizOption(questionIndex, optionIndex)}
+                                          className={`flex w-full items-start gap-3 text-left transition ${
+                                            showCorrect
+                                              ? 'text-emerald-600'
+                                              : showIncorrect
+                                              ? 'text-rose-500'
+                                              : showSelected
+                                              ? 'text-slate-800'
+                                              : 'text-slate-400 hover:text-slate-600'
+                                          }`}
+                                        >
+                                          <span
+                                            className={`mt-1.5 h-6 w-6 shrink-0 border ${
+                                              showCorrect
+                                                ? 'border-emerald-300 bg-emerald-300'
+                                                : showIncorrect
+                                                ? 'border-rose-300 bg-rose-200'
+                                                : showSelected
+                                                ? 'border-slate-400 bg-slate-200'
+                                                : 'border-slate-200 bg-white'
+                                            }`}
+                                          >
+                                            {showCorrect || showSelected ? (
+                                              <span className="mx-auto mt-[5px] block h-2.5 w-2.5 bg-white" />
+                                            ) : null}
+                                          </span>
+                                          <span className="text-[1.05rem] leading-8">{option}</span>
+                                        </button>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      <div className="border-t border-slate-200 px-4 py-4">
+                        <div className="flex flex-col gap-3">
+                          {!activeQuizSubmitted ? (
+                            <button
+                              type="button"
+                              onClick={handleSubmitQuiz}
+                              disabled={!activeQuizAllAnswered}
+                              className={`border px-4 py-3 text-base font-semibold transition ${
+                                activeQuizAllAnswered
+                                  ? 'border-slate-300 bg-slate-900 text-white hover:bg-slate-800'
+                                  : 'cursor-not-allowed border-slate-200 bg-slate-100 text-slate-400'
+                              }`}
+                            >
+                              提交
+                            </button>
+                          ) : null}
+
+                          {activeQuizSubmitted ? (
+                            <div className="border border-slate-200 bg-slate-50 px-4 py-4 text-center text-base font-semibold text-slate-800">
+                              {activeQuizCorrectCount === activeQuiz.length ? (
+                                <span>
+                                  Excellent! ({activeQuizCorrectCount}/{activeQuiz.length}) Perfect score!
+                                </span>
+                              ) : (
+                                <span>
+                                  已答对 {activeQuizCorrectCount}/{activeQuiz.length}
+                                </span>
+                              )}
+                            </div>
+                          ) : null}
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </section>
+              </div>
+            </aside>
           </div>
         </section>
       </div>
@@ -924,22 +1103,16 @@ export const EnglishLearningHub: React.FC<EnglishLearningHubProps> = ({ onBack }
                 onClick={() => handleOpenWordbookScope(article.id)}
                 className="border border-slate-200 bg-[#fcfaf4] p-5 text-left transition hover:border-slate-300 hover:bg-[#faf6ec]"
               >
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                  <div className="min-w-0">
-                    <div className="flex flex-wrap items-center gap-2 text-xs font-semibold text-slate-500">
-                      <span className="bg-slate-100 px-2.5 py-1">{article.dailyLabel}</span>
-                      <span className="bg-slate-100 px-2.5 py-1">
-                        {article.publishedAt ?? '发布时间待记录'}
-                      </span>
-                    </div>
-                    <h2 className="mt-4 text-2xl font-black leading-tight text-slate-900">
-                      {article.title}
-                    </h2>
-                    <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-600">
-                      查看这篇文章对应的单词本内容。
-                    </p>
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                <div className="min-w-0">
+                  <div className="text-xs font-semibold text-slate-500">
+                    {article.publishedAt ?? '发布时间待记录'}
                   </div>
-                  <div className="shrink-0">
+                  <h2 className="mt-4 text-2xl font-black leading-tight text-slate-900">
+                    {getDefaultArticleTitle(article)}
+                  </h2>
+                </div>
+                <div className="shrink-0">
                     <span className="inline-flex bg-white px-3 py-2 text-sm font-semibold text-slate-600 ring-1 ring-slate-200">
                       {count} 个词条
                     </span>
@@ -959,22 +1132,12 @@ export const EnglishLearningHub: React.FC<EnglishLearningHubProps> = ({ onBack }
         <div className="border-b border-slate-200 bg-slate-50/70 px-4 py-4">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div>
-              <button
-                type="button"
-                onClick={handleOpenWordbooksHome}
-                className="inline-flex items-center gap-2 border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
-              >
-                <ArrowLeft size={16} />
-                返回单词本列表
-              </button>
-              <h1 className="mt-4 text-2xl font-black leading-tight text-slate-900">{wordbookScopeTitle}</h1>
+              <h1 className="text-2xl font-black leading-tight text-slate-900">{wordbookScopeTitle}</h1>
               <p className="mt-2 text-sm leading-6 text-slate-500">
                 {wordbookScope === 'all'
                   ? '查看全部文章累计收录的词条。'
                   : wordbookScope && ARTICLE_MAP.has(wordbookScope)
-                  ? `${ARTICLE_MAP.get(wordbookScope)!.dailyLabel} · ${
-                      ARTICLE_MAP.get(wordbookScope)!.publishedAt ?? '发布时间待记录'
-                    }`
+                  ? `${ARTICLE_MAP.get(wordbookScope)!.publishedAt ?? '发布时间待记录'}`
                   : '按文章查看对应的词条。'}
               </p>
             </div>
@@ -1291,25 +1454,60 @@ export const EnglishLearningHub: React.FC<EnglishLearningHubProps> = ({ onBack }
       <div className="mx-auto flex h-full max-w-7xl flex-col px-4 py-3 sm:px-6 sm:py-4">
         <div className="flex min-h-0 flex-1 flex-col border border-black/5 bg-white/70 p-4 shadow-[0_20px_80px_rgba(148,163,184,0.2)] backdrop-blur-sm sm:p-6">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3">
               <button
                 type="button"
-                onClick={onBack}
-                className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
+                onClick={
+                  isReadingDetail
+                    ? handleOpenArticlesHome
+                    : isWordbookDetail && wordbookReturnArticleId
+                    ? handleReturnToArticle
+                    : isWordbookDetail
+                    ? handleOpenWordbooksHome
+                    : onBack
+                }
+                className="inline-flex items-center gap-2 border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
               >
                 <ArrowLeft size={16} />
-                返回入口
+                {isReadingDetail
+                  ? '返回文章列表'
+                  : isWordbookDetail && wordbookReturnArticleId
+                  ? '返回文章'
+                  : isWordbookDetail
+                  ? '返回单词本列表'
+                  : '返回入口'}
               </button>
-              <div className="rounded-full bg-[#1f2937] px-3 py-1 text-xs font-semibold uppercase tracking-[0.25em] text-white">
-                English Hub
-              </div>
+
+              {isReadingDetail && openedArticle ? (
+                <>
+                  <div className="border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-semibold text-slate-600">
+                    {openedArticle.publishedAt ?? '发布时间待记录'}
+                  </div>
+                  <div className="inline-flex border border-slate-200 bg-[#f4f0e8] p-1">
+                    {openedArticle.levels.map((levelRecord) => (
+                      <button
+                        key={`${openedArticle.id}-top-level-${levelRecord.level}`}
+                        type="button"
+                        onClick={() => handleSwitchArticleLevel(levelRecord.level)}
+                        className={`min-w-[5.8rem] border px-4 py-2 text-lg font-semibold tracking-tight transition ${
+                          levelRecord.level === activeReadingLevelRecord?.level
+                            ? 'border-slate-300 bg-white text-slate-700 shadow-[0_1px_0_rgba(148,163,184,0.2)]'
+                            : 'border-transparent bg-[#f4f0e8] text-slate-500 hover:bg-white/80'
+                        }`}
+                      >
+                        Level {levelRecord.level}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              ) : null}
             </div>
 
-            <div className="inline-flex rounded-full border border-slate-200 bg-white p-1 shadow-sm">
+            <div className="inline-flex border border-slate-200 bg-white p-1 shadow-sm">
               <button
                 type="button"
                 onClick={handleOpenArticlesHome}
-                className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition ${
+                className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold transition ${
                   activeSection === 'articles' ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-50'
                 }`}
               >
@@ -1318,8 +1516,12 @@ export const EnglishLearningHub: React.FC<EnglishLearningHubProps> = ({ onBack }
               </button>
               <button
                 type="button"
-                onClick={handleOpenWordbooksHome}
-                className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition ${
+                onClick={
+                  isReadingDetail && openedArticle
+                    ? () => handleOpenWordbookScope(openedArticle.id, openedArticle.id)
+                    : handleOpenWordbooksHome
+                }
+                className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold transition ${
                   activeSection === 'wordbooks'
                     ? 'bg-slate-900 text-white'
                     : 'text-slate-600 hover:bg-slate-50'
@@ -1328,7 +1530,7 @@ export const EnglishLearningHub: React.FC<EnglishLearningHubProps> = ({ onBack }
                 <NotebookPen size={16} />
                 单词本
                 <span
-                  className={`rounded-full px-2 py-0.5 text-xs ${
+                  className={`px-2 py-0.5 text-xs ${
                     activeSection === 'wordbooks' ? 'bg-white/15 text-white' : 'bg-slate-100 text-slate-600'
                   }`}
                 >
@@ -1358,7 +1560,7 @@ export const EnglishLearningHub: React.FC<EnglishLearningHubProps> = ({ onBack }
 
           <div
             data-lookup-modal="true"
-            className="relative z-10 flex h-[min(78dvh,42rem)] w-[min(92vw,48rem)] flex-col overflow-hidden rounded-[2rem] bg-[#111827] p-5 text-slate-50 shadow-[0_24px_80px_rgba(15,23,42,0.35)] sm:p-6"
+            className="relative z-10 flex max-h-[min(78dvh,42rem)] w-[min(92vw,48rem)] flex-col overflow-hidden rounded-[2rem] bg-[#111827] p-5 text-slate-50 shadow-[0_24px_80px_rgba(15,23,42,0.35)] sm:p-6"
           >
             <div className="flex shrink-0 items-center justify-between gap-4">
               <p className="text-sm font-semibold text-amber-200/90">
@@ -1373,7 +1575,7 @@ export const EnglishLearningHub: React.FC<EnglishLearningHubProps> = ({ onBack }
               </button>
             </div>
 
-            <div className="mt-4 flex min-h-0 flex-1 flex-col gap-4 overflow-hidden">
+            <div className="mt-4 flex min-h-0 flex-col gap-4 overflow-hidden">
               {selection ? (
                 <div className="shrink-0 rounded-[1.5rem] bg-white/5 p-4 ring-1 ring-white/10">
                   <div className="max-h-[min(22dvh,10rem)] overflow-y-auto pr-1">
@@ -1417,8 +1619,8 @@ export const EnglishLearningHub: React.FC<EnglishLearningHubProps> = ({ onBack }
 
               {currentLookup && (
                 <>
-                  <div className="min-h-0 flex flex-1 flex-col rounded-[1.5rem] bg-white/5 p-4 ring-1 ring-white/10">
-                    <div className="min-h-0 flex-1 space-y-2 overflow-y-auto pr-1">
+                  <div className="rounded-[1.5rem] bg-white/5 p-4 ring-1 ring-white/10">
+                    <div className="max-h-[min(28dvh,16rem)] space-y-2 overflow-y-auto pr-1">
                       {currentLookup.explains.map((explain) => (
                         <p
                           key={explain}
@@ -1430,21 +1632,6 @@ export const EnglishLearningHub: React.FC<EnglishLearningHubProps> = ({ onBack }
                     </div>
                   </div>
                   <div className="shrink-0 flex flex-col gap-3 sm:flex-row">
-                    <button
-                      type="button"
-                      disabled={audioLoadingId === currentLookup.normalizedQuery}
-                      onClick={() => {
-                        void handlePlayCurrentLookup();
-                      }}
-                      className="inline-flex flex-1 items-center justify-center gap-2 rounded-full border border-white/15 px-4 py-3 text-sm font-semibold text-white transition hover:bg-white/10 disabled:cursor-wait disabled:border-white/5 disabled:text-slate-500"
-                    >
-                      {audioLoadingId === currentLookup.normalizedQuery ? (
-                        <LoaderCircle size={16} className="animate-spin" />
-                      ) : (
-                        <Volume2 size={16} />
-                      )}
-                      发音
-                    </button>
                     <button
                       type="button"
                       onClick={handleToggleWordbook}
@@ -1464,7 +1651,6 @@ export const EnglishLearningHub: React.FC<EnglishLearningHubProps> = ({ onBack }
                   {isWordbookActionDisabled ? (
                     <p className="shrink-0 text-sm text-amber-200/90">超过 5 个词的选择不能加入单词本。</p>
                   ) : null}
-                  {audioErrorMessage ? <p className="shrink-0 text-sm text-rose-200">{audioErrorMessage}</p> : null}
                 </>
               )}
             </div>
