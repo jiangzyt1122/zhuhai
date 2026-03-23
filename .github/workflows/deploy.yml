@@ -6,33 +6,27 @@ on:
       - master
   workflow_dispatch:
 
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
-
 permissions:
-  contents: read
-  pages: write
-  id-token: write
+  contents: write
 
 concurrency:
-  group: pages
+  group: gh-pages
   cancel-in-progress: true
 
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
-
-      - name: Configure Pages
-        uses: actions/configure-pages@v5
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
 
       - name: Setup Node
         uses: actions/setup-node@v6
         with:
-          node-version: 22
+          node-version: 24
           cache: npm
 
       - name: Install dependencies
@@ -41,21 +35,59 @@ jobs:
       - name: Build site
         run: npm run build:pages
 
-      - name: Upload GitHub Pages artifact
-        uses: actions/upload-pages-artifact@v4
-        with:
-          path: offline-dist
+      - name: Publish to gh-pages branch
+        env:
+          TARGET_DIR: ${{ runner.temp }}/gh-pages
+        run: |
+          set -eu
 
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    env:
-      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+          git fetch origin gh-pages || true
 
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4.0.5
+          if git ls-remote --exit-code --heads origin gh-pages >/dev/null 2>&1; then
+            git worktree add -B gh-pages "$TARGET_DIR" origin/gh-pages
+          else
+            git worktree add -B gh-pages "$TARGET_DIR"
+          fi
+
+          python3 - <<'PY'
+          import os
+          import shutil
+          from pathlib import Path
+
+          source = Path('offline-dist')
+          target = Path(os.environ['TARGET_DIR'])
+
+          for child in target.iterdir():
+            if child.name == '.git':
+              continue
+            if child.is_dir():
+              shutil.rmtree(child)
+            else:
+              child.unlink()
+
+          for child in source.iterdir():
+            destination = target / child.name
+            if child.is_dir():
+              shutil.copytree(child, destination)
+            else:
+              shutil.copy2(child, destination)
+
+          cname = Path('CNAME')
+          if cname.exists():
+            shutil.copy2(cname, target / 'CNAME')
+
+          (target / '.nojekyll').touch()
+          PY
+
+          cd "$TARGET_DIR"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add --all
+
+          if git diff --cached --quiet; then
+            echo "No changes to deploy."
+            exit 0
+          fi
+
+          git commit -m "Deploy ${GITHUB_SHA}"
+          git push origin HEAD:gh-pages
