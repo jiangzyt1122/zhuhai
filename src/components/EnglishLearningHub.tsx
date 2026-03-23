@@ -537,7 +537,7 @@ export const EnglishLearningHub: React.FC<EnglishLearningHubProps> = ({ onBack }
     setAudioErrorMessage('');
 
     try {
-      const nextUrl = await lookupLearningPronunciation(currentLookup.query);
+      const nextUrl = await lookupLearningPronunciation(currentLookup.query, currentLookup.source);
       setAudioUrlCache((prev) => ({
         ...prev,
         [cacheKey]: nextUrl
@@ -1024,10 +1024,17 @@ export const EnglishLearningHub: React.FC<EnglishLearningHubProps> = ({ onBack }
               <div className="mt-5 rounded-[1.5rem] bg-rose-500/10 p-4 text-sm leading-7 text-rose-100 ring-1 ring-rose-400/20">
                 <p className="font-semibold text-rose-200">查询失败</p>
                 <p className="mt-2">{lookupState.message}</p>
-                <p className="mt-3 text-rose-100/80">
-                  本地调试请在运行 `npm run dev` 或 `npm run preview` 的环境里设置
-                  `YOUDAO_APP_KEY` 和 `YOUDAO_APP_SECRET`。
-                </p>
+                {lookupState.message.includes('纯静态部署') ? (
+                  <p className="mt-3 text-rose-100/80">
+                    现在这类线上静态部署只能直接使用站内词库。若要查整句或未收录内容，需要额外配置可公网访问的词典代理，
+                    然后在前端设置 `VITE_YOUDAO_PROXY_URL`。
+                  </p>
+                ) : (
+                  <p className="mt-3 text-rose-100/80">
+                    本地调试请在运行 `npm run dev` 或 `npm run preview` 的环境里设置
+                    `YOUDAO_APP_KEY` 和 `YOUDAO_APP_SECRET`；线上静态部署则需要额外的词典代理服务。
+                  </p>
+                )}
               </div>
             )}
 

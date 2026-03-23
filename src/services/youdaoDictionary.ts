@@ -1,5 +1,8 @@
 type DictionaryPayload = Record<string, unknown>;
 
+const YOUDAO_PROXY_URL = (import.meta.env.VITE_YOUDAO_PROXY_URL || '/api/youdao/dict').trim();
+const IS_DEFAULT_LOCAL_PROXY = YOUDAO_PROXY_URL === '/api/youdao/dict';
+
 export interface DictionaryLookupResult {
   query: string;
   normalizedQuery: string;
@@ -74,6 +77,9 @@ const pickFirstString = (...values: unknown[]) => {
 };
 
 const normalizeQuery = (query: string) => cleanString(query.toLowerCase());
+
+const buildStaticProxyUnavailableMessage = () =>
+  '当前站点是纯静态部署，没有可用的词典代理服务。内置词库里的单词和部分词组仍可查询；整句或未收录内容需要额外后端代理。';
 
 const findCandidatePayloads = (raw: unknown): DictionaryPayload[] => {
   if (!isRecord(raw)) {
@@ -262,18 +268,29 @@ export const lookupYoudaoDictionary = async (query: string): Promise<DictionaryL
     throw new Error('请选择要查询的单词或词组。');
   }
 
-  const response = await fetch(`/api/youdao/dict?q=${encodeURIComponent(trimmedQuery)}`, {
-    headers: {
-      Accept: 'application/json'
-    }
-  });
+  let response: Response;
+  try {
+    response = await fetch(`${YOUDAO_PROXY_URL}?q=${encodeURIComponent(trimmedQuery)}`, {
+      headers: {
+        Accept: 'application/json'
+      }
+    });
+  } catch {
+    throw new Error(
+      IS_DEFAULT_LOCAL_PROXY ? buildStaticProxyUnavailableMessage() : '词典代理服务当前不可用。'
+    );
+  }
 
   const payload = await response.json().catch(() => null);
 
   if (!response.ok) {
+    if (response.status === 404 && IS_DEFAULT_LOCAL_PROXY) {
+      throw new Error(buildStaticProxyUnavailableMessage());
+    }
+
     const message =
       (isRecord(payload) && pickFirstString(payload.message, payload.errorMessage)) ||
-      '词典服务当前不可用。';
+      (IS_DEFAULT_LOCAL_PROXY ? buildStaticProxyUnavailableMessage() : '词典服务当前不可用。');
     throw new Error(message);
   }
 
