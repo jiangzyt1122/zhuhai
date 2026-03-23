@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build:dict-index": "node scripts/generate-dictionary-index.mjs",
+    "build:pages": "vite build --mode offline",
     "build": "vite build",
     "preview": "vite preview"
   },
