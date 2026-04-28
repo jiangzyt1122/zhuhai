@@ -36,6 +36,7 @@
     }
 
     .game {
+      --night-progress: 0;
       position: relative;
       width: 100vw;
       height: 100vh;
@@ -94,6 +95,52 @@
       transform: scale(0.62);
       animation-duration: 37s;
       animation-delay: -28s;
+    }
+
+    .stars {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      pointer-events: none;
+      opacity: var(--night-progress);
+      background:
+        radial-gradient(circle at 17% 16%, #fff8c8 0 2px, transparent 3px),
+        radial-gradient(circle at 27% 9%, #fff8c8 0 1.5px, transparent 2.5px),
+        radial-gradient(circle at 42% 18%, #fff8c8 0 2px, transparent 3px),
+        radial-gradient(circle at 61% 11%, #fff8c8 0 1.5px, transparent 2.5px),
+        radial-gradient(circle at 73% 20%, #fff8c8 0 2px, transparent 3px),
+        radial-gradient(circle at 88% 13%, #fff8c8 0 1.5px, transparent 2.5px);
+      transition: opacity 500ms linear;
+    }
+
+    .moon {
+      position: absolute;
+      right: 14%;
+      top: 8%;
+      z-index: 2;
+      width: clamp(48px, 8vw, 82px);
+      height: clamp(48px, 8vw, 82px);
+      border-radius: 999px;
+      background:
+        radial-gradient(circle at 34% 34%, rgba(255, 255, 255, 0.9) 0 7px, transparent 8px),
+        radial-gradient(circle at 62% 58%, rgba(230, 211, 147, 0.35) 0 8px, transparent 9px),
+        #fff5ac;
+      box-shadow: 0 0 30px rgba(255, 245, 172, 0.48);
+      opacity: var(--night-progress);
+      transition: opacity 500ms linear;
+      pointer-events: none;
+    }
+
+    .night-wash {
+      position: absolute;
+      inset: 0;
+      z-index: 900;
+      pointer-events: none;
+      opacity: var(--night-progress);
+      background:
+        radial-gradient(circle at 72% 16%, rgba(255, 245, 172, 0.16), transparent 22%),
+        linear-gradient(180deg, rgba(18, 34, 85, 0.84), rgba(26, 44, 105, 0.55) 44%, rgba(18, 42, 58, 0.62));
+      transition: opacity 500ms linear;
     }
 
     @keyframes cloudDrift {
@@ -379,6 +426,10 @@
         inset 0 1px 0 rgba(255, 255, 255, 0.88);
     }
 
+    .game.bedtime .egg-button {
+      filter: saturate(0.78) brightness(0.92);
+    }
+
     .facilities,
     .actors {
       position: absolute;
@@ -398,6 +449,137 @@
       position: absolute;
       pointer-events: none;
       filter: drop-shadow(0 12px 12px rgba(72, 100, 63, 0.16));
+    }
+
+    .farm-facility {
+      z-index: 8;
+      filter: drop-shadow(0 16px 10px rgba(79, 91, 58, 0.18));
+    }
+
+    .farm-ground {
+      position: absolute;
+      left: 2%;
+      right: 2%;
+      bottom: 0;
+      height: 23%;
+      border-radius: 50%;
+      background:
+        radial-gradient(circle at 30% 46%, rgba(255, 255, 255, 0.34) 0 8px, transparent 9px),
+        radial-gradient(ellipse, rgba(215, 251, 139, 0.84), rgba(103, 190, 87, 0.16) 70%, transparent 72%);
+    }
+
+    .farm-barn {
+      position: absolute;
+      left: 13%;
+      right: 13%;
+      bottom: 15%;
+      height: 62%;
+      border-radius: 22px 22px 18px 18px;
+      background:
+        radial-gradient(circle at 34% 22%, rgba(255, 255, 255, 0.34) 0 11px, transparent 12px),
+        repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.14) 0 3px, transparent 3px 19px),
+        linear-gradient(180deg, #ff7067, #e5414c);
+      border: 5px solid rgba(98, 54, 39, 0.34);
+      box-shadow: inset 0 -7px 0 rgba(120, 45, 51, 0.16);
+      z-index: 2;
+    }
+
+    .farm-barn::before {
+      content: "";
+      position: absolute;
+      left: -15%;
+      right: -15%;
+      top: -29%;
+      height: 36%;
+      border-radius: 34px 34px 12px 12px;
+      background:
+        linear-gradient(135deg, transparent 0 47%, rgba(255, 255, 255, 0.28) 48% 54%, transparent 55% 100%),
+        linear-gradient(180deg, #8fd0ff, #4b9fe8);
+      border: 5px solid rgba(38, 74, 111, 0.34);
+      box-shadow: inset 0 -5px 0 rgba(38, 74, 111, 0.14);
+      clip-path: polygon(50% 0, 100% 100%, 0 100%);
+    }
+
+    .farm-window {
+      position: absolute;
+      top: 20%;
+      width: 23%;
+      height: 20%;
+      border-radius: 12px;
+      background: rgba(255, 246, 160, 0.62);
+      border: 4px solid rgba(93, 59, 42, 0.34);
+      box-shadow: 0 0 18px rgba(255, 236, 134, 0.32);
+    }
+
+    .farm-window.left { left: 14%; }
+    .farm-window.right { right: 14%; }
+
+    .farm-door {
+      position: absolute;
+      left: 35%;
+      bottom: -2px;
+      width: 30%;
+      height: 45%;
+      border-radius: 17px 17px 8px 8px;
+      background:
+        linear-gradient(90deg, transparent 47%, rgba(255, 255, 255, 0.16) 48% 52%, transparent 53% 100%),
+        linear-gradient(180deg, #875a39, #5f3e29);
+      border: 4px solid rgba(65, 42, 29, 0.48);
+      box-shadow:
+        inset 0 5px 0 rgba(255, 255, 255, 0.12),
+        0 0 20px rgba(255, 222, 124, 0.18);
+    }
+
+    .farm-door::after {
+      content: "";
+      position: absolute;
+      right: 13%;
+      top: 45%;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #ffd764;
+      box-shadow: 0 0 12px rgba(255, 215, 100, 0.42);
+    }
+
+    .farm-sleep-sign {
+      position: absolute;
+      left: 50%;
+      top: -6%;
+      z-index: 4;
+      translate: -50% 0;
+      padding: 4px 12px;
+      border-radius: 999px;
+      background: rgba(255, 253, 220, 0.88);
+      border: 3px solid rgba(96, 69, 42, 0.25);
+      color: #6b4f35;
+      font-size: clamp(12px, 1.3vw, 15px);
+      font-weight: 900;
+      opacity: var(--night-progress);
+      white-space: nowrap;
+    }
+
+    .farm-snooze {
+      position: absolute;
+      left: 57%;
+      top: 33%;
+      z-index: 5;
+      color: #ffffff;
+      font-size: clamp(18px, 2.4vw, 28px);
+      font-weight: 900;
+      opacity: 0;
+      text-shadow: 0 3px 0 rgba(35, 51, 92, 0.22);
+      animation: snoozeFloat 2.2s ease-in-out infinite;
+      pointer-events: none;
+    }
+
+    .farm-facility.hen-home .farm-snooze {
+      opacity: 1;
+    }
+
+    @keyframes snoozeFloat {
+      0%, 100% { translate: 0 0; }
+      50% { translate: 0 -8px; }
     }
 
     .queue-pebbles {
@@ -1382,6 +1564,37 @@
       opacity: 1;
     }
 
+    .hen.sleeping {
+      transform: translate(-50%, -73%) scale(0.82);
+    }
+
+    .hen.sleeping .hen-sprite {
+      animation: henSleepBreath 2.1s ease-in-out infinite;
+    }
+
+    .hen.sleeping .hen-eye-shape {
+      transform: scaleY(0.18);
+      transform-box: fill-box;
+      transform-origin: center;
+    }
+
+    .hen.sleeping .hen-beak-open,
+    .hen.sleeping .hen-side-smile {
+      opacity: 0;
+    }
+
+    .hen.sleeping::after {
+      content: "Zzz";
+      position: absolute;
+      left: 66%;
+      top: -17%;
+      color: #ffffff;
+      font-size: 24px;
+      font-weight: 900;
+      text-shadow: 0 3px 0 rgba(38, 53, 98, 0.24);
+      animation: snoozeFloat 2.2s ease-in-out infinite;
+    }
+
     .hen-blush-shape {
       fill: rgba(255, 116, 129, 0.36);
     }
@@ -1558,6 +1771,11 @@
     @keyframes chickDig {
       0%, 100% { translate: -1px 0; rotate: -9deg; }
       50% { translate: 1px 1px; rotate: 8deg; }
+    }
+
+    @keyframes henSleepBreath {
+      0%, 100% { translate: 0 0; rotate: -2deg; }
+      50% { translate: 0 3px; rotate: 1deg; }
     }
 
     @keyframes toolDig {
@@ -1841,6 +2059,8 @@
 <body>
   <main id="game" class="game" aria-label="Happy Chick Farm">
     <div class="sky-glow"></div>
+    <div class="stars" aria-hidden="true"></div>
+    <div class="moon" aria-hidden="true"></div>
     <div class="cloud one"></div>
     <div class="cloud two"></div>
     <div class="cloud three"></div>
@@ -1863,10 +2083,11 @@
     </div>
 
     <section class="hud" aria-live="polite">
-      <a class="home-link" href="./" aria-label="返回主页选择">返回主页</a>
+      <a class="home-link" href="./" aria-label="Back to home selection">Home</a>
       <div class="stats">
         <span id="chickCount" class="stat-pill">Chicks: 0</span>
         <span id="eggCount" class="stat-pill">Hatching: 0</span>
+        <span id="timeStatus" class="stat-pill">Daytime</span>
       </div>
       <div class="hint">Arrow keys move · Space/double-click to lay an egg · Chicks line up to play</div>
     </section>
@@ -1897,6 +2118,17 @@
         <div class="hill-flag flag-left"></div>
         <div class="hill-flag flag-mid"></div>
         <div class="hill-flag flag-right"></div>
+      </div>
+
+      <div id="farmFacility" class="facility farm-facility" aria-hidden="true">
+        <div class="farm-ground"></div>
+        <div class="farm-barn">
+          <div class="farm-window left"></div>
+          <div class="farm-window right"></div>
+          <div class="farm-door"></div>
+        </div>
+        <div class="farm-sleep-sign">Bedtime</div>
+        <div class="farm-snooze">Zzz</div>
       </div>
 
       <div id="swingFacility" class="facility swing-facility">
@@ -1932,8 +2164,8 @@
             <g class="hen-side">
               <path class="hen-foot-line" d="M49 88 L39 104 M49 88 L49 106 M49 88 L59 103"></path>
               <path class="hen-foot-line" d="M79 89 L70 107 M79 89 L80 108 M79 89 L92 103"></path>
-              <path class="hen-beak-shape" d="M36 48 L8 41 L15 54 L8 68 L36 60 Z"></path>
-              <path class="hen-beak-line" d="M34 54 L15 54"></path>
+              <path class="hen-beak-shape" d="M31 44 L4 56 L31 68 Z"></path>
+              <path class="hen-beak-line" d="M6 56 L31 56"></path>
               <g class="hen-beak-open">
                 <path class="hen-beak-open-shape" d="M36 49 L7 36 L15 51 Z"></path>
                 <path class="hen-beak-open-shape" d="M36 59 L15 63 L7 78 Z"></path>
@@ -1951,6 +2183,7 @@
     </div>
 
     <button id="eggButton" class="egg-button" type="button" aria-label="Lay an egg">Lay Egg</button>
+    <div class="night-wash" aria-hidden="true"></div>
   </main>
 
   <script>
@@ -1963,7 +2196,13 @@
       const eggButton = document.getElementById("eggButton");
       const chickCountEl = document.getElementById("chickCount");
       const eggCountEl = document.getElementById("eggCount");
+      const timeStatusEl = document.getElementById("timeStatus");
       const feedbackEl = document.getElementById("feedback");
+
+      const DAY_DURATION = 180000;
+      const DUSK_DURATION = 10000;
+      const NIGHT_DURATION = 15000;
+      const DAWN_DURATION = 5000;
 
       const state = {
         width: 0,
@@ -1981,7 +2220,11 @@
         pointerId: null,
         pointerStart: null,
         dragging: false,
-        feedbackTimer: 0
+        feedbackTimer: 0,
+        dayPhase: "day",
+        phaseStartedAt: performance.now(),
+        nightProgress: 0,
+        lastBedtimeCheck: 0
       };
 
       const hen = {
@@ -2053,6 +2296,17 @@
           y: 0,
           w: 220,
           h: 140
+        },
+        farm: {
+          id: "farm",
+          el: document.getElementById("farmFacility"),
+          queue: [],
+          busy: false,
+          current: null,
+          x: 0,
+          y: 0,
+          w: 260,
+          h: 210
         }
       };
 
@@ -2121,21 +2375,40 @@
         const scale = clamp(Math.min(state.width / 1040, state.height / 720), 0.72, 1.08);
         const slideW = 250 * scale;
         const slideH = 210 * scale;
-        const hillW = Math.min(state.width * 0.86, 760 * scale);
+        const baseHillW = Math.min(state.width * 0.86, 760 * scale);
         const hillH = 214 * scale;
         const swingW = 238 * scale;
         const swingH = 226 * scale;
         const sandW = 324 * scale;
         const sandH = 202 * scale;
+        const farmW = 250 * scale;
+        const farmH = 206 * scale;
+        const hillFarmGap = 28 * scale;
 
         if (state.width < 760) {
+          const farmX = state.width - farmW - 12;
+          const sideBySideHillW = farmX - 12 - hillFarmGap;
           setFacilityBox(facilities.slide, state.width * 0.05, state.height * 0.45, slideW, slideH);
           setFacilityBox(facilities.swing, state.width - swingW - 16, state.height * 0.45, swingW, swingH);
-          setFacilityBox(facilities.hill, (state.width - hillW) / 2, state.height * 0.27, hillW, hillH);
+          if (sideBySideHillW >= 260 * scale) {
+            const hillW = Math.min(baseHillW, sideBySideHillW);
+            setFacilityBox(facilities.hill, 12, state.height * 0.27, hillW, hillH);
+            setFacilityBox(facilities.farm, farmX, state.height * 0.34, farmW, farmH);
+          } else {
+            const hillW = Math.min(baseHillW, state.width * 0.82);
+            const hillY = state.height * 0.24;
+            setFacilityBox(facilities.hill, state.width * 0.04, hillY, hillW, hillH);
+            setFacilityBox(facilities.farm, farmX, hillY + hillH + 18 * scale, farmW, farmH);
+          }
           setFacilityBox(facilities.sand, state.width * 0.04, state.height * 0.72, sandW, sandH);
         } else {
+          const farmX = Math.min(state.width - farmW - 18, state.width * 0.68);
+          const hillRight = farmX - hillFarmGap;
+          const hillW = Math.min(baseHillW, Math.max(360 * scale, hillRight - state.width * 0.18));
+          const hillX = Math.max(12, hillRight - hillW);
           setFacilityBox(facilities.slide, state.width * 0.055, state.height * 0.47, slideW, slideH);
-          setFacilityBox(facilities.hill, state.width * 0.5 - hillW / 2, state.height * 0.25, hillW, hillH);
+          setFacilityBox(facilities.hill, hillX, state.height * 0.25, hillW, hillH);
+          setFacilityBox(facilities.farm, farmX, state.height * 0.32, farmW, farmH);
           setFacilityBox(facilities.swing, state.width * 0.78, state.height * 0.47, swingW, swingH);
           setFacilityBox(facilities.sand, state.width * 0.16, state.height * 0.69, sandW, sandH);
         }
@@ -2145,6 +2418,16 @@
         hen.y = hp.y;
         hen.targetX = clamp(hen.targetX, 44, state.width - 44);
         hen.targetY = clamp(hen.targetY, state.groundTop + 36, state.height - 34);
+        if (hen.state === "toFarm") {
+          hen.route = buildFarmRoute();
+          hen.routeIndex = clamp(hen.routeIndex, 0, Math.max(0, hen.route.length - 1));
+        } else if (hen.state === "sleep") {
+          const sleepSpot = getFarmHenSleepPoint();
+          hen.x = sleepSpot.x;
+          hen.y = sleepSpot.y;
+          hen.targetX = sleepSpot.x;
+          hen.targetY = sleepSpot.y;
+        }
 
         state.eggs.forEach((egg) => {
           const p = clampActorPoint(egg.x, egg.y);
@@ -2161,6 +2444,8 @@
             chick.routeIndex = clamp(chick.routeIndex, 0, Math.max(0, chick.route.length - 1));
           } else if (chick.state === "toQueue" && chick.facility) {
             chick.queueTarget = getApproachPosition(facilities[chick.facility], chick);
+          } else if (chick.state === "toFarm") {
+            chick.sleepTarget = getFarmDoorPoint();
           }
         });
 
@@ -2177,6 +2462,237 @@
         }, 1600);
       }
 
+      function isBedtime() {
+        return state.dayPhase !== "day";
+      }
+
+      function isHenAtFarm() {
+        return hen.facility === "farm" || hen.state === "toFarm" || hen.state === "sleep";
+      }
+
+      function updateTimeStatus() {
+        const labels = {
+          day: "Daytime",
+          dusk: "Going home",
+          night: "Night",
+          dawn: "Morning"
+        };
+        timeStatusEl.textContent = labels[state.dayPhase] || "Daytime";
+      }
+
+      function setNightProgress(progress) {
+        state.nightProgress = clamp(progress, 0, 1);
+        game.style.setProperty("--night-progress", state.nightProgress.toFixed(3));
+        game.classList.toggle("bedtime", isBedtime());
+        game.classList.toggle("night", state.nightProgress > 0.82);
+        updateTimeStatus();
+      }
+
+      function changeDayPhase(phase, now) {
+        state.dayPhase = phase;
+        state.phaseStartedAt = now;
+        updateTimeStatus();
+
+        if (phase === "dusk") {
+          setNightProgress(0.02);
+          showFeedback("Sunset is coming. Everyone is heading back to the farm.");
+          sendEveryoneToFarm();
+          return;
+        }
+
+        if (phase === "night") {
+          setNightProgress(1);
+          showFeedback("Night is here. The farm lights are on.");
+          sendEveryoneToFarm();
+          return;
+        }
+
+        if (phase === "dawn") {
+          setNightProgress(1);
+          showFeedback("Morning light is coming. Time to wake up gently.");
+          return;
+        }
+
+        setNightProgress(0);
+        wakeHenForDay();
+        showFeedback("Good morning! Time to play again.");
+      }
+
+      function updateDayNight(now) {
+        const elapsed = now - state.phaseStartedAt;
+
+        if (state.dayPhase === "day") {
+          setNightProgress(0);
+          if (elapsed >= DAY_DURATION) {
+            changeDayPhase("dusk", now);
+          }
+          return;
+        }
+
+        if (state.dayPhase === "dusk") {
+          setNightProgress(elapsed / DUSK_DURATION);
+          if (elapsed >= DUSK_DURATION) {
+            changeDayPhase("night", now);
+          }
+        } else if (state.dayPhase === "night") {
+          setNightProgress(1);
+          if (elapsed >= NIGHT_DURATION) {
+            changeDayPhase("dawn", now);
+          }
+        } else if (state.dayPhase === "dawn") {
+          setNightProgress(1 - elapsed / DAWN_DURATION);
+          if (elapsed >= DAWN_DURATION) {
+            changeDayPhase("day", now);
+          }
+        }
+
+        if (isBedtime() && now - state.lastBedtimeCheck > 1200) {
+          state.lastBedtimeCheck = now;
+          sendEveryoneToFarm();
+        }
+      }
+
+      function getFarmDoorPoint() {
+        const f = facilities.farm;
+        return clampActorPoint(f.x + f.w * 0.5, f.y + f.h * 0.84, state.groundTop + 8);
+      }
+
+      function getFarmApproachPoint() {
+        const f = facilities.farm;
+        return clampActorPoint(f.x + f.w * 0.27, f.y + f.h * 0.91, state.groundTop + 8);
+      }
+
+      function getFarmHenSleepPoint() {
+        const f = facilities.farm;
+        return clampHenPoint(f.x + f.w * 0.51, f.y + f.h * 0.88);
+      }
+
+      function buildFarmRoute() {
+        const approach = getFarmApproachPoint();
+        const sleepSpot = getFarmHenSleepPoint();
+        return [
+          { x: approach.x, y: approach.y, speed: 430 },
+          { x: sleepSpot.x, y: sleepSpot.y, speed: 330 }
+        ];
+      }
+
+      function sendEveryoneToFarm() {
+        state.chicks.forEach(sendChickToFarm);
+        if (!isHenAtFarm()) {
+          startHenFarmRest(false);
+        }
+      }
+
+      function sendChickToFarm(chick) {
+        if (!chick) return;
+        const target = getFarmDoorPoint();
+
+        if (chick.state !== "toFarm") {
+          releaseFacility(chick);
+        }
+
+        chick.state = "toFarm";
+        chick.facility = "farm";
+        chick.queueTarget = null;
+        chick.route = [];
+        chick.routeIndex = 0;
+        chick.queued = false;
+        chick.sleepTarget = target;
+        chick.expiresAt = Math.max(chick.expiresAt, performance.now() + 70000);
+        chick.el.classList.remove("playing", "swinging", "digging");
+        chick.el.style.setProperty("--rider-angle", "0deg");
+      }
+
+      function updateChickToFarm(chick, dt) {
+        chick.sleepTarget = getFarmDoorPoint();
+        return moveToward(chick, chick.sleepTarget, Math.max(260, chick.speed * 4.2), dt);
+      }
+
+      function tuckChickIntoFarmAt(index) {
+        const chick = state.chicks[index];
+        if (!chick) return;
+        chick.el.remove();
+        state.chickMap.delete(chick.id);
+        state.chicks.splice(index, 1);
+        updateStats();
+      }
+
+      function startHenFarmRest(manual) {
+        stopHenFacilityPlay();
+        const sleepSpot = getFarmHenSleepPoint();
+        hen.facility = "farm";
+        hen.state = "toFarm";
+        hen.route = buildFarmRoute();
+        hen.routeIndex = 0;
+        hen.targetX = sleepSpot.x;
+        hen.targetY = sleepSpot.y;
+        hen.swingControls = false;
+        henEl.classList.add("playing");
+        henEl.classList.remove("sleeping", "swinging", "digging", "smile");
+        facilities.farm.el.classList.remove("hen-home");
+        if (manual) {
+          showFeedback("The hen is heading back to the farm for a rest.");
+        }
+      }
+
+      function finishHenFarmRest() {
+        const sleepSpot = getFarmHenSleepPoint();
+        hen.x = sleepSpot.x;
+        hen.y = sleepSpot.y;
+        hen.targetX = sleepSpot.x;
+        hen.targetY = sleepSpot.y;
+        hen.dir = -1;
+        hen.moving = false;
+        hen.state = "sleep";
+        hen.facility = "farm";
+        hen.route = [];
+        hen.routeIndex = 0;
+        henEl.classList.remove("playing", "swinging", "digging", "smile");
+        henEl.classList.add("sleeping");
+        facilities.farm.el.classList.add("hen-home");
+      }
+
+      function updateHenFarmRest(dt) {
+        if (hen.state === "toFarm") {
+          const point = hen.route[hen.routeIndex] || getFarmHenSleepPoint();
+          const arrived = moveToward(hen, point, point.speed || 270, dt);
+          if (arrived) {
+            hen.routeIndex += 1;
+            if (hen.routeIndex >= hen.route.length) {
+              finishHenFarmRest();
+            }
+          }
+          return;
+        }
+
+        if (hen.state === "sleep") {
+          const sleepSpot = getFarmHenSleepPoint();
+          hen.x = sleepSpot.x;
+          hen.y = sleepSpot.y;
+          hen.targetX = sleepSpot.x;
+          hen.targetY = sleepSpot.y;
+          hen.dir = -1;
+          hen.moving = false;
+          facilities.farm.el.classList.add("hen-home");
+        }
+      }
+
+      function wakeHenForDay() {
+        if (!isHenAtFarm()) return;
+        const f = facilities.farm;
+        const wakePoint = clampHenPoint(f.x + f.w * 0.23, f.y + f.h * 0.92);
+        hen.x = wakePoint.x;
+        hen.y = wakePoint.y;
+        hen.targetX = wakePoint.x - 26;
+        hen.targetY = wakePoint.y;
+        hen.state = "idle";
+        hen.facility = null;
+        hen.route = [];
+        hen.routeIndex = 0;
+        henEl.classList.remove("sleeping", "playing", "swinging", "digging");
+        facilities.farm.el.classList.remove("hen-home");
+      }
+
       function makeEggElement() {
         const el = document.createElement("div");
         el.className = "egg";
@@ -2189,6 +2705,11 @@
       }
 
       function layEgg() {
+        if (isBedtime() || isHenAtFarm()) {
+          showFeedback("It is bedtime. Eggs can wait until morning.");
+          return;
+        }
+
         const now = performance.now();
         const p = clampActorPoint(hen.x, hen.y + 11);
         const egg = {
@@ -2305,7 +2826,9 @@
           showFeedback("Great! A new chick hatched!");
         }
 
-        if (Math.random() < 0.62) {
+        if (isBedtime()) {
+          sendChickToFarm(chick);
+        } else if (Math.random() < 0.62) {
           sendChickToFacility(chick, chooseFacility());
         }
         updateStats();
@@ -2318,6 +2841,11 @@
 
       function sendChickToFacility(chick, facilityId) {
         if (!chick || chick.state !== "wander") return;
+        if (isBedtime()) {
+          sendChickToFarm(chick);
+          return;
+        }
+
         const facility = facilities[facilityId];
         if (!facility) return;
 
@@ -2411,6 +2939,9 @@
         if (facility.id === "sand") {
           return clampActorPoint(facility.x - 12, facility.y + facility.h * 0.72, state.groundTop + 8);
         }
+        if (facility.id === "farm") {
+          return getFarmDoorPoint();
+        }
         const peak = getHillPeak(facility, chick.hillPeak ?? 1);
         const foot = chick.hillSide === "right" ? peak.rightFoot : peak.leftFoot;
         return clampActorPoint(facility.x + facility.w * foot.x, facility.y + facility.h * foot.y, 70);
@@ -2419,6 +2950,7 @@
       function processQueue(facilityId) {
         const facility = facilities[facilityId];
         if (!facility) return;
+        if (facility.id === "farm" || isBedtime()) return;
 
         updateQueueTargets(facilityId);
         if (facility.id === "sand") {
@@ -2483,6 +3015,7 @@
         if (facility.id === "slide") return buildSlideRoute(facility);
         if (facility.id === "hill") return buildHillRoute(facility, chick);
         if (facility.id === "swing") return buildSwingRoute(facility);
+        if (facility.id === "farm") return buildFarmRoute();
         return buildSandRoute(facility, chick);
       }
 
@@ -2616,6 +3149,11 @@
       }
 
       function setChickWander(chick) {
+        if (isBedtime()) {
+          sendChickToFarm(chick);
+          return;
+        }
+
         releaseFacility(chick);
         chick.state = "wander";
         chick.facility = null;
@@ -2709,11 +3247,16 @@
         hen.route = [];
         hen.routeIndex = 0;
         hen.swingControls = false;
-        henEl.classList.remove("playing", "swinging", "digging");
+        facilities.farm.el.classList.remove("hen-home");
+        henEl.classList.remove("playing", "swinging", "digging", "sleeping");
       }
 
       function startHenFacilityPlay(facility) {
         if (!facility) return;
+        if (facility.id === "farm") {
+          startHenFarmRest(true);
+          return;
+        }
         stopHenFacilityPlay();
         hen.facility = facility.id;
         hen.state = "route";
@@ -2831,8 +3374,24 @@
 
         const beforeX = hen.x;
         const beforeY = hen.y;
+        let handledFarmRest = false;
 
-        if (vx || vy) {
+        if (isBedtime()) {
+          if (!isHenAtFarm()) {
+            startHenFarmRest(false);
+          }
+          updateHenFarmRest(dt);
+          handledFarmRest = true;
+        } else if (isHenAtFarm() && !(vx || vy)) {
+          updateHenFarmRest(dt);
+          handledFarmRest = true;
+        } else if (isHenAtFarm() && (vx || vy)) {
+          wakeHenForDay();
+        }
+
+        if (handledFarmRest) {
+          hen.moving = Math.hypot(hen.x - beforeX, hen.y - beforeY) > 0.12;
+        } else if (vx || vy) {
           stopHenFacilityPlay();
           const len = Math.hypot(vx, vy);
           const step = hen.speed * dt / 1000;
@@ -2906,6 +3465,11 @@
             updateSwingChick(chick, now);
           } else if (chick.state === "dig") {
             updateDigChick(chick, now);
+          } else if (chick.state === "toFarm") {
+            if (updateChickToFarm(chick, dt)) {
+              tuckChickIntoFarmAt(i);
+              continue;
+            }
           }
 
           const p = clampActorPoint(chick.x, chick.y, getChickMinY(chick));
@@ -3182,8 +3746,16 @@
           state.pointerId = null;
           state.pointerStart = null;
           state.dragging = false;
-          startHenFacilityPlay(facility);
+          if (facility.id === "farm") {
+            startHenFarmRest(true);
+          } else if (!isBedtime()) {
+            startHenFacilityPlay(facility);
+          }
           return;
+        }
+        if (isBedtime()) return;
+        if (isHenAtFarm()) {
+          wakeHenForDay();
         }
         stopHenFacilityPlay();
         state.pointerDown = true;
@@ -3236,6 +3808,7 @@
         const dt = Math.min(40, now - state.lastTime || 16);
         state.lastTime = now;
 
+        updateDayNight(now);
         updateHen(now, dt);
         updateEggs(now);
         updateChicks(now, dt);
@@ -3243,6 +3816,7 @@
         requestAnimationFrame(loop);
       }
 
+      setNightProgress(0);
       resizeGame();
       const start = randomGrassPoint();
       hen.x = start.x;
