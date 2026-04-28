@@ -1,0 +1,3258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>Happy Chick Farm</title>
+  <style>
+    :root {
+      --sky-top: #b9ecff;
+      --sky-bottom: #e4f9ff;
+      --grass-a: #7fd66d;
+      --grass-b: #4fb95f;
+      --panel: rgba(255, 255, 255, 0.72);
+      --panel-line: rgba(255, 255, 255, 0.92);
+      --ink: #5a4a3e;
+      --soft-shadow: 0 12px 30px rgba(79, 119, 79, 0.18);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: #bceeff;
+      font-family: "Comic Sans MS", "Trebuchet MS", "PingFang SC", "Microsoft YaHei", cursive, sans-serif;
+      color: var(--ink);
+    }
+
+    button {
+      font: inherit;
+    }
+
+    .game {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      min-height: 520px;
+      overflow: hidden;
+      touch-action: none;
+      background:
+        linear-gradient(180deg, var(--sky-top) 0%, var(--sky-bottom) 43%, #a9e98f 43%, #66cc6d 100%);
+      user-select: none;
+    }
+
+    .sky-glow {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      background:
+        radial-gradient(circle at 16% 14%, rgba(255, 249, 178, 0.76) 0 46px, rgba(255, 249, 178, 0.22) 48px 90px, transparent 92px),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.18), transparent 42%);
+      pointer-events: none;
+    }
+
+    .cloud {
+      position: absolute;
+      z-index: 1;
+      width: 142px;
+      height: 48px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.88);
+      box-shadow:
+        20px 12px 0 rgba(255, 255, 255, 0.92),
+        58px -14px 0 rgba(255, 255, 255, 0.88),
+        86px 4px 0 rgba(255, 255, 255, 0.96),
+        0 12px 24px rgba(95, 158, 168, 0.12);
+      opacity: 0.9;
+      animation: cloudDrift 34s linear infinite;
+    }
+
+    .cloud.one {
+      top: 11%;
+      left: 13%;
+      transform: scale(0.78);
+      animation-duration: 42s;
+    }
+
+    .cloud.two {
+      top: 18%;
+      right: 18%;
+      transform: scale(1.04);
+      animation-duration: 50s;
+      animation-delay: -16s;
+    }
+
+    .cloud.three {
+      top: 7%;
+      right: 42%;
+      transform: scale(0.62);
+      animation-duration: 37s;
+      animation-delay: -28s;
+    }
+
+    @keyframes cloudDrift {
+      0% { translate: -24px 0; }
+      50% { translate: 26px 4px; }
+      100% { translate: -24px 0; }
+    }
+
+    .hills {
+      position: absolute;
+      left: -4vw;
+      right: -4vw;
+      top: 29%;
+      height: 22%;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    .hill-far {
+      position: absolute;
+      bottom: 0;
+      border-radius: 55% 55% 0 0;
+      box-shadow: inset 0 18px 22px rgba(255, 255, 255, 0.18);
+    }
+
+    .hill-far.a {
+      left: 0;
+      width: 36%;
+      height: 78%;
+      background: linear-gradient(180deg, #a6d982, #77c06d);
+    }
+
+    .hill-far.b {
+      left: 26%;
+      width: 46%;
+      height: 100%;
+      background: linear-gradient(180deg, #b6e188, #84c970);
+    }
+
+    .hill-far.c {
+      right: 0;
+      width: 42%;
+      height: 84%;
+      background: linear-gradient(180deg, #99d77f, #67bd67);
+    }
+
+    .fence {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 43%;
+      height: 56px;
+      z-index: 2;
+      pointer-events: none;
+      background:
+        linear-gradient(180deg, transparent 0 17px, rgba(126, 88, 45, 0.38) 18px 26px, transparent 27px 100%),
+        linear-gradient(180deg, transparent 0 37px, rgba(126, 88, 45, 0.3) 38px 45px, transparent 46px 100%);
+    }
+
+    .fence::before {
+      content: "";
+      position: absolute;
+      inset: 5px 0 0 0;
+      background:
+        repeating-linear-gradient(90deg,
+          transparent 0 22px,
+          #e9bf72 22px 31px,
+          #d79b55 31px 35px,
+          transparent 35px 56px);
+      opacity: 0.9;
+      clip-path: polygon(0 20%, 100% 10%, 100% 100%, 0 100%);
+    }
+
+    .grass {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 58%;
+      z-index: 3;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at 8% 74%, rgba(255, 255, 255, 0.2) 0 8px, transparent 9px),
+        radial-gradient(circle at 24% 48%, rgba(255, 255, 255, 0.18) 0 10px, transparent 11px),
+        radial-gradient(circle at 72% 66%, rgba(255, 255, 255, 0.15) 0 9px, transparent 10px),
+        radial-gradient(circle at 90% 42%, rgba(255, 255, 255, 0.18) 0 7px, transparent 8px),
+        repeating-linear-gradient(104deg, rgba(36, 139, 52, 0.12) 0 2px, transparent 2px 24px),
+        linear-gradient(180deg, var(--grass-a), var(--grass-b));
+      box-shadow: inset 0 22px 34px rgba(255, 255, 255, 0.18);
+    }
+
+    .grass::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse at 18% 28%, rgba(255, 255, 255, 0.22) 0 42px, transparent 45px),
+        radial-gradient(ellipse at 48% 54%, rgba(255, 255, 255, 0.14) 0 60px, transparent 64px),
+        radial-gradient(ellipse at 82% 38%, rgba(255, 255, 255, 0.16) 0 52px, transparent 56px);
+      mix-blend-mode: soft-light;
+    }
+
+    .flowers {
+      position: absolute;
+      inset: 44% 0 0 0;
+      z-index: 4;
+      pointer-events: none;
+    }
+
+    .flower {
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background:
+        radial-gradient(circle, #ffd862 0 4px, transparent 5px),
+        radial-gradient(circle at 50% 0, #ff8bb2 0 5px, transparent 6px),
+        radial-gradient(circle at 50% 100%, #ff8bb2 0 5px, transparent 6px),
+        radial-gradient(circle at 0 50%, #ff8bb2 0 5px, transparent 6px),
+        radial-gradient(circle at 100% 50%, #ff8bb2 0 5px, transparent 6px);
+      filter: drop-shadow(0 2px 2px rgba(83, 117, 53, 0.18));
+      opacity: 0.86;
+    }
+
+    .flower::after {
+      content: "";
+      position: absolute;
+      left: 8px;
+      top: 15px;
+      width: 2px;
+      height: 18px;
+      border-radius: 2px;
+      background: #398e45;
+    }
+
+    .flower.f2 {
+      transform: scale(0.75);
+      background:
+        radial-gradient(circle, #fff48d 0 4px, transparent 5px),
+        radial-gradient(circle at 50% 0, #a5e7ff 0 5px, transparent 6px),
+        radial-gradient(circle at 50% 100%, #a5e7ff 0 5px, transparent 6px),
+        radial-gradient(circle at 0 50%, #a5e7ff 0 5px, transparent 6px),
+        radial-gradient(circle at 100% 50%, #a5e7ff 0 5px, transparent 6px);
+    }
+
+    .flower.f3 {
+      transform: scale(0.62);
+      background:
+        radial-gradient(circle, #fff48d 0 4px, transparent 5px),
+        radial-gradient(circle at 50% 0, #ffc7a2 0 5px, transparent 6px),
+        radial-gradient(circle at 50% 100%, #ffc7a2 0 5px, transparent 6px),
+        radial-gradient(circle at 0 50%, #ffc7a2 0 5px, transparent 6px),
+        radial-gradient(circle at 100% 50%, #ffc7a2 0 5px, transparent 6px);
+    }
+
+    .hud {
+      position: absolute;
+      left: clamp(12px, 2.2vw, 28px);
+      right: clamp(12px, 2.2vw, 28px);
+      top: 14px;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 11px 14px;
+      border: 1px solid var(--panel-line);
+      border-radius: 24px;
+      background: var(--panel);
+      box-shadow: var(--soft-shadow), inset 0 1px 0 rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(10px);
+    }
+
+    .stats {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+      font-size: clamp(15px, 2.2vw, 21px);
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .stat-pill {
+      display: inline-flex;
+      align-items: center;
+      min-height: 34px;
+      padding: 4px 12px;
+      border-radius: 999px;
+      background: rgba(255, 251, 225, 0.78);
+      border: 1px solid rgba(255, 255, 255, 0.78);
+      box-shadow: inset 0 -2px 0 rgba(223, 164, 86, 0.12);
+    }
+
+    .home-link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 34px;
+      padding: 4px 13px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.82);
+      background: rgba(255, 255, 255, 0.78);
+      color: #5a4a3e;
+      box-shadow: inset 0 -2px 0 rgba(111, 77, 36, 0.1);
+      font-size: clamp(14px, 1.8vw, 18px);
+      font-weight: 900;
+      text-decoration: none;
+      white-space: nowrap;
+      transition: transform 120ms ease, background 120ms ease;
+    }
+
+    .home-link:hover,
+    .home-link:focus-visible {
+      background: rgba(255, 251, 225, 0.92);
+      transform: translateY(-1px);
+      outline: none;
+    }
+
+    .hint {
+      min-width: 0;
+      font-size: clamp(12px, 1.55vw, 16px);
+      line-height: 1.28;
+      text-align: right;
+      color: #715c4e;
+    }
+
+    .feedback {
+      position: absolute;
+      left: 50%;
+      top: 77px;
+      z-index: 1001;
+      max-width: min(86vw, 460px);
+      padding: 10px 18px;
+      border-radius: 999px;
+      background: rgba(255, 253, 215, 0.9);
+      border: 1px solid rgba(255, 255, 255, 0.95);
+      box-shadow: 0 12px 28px rgba(107, 134, 75, 0.18), inset 0 -2px 0 rgba(235, 181, 83, 0.12);
+      font-size: clamp(14px, 2vw, 19px);
+      font-weight: 800;
+      text-align: center;
+      opacity: 0;
+      translate: -50% -12px;
+      pointer-events: none;
+      transition: opacity 220ms ease, translate 220ms ease;
+    }
+
+    .feedback.show {
+      opacity: 1;
+      translate: -50% 0;
+    }
+
+    .egg-button {
+      position: absolute;
+      right: clamp(16px, 3vw, 36px);
+      bottom: clamp(16px, 3vw, 34px);
+      z-index: 1100;
+      min-width: 136px;
+      min-height: 64px;
+      padding: 12px 23px;
+      border: 0;
+      border-radius: 999px;
+      color: #634127;
+      font-size: clamp(20px, 3vw, 28px);
+      font-weight: 900;
+      cursor: pointer;
+      background:
+        radial-gradient(circle at 30% 18%, rgba(255, 255, 255, 0.82) 0 12px, transparent 13px),
+        linear-gradient(180deg, #fff39c, #ffbd4c);
+      box-shadow:
+        0 10px 0 #df8735,
+        0 16px 26px rgba(107, 90, 44, 0.22),
+        inset 0 1px 0 rgba(255, 255, 255, 0.88);
+      transition: transform 120ms ease, box-shadow 120ms ease;
+    }
+
+    .egg-button:active,
+    .egg-button.pressed {
+      transform: translateY(7px) scale(0.985);
+      box-shadow:
+        0 3px 0 #df8735,
+        0 9px 18px rgba(107, 90, 44, 0.18),
+        inset 0 1px 0 rgba(255, 255, 255, 0.88);
+    }
+
+    .facilities,
+    .actors {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+
+    .facilities {
+      z-index: 6;
+    }
+
+    .actors {
+      z-index: 20;
+    }
+
+    .facility {
+      position: absolute;
+      pointer-events: none;
+      filter: drop-shadow(0 12px 12px rgba(72, 100, 63, 0.16));
+    }
+
+    .queue-pebbles {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+    }
+
+    .queue-pebbles i {
+      position: absolute;
+      width: 13px;
+      height: 7px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.38);
+      box-shadow: inset 0 -1px 0 rgba(65, 120, 45, 0.14);
+    }
+
+    .slide-facility .queue-pebbles i:nth-child(1) { left: 3%; bottom: 9%; }
+    .slide-facility .queue-pebbles i:nth-child(2) { left: -9%; bottom: 19%; }
+    .slide-facility .queue-pebbles i:nth-child(3) { left: -20%; bottom: 29%; }
+    .slide-facility .queue-pebbles i:nth-child(4) { left: -29%; bottom: 39%; }
+
+    .slide-platform {
+      position: absolute;
+      left: 38%;
+      top: 13%;
+      width: 27%;
+      height: 22%;
+      border-radius: 18px 18px 13px 13px;
+      background:
+        radial-gradient(circle at 30% 18%, rgba(255, 255, 255, 0.55) 0 9px, transparent 10px),
+        linear-gradient(180deg, #ffd773, #f3a445);
+      box-shadow: inset 0 -5px 0 rgba(182, 103, 44, 0.18);
+      z-index: 4;
+    }
+
+    .slide-platform::before {
+      content: "";
+      position: absolute;
+      left: -8%;
+      right: -8%;
+      top: -16%;
+      height: 26%;
+      border-radius: 999px;
+      background: linear-gradient(180deg, #fff0a3, #ffca58);
+      box-shadow: inset 0 -3px 0 rgba(174, 115, 43, 0.12);
+    }
+
+    .slide-leg {
+      position: absolute;
+      width: 5%;
+      height: 58%;
+      top: 28%;
+      border-radius: 999px;
+      background: linear-gradient(180deg, #f4b56a, #b96b3d);
+      z-index: 1;
+    }
+
+    .slide-leg.left {
+      left: 42%;
+      rotate: 4deg;
+    }
+
+    .slide-leg.right {
+      left: 58%;
+      rotate: -3deg;
+    }
+
+    .slide-stairs {
+      position: absolute;
+      left: 18%;
+      top: 30%;
+      width: 27%;
+      height: 56%;
+      z-index: 3;
+      transform: skewX(-8deg);
+    }
+
+    .slide-stairs::before,
+    .slide-stairs::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 8%;
+      border-radius: 999px;
+      background: linear-gradient(180deg, #9cc7ff, #5b89d7);
+    }
+
+    .slide-stairs::before {
+      left: 11%;
+    }
+
+    .slide-stairs::after {
+      right: 11%;
+    }
+
+    .slide-stairs span {
+      position: absolute;
+      left: 12%;
+      right: 12%;
+      height: 8%;
+      border-radius: 999px;
+      background: linear-gradient(180deg, #d8f1ff, #79abe8);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+    }
+
+    .slide-stairs span:nth-child(1) { top: 16%; }
+    .slide-stairs span:nth-child(2) { top: 34%; }
+    .slide-stairs span:nth-child(3) { top: 52%; }
+    .slide-stairs span:nth-child(4) { top: 70%; }
+
+    .slide-chute {
+      position: absolute;
+      left: 54%;
+      top: 33%;
+      width: 48%;
+      height: 24%;
+      z-index: 3;
+      transform-origin: left top;
+      rotate: 33deg;
+      border-radius: 14px 24px 28px 14px;
+      background:
+        linear-gradient(90deg, rgba(255, 255, 255, 0.48) 0 11%, transparent 12% 100%),
+        linear-gradient(180deg, #ff92b3, #ee5f83);
+      box-shadow:
+        inset 0 -6px 0 rgba(178, 52, 89, 0.2),
+        inset 0 5px 0 rgba(255, 255, 255, 0.24);
+    }
+
+    .slide-landing {
+      position: absolute;
+      right: -2%;
+      bottom: 7%;
+      width: 34%;
+      height: 16%;
+      border-radius: 50%;
+      background: radial-gradient(ellipse, rgba(255, 225, 117, 0.62), rgba(255, 225, 117, 0.12) 68%, transparent 70%);
+      z-index: 0;
+    }
+
+    .hill-facility .queue-pebbles i:nth-child(1) { left: 15%; bottom: 7%; }
+    .hill-facility .queue-pebbles i:nth-child(2) { left: 47%; bottom: 7%; }
+    .hill-facility .queue-pebbles i:nth-child(3) { right: 15%; bottom: 7%; }
+    .hill-facility .queue-pebbles i:nth-child(4) { left: 31%; bottom: 14%; }
+
+    .hill-body {
+      position: absolute;
+      left: 1%;
+      right: 1%;
+      bottom: 0;
+      height: 100%;
+      border-radius: 0;
+      overflow: hidden;
+      clip-path: polygon(0 100%, 0 64%, 8% 60%, 15% 42%, 25% 18%, 36% 58%, 42% 61%, 50% 13%, 59% 58%, 65% 62%, 76% 20%, 88% 58%, 100% 64%, 100% 100%);
+      background:
+        radial-gradient(ellipse at 25% 24%, rgba(255, 255, 255, 0.36) 0 34px, transparent 36px),
+        radial-gradient(ellipse at 50% 18%, rgba(255, 255, 255, 0.38) 0 38px, transparent 41px),
+        radial-gradient(ellipse at 76% 25%, rgba(255, 255, 255, 0.34) 0 34px, transparent 37px),
+        linear-gradient(160deg, #b8ee81, #68c861 58%, #43a853);
+      box-shadow:
+        inset 0 -10px 0 rgba(44, 124, 60, 0.16),
+        inset 0 12px 0 rgba(255, 255, 255, 0.16);
+    }
+
+    .hill-body::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(116deg, transparent 0 17%, rgba(255, 255, 255, 0.22) 17% 24%, transparent 24% 100%),
+        linear-gradient(70deg, transparent 0 43%, rgba(255, 255, 255, 0.2) 43% 51%, transparent 51% 100%),
+        linear-gradient(116deg, transparent 0 70%, rgba(255, 255, 255, 0.2) 70% 78%, transparent 78% 100%);
+      opacity: 0.75;
+    }
+
+    .hill-path {
+      position: absolute;
+      left: 8%;
+      top: 10%;
+      width: 84%;
+      height: 78%;
+      z-index: 2;
+      overflow: visible;
+    }
+
+    .hill-path path {
+      fill: none;
+      stroke: rgba(255, 255, 255, 0.72);
+      stroke-width: 9;
+      stroke-linecap: round;
+      stroke-dasharray: 7 14;
+      filter: drop-shadow(0 2px 0 rgba(65, 134, 54, 0.2));
+    }
+
+    .hill-flag {
+      position: absolute;
+      left: 50%;
+      top: 7%;
+      width: 10px;
+      height: 46px;
+      z-index: 4;
+      border-radius: 999px;
+      background: #6f4b2e;
+      border: 2px solid rgba(55, 35, 22, 0.25);
+    }
+
+    .hill-flag.flag-left { left: 25%; top: 12%; }
+    .hill-flag.flag-mid { left: 50%; top: 6%; height: 52px; }
+    .hill-flag.flag-right { left: 76%; top: 13%; }
+
+    .hill-flag::after {
+      content: "";
+      position: absolute;
+      left: 7px;
+      top: 2px;
+      width: 34px;
+      height: 22px;
+      border-radius: 4px 14px 14px 4px;
+      background:
+        radial-gradient(circle at 72% 50%, rgba(255, 255, 255, 0.72) 0 4px, transparent 5px),
+        #ffcf4f;
+      border: 3px solid rgba(79, 51, 32, 0.42);
+      transform-origin: left center;
+      animation: flagWave 1.9s ease-in-out infinite;
+    }
+
+    .hill-flag.flag-left::after { background: radial-gradient(circle at 72% 50%, rgba(255, 255, 255, 0.72) 0 4px, transparent 5px), #ff8ab0; }
+    .hill-flag.flag-mid::after { background: radial-gradient(circle at 72% 50%, rgba(255, 255, 255, 0.72) 0 4px, transparent 5px), #ffe45c; }
+    .hill-flag.flag-right::after { background: radial-gradient(circle at 72% 50%, rgba(255, 255, 255, 0.72) 0 4px, transparent 5px), #63d4ff; }
+
+    @keyframes flagWave {
+      50% { transform: skewY(5deg) scaleX(0.95); }
+    }
+
+    .swing-facility .queue-pebbles i:nth-child(1) { left: -11%; bottom: 13%; }
+    .swing-facility .queue-pebbles i:nth-child(2) { left: -23%; bottom: 25%; }
+    .swing-facility .queue-pebbles i:nth-child(3) { left: -35%; bottom: 37%; }
+    .swing-facility .queue-pebbles i:nth-child(4) { left: -47%; bottom: 49%; }
+
+    .swing-sand {
+      position: absolute;
+      left: 5%;
+      right: 5%;
+      bottom: 2%;
+      height: 22%;
+      border-radius: 50%;
+      background:
+        radial-gradient(circle at 24% 43%, rgba(255, 255, 255, 0.34) 0 5px, transparent 6px),
+        radial-gradient(circle at 66% 61%, rgba(218, 161, 89, 0.16) 0 7px, transparent 8px),
+        radial-gradient(ellipse, rgba(255, 218, 139, 0.72), rgba(240, 173, 95, 0.18) 68%, transparent 70%);
+    }
+
+    .swing-leg {
+      position: absolute;
+      top: 14%;
+      width: 7%;
+      height: 78%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #b87542, #e2a35c 45%, #8e5634);
+      box-shadow: inset 1px 0 0 rgba(255, 255, 255, 0.22);
+      z-index: 2;
+      transform-origin: top center;
+    }
+
+    .swing-leg.left {
+      left: 23%;
+      rotate: 13deg;
+    }
+
+    .swing-leg.right {
+      right: 23%;
+      rotate: -13deg;
+    }
+
+    .swing-beam {
+      position: absolute;
+      left: 17%;
+      right: 17%;
+      top: 11%;
+      height: 9%;
+      border-radius: 999px;
+      background:
+        radial-gradient(circle at 25% 35%, rgba(255, 255, 255, 0.35) 0 6px, transparent 7px),
+        linear-gradient(180deg, #e7ad68, #a96439);
+      box-shadow: inset 0 -4px 0 rgba(105, 67, 43, 0.16);
+      z-index: 4;
+    }
+
+    .swing-moving {
+      position: absolute;
+      left: 50%;
+      top: 19%;
+      width: 38%;
+      height: 65%;
+      z-index: 3;
+      transform-origin: 50% 0;
+      transform: translateX(-50%) rotate(var(--swing-angle, 0deg));
+      transition: none;
+    }
+
+    .swing-rope {
+      position: absolute;
+      top: 0;
+      width: 7%;
+      height: 82%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #8c6a49, #d7b17a, #8c6a49);
+    }
+
+    .swing-rope.left { left: 18%; }
+    .swing-rope.right { right: 18%; }
+
+    .swing-seat {
+      position: absolute;
+      left: 4%;
+      right: 4%;
+      bottom: 11%;
+      height: 18%;
+      border-radius: 18px 18px 24px 24px;
+      background:
+        radial-gradient(circle at 25% 30%, rgba(255, 255, 255, 0.38) 0 8px, transparent 9px),
+        linear-gradient(180deg, #73d7ff, #358ccc);
+      box-shadow:
+        inset 0 -5px 0 rgba(34, 96, 150, 0.18),
+        0 8px 8px rgba(72, 91, 100, 0.14);
+    }
+
+    .hen,
+    .egg,
+    .chick {
+      position: absolute;
+      will-change: left, top;
+      pointer-events: none;
+    }
+
+    .hen {
+      width: 96px;
+      height: 100px;
+      transform: translate(-50%, -78%);
+      z-index: 200;
+    }
+
+    .hen-sprite {
+      position: absolute;
+      inset: 0;
+      transform-origin: 50% 82%;
+      animation: henBob 1.18s ease-in-out infinite;
+      scale: var(--hen-dir, 1) 1;
+    }
+
+    .hen.moving .hen-sprite {
+      animation-duration: 0.62s;
+    }
+
+    .hen-shadow,
+    .chick-shadow,
+    .egg-shadow {
+      position: absolute;
+      left: 50%;
+      bottom: 0;
+      transform: translateX(-50%);
+      border-radius: 50%;
+      background: rgba(61, 103, 49, 0.18);
+      filter: blur(1px);
+    }
+
+    .hen-shadow {
+      width: 76px;
+      height: 17px;
+    }
+
+    .hen-body {
+      position: absolute;
+      left: 20px;
+      bottom: 16px;
+      width: 62px;
+      height: 60px;
+      border-radius: 56% 50% 50% 54% / 58% 54% 50% 46%;
+      background:
+        radial-gradient(circle at 32% 22%, rgba(255, 255, 255, 0.82) 0 11px, transparent 12px),
+        linear-gradient(145deg, #fff8d7, #f8d16e 60%, #e6ac45);
+      box-shadow:
+        inset -8px -8px 0 rgba(190, 121, 48, 0.12),
+        inset 4px 5px 0 rgba(255, 255, 255, 0.38),
+        0 8px 12px rgba(122, 93, 49, 0.14);
+    }
+
+    .hen-wing {
+      position: absolute;
+      left: 12px;
+      top: 22px;
+      width: 36px;
+      height: 30px;
+      border-radius: 70% 40% 70% 50%;
+      background:
+        radial-gradient(circle at 30% 24%, rgba(255, 255, 255, 0.45) 0 6px, transparent 7px),
+        linear-gradient(145deg, #f6bf57, #dc8d43);
+      box-shadow: inset -4px -4px 0 rgba(150, 82, 43, 0.12);
+      transform-origin: 86% 15%;
+      animation: wingWiggle 1.18s ease-in-out infinite;
+    }
+
+    .hen.moving .hen-wing {
+      animation-duration: 0.44s;
+    }
+
+    .hen-head {
+      position: absolute;
+      left: 44px;
+      top: 11px;
+      width: 44px;
+      height: 45px;
+      border-radius: 50% 53% 48% 50%;
+      background:
+        radial-gradient(circle at 31% 21%, rgba(255, 255, 255, 0.82) 0 8px, transparent 9px),
+        linear-gradient(145deg, #fff9da, #f3c869 66%, #e9ae45);
+      box-shadow:
+        inset -5px -5px 0 rgba(173, 105, 41, 0.1),
+        0 5px 8px rgba(109, 79, 49, 0.1);
+    }
+
+    .hen-comb {
+      position: absolute;
+      left: 10px;
+      top: -13px;
+      width: 27px;
+      height: 22px;
+      background:
+        radial-gradient(circle at 21% 65%, #ff6868 0 8px, transparent 9px),
+        radial-gradient(circle at 50% 35%, #ff7474 0 10px, transparent 11px),
+        radial-gradient(circle at 78% 65%, #ee4e58 0 8px, transparent 9px);
+      filter: drop-shadow(0 2px 0 rgba(171, 59, 61, 0.18));
+    }
+
+    .hen-eye {
+      position: absolute;
+      right: 11px;
+      top: 17px;
+      width: 9px;
+      height: 11px;
+      border-radius: 50%;
+      background: #44352d;
+      box-shadow: inset 2px 2px 0 rgba(255, 255, 255, 0.88);
+    }
+
+    .hen-beak {
+      position: absolute;
+      right: -9px;
+      top: 24px;
+      width: 18px;
+      height: 14px;
+      background: linear-gradient(180deg, #ffcf62, #f28b3e);
+      clip-path: polygon(0 20%, 100% 50%, 0 82%);
+      filter: drop-shadow(0 2px 1px rgba(134, 82, 35, 0.14));
+    }
+
+    .hen-blush {
+      position: absolute;
+      right: 6px;
+      top: 29px;
+      width: 12px;
+      height: 7px;
+      border-radius: 50%;
+      background: rgba(255, 132, 139, 0.48);
+    }
+
+    .hen-leg {
+      position: absolute;
+      bottom: 5px;
+      width: 7px;
+      height: 17px;
+      border-radius: 999px;
+      background: #d88935;
+    }
+
+    .hen-leg.left { left: 42px; }
+    .hen-leg.right { left: 58px; }
+
+    .hen-leg::after {
+      content: "";
+      position: absolute;
+      left: -5px;
+      bottom: -2px;
+      width: 18px;
+      height: 6px;
+      border-radius: 999px;
+      background: #d88935;
+    }
+
+    @keyframes henBob {
+      0%, 100% { translate: 0 0; rotate: -1deg; }
+      50% { translate: 0 -5px; rotate: 1deg; }
+    }
+
+    @keyframes wingWiggle {
+      0%, 100% { rotate: -4deg; }
+      50% { rotate: 9deg; }
+    }
+
+    .egg {
+      width: 48px;
+      height: 62px;
+      transform: translate(-50%, -88%);
+      z-index: 120;
+    }
+
+    .egg-shell {
+      position: absolute;
+      left: 5px;
+      top: 2px;
+      width: 38px;
+      height: 52px;
+      border-radius: 50% 50% 46% 46% / 58% 58% 42% 42%;
+      background:
+        radial-gradient(circle at 31% 22%, rgba(255, 255, 255, 0.92) 0 8px, transparent 9px),
+        radial-gradient(circle at 64% 62%, rgba(228, 181, 122, 0.32) 0 3px, transparent 4px),
+        radial-gradient(circle at 37% 70%, rgba(218, 169, 104, 0.28) 0 2px, transparent 3px),
+        radial-gradient(circle at 60% 36%, rgba(218, 169, 104, 0.22) 0 2px, transparent 3px),
+        linear-gradient(145deg, #fffaf0, #f1d6ae);
+      box-shadow:
+        inset -5px -8px 0 rgba(159, 112, 69, 0.12),
+        0 7px 9px rgba(103, 84, 58, 0.13);
+      transform-origin: 50% 80%;
+      animation: eggWobble 0.9s ease-in-out infinite;
+    }
+
+    .egg-countdown {
+      position: absolute;
+      left: 50%;
+      top: 18px;
+      transform: translateX(-50%);
+      min-width: 25px;
+      height: 25px;
+      display: grid;
+      place-items: center;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.78);
+      color: #8a6442;
+      font-size: 16px;
+      font-weight: 900;
+      box-shadow: inset 0 -2px 0 rgba(157, 112, 63, 0.1);
+    }
+
+    .egg-shadow {
+      width: 42px;
+      height: 10px;
+      bottom: 1px;
+    }
+
+    .egg.hatching .egg-shell {
+      animation: hatchPop 0.62s ease forwards;
+    }
+
+    .egg.hatching .egg-countdown {
+      opacity: 0;
+    }
+
+    .egg.hatching::before,
+    .egg.hatching::after {
+      content: "";
+      position: absolute;
+      top: 17px;
+      width: 25px;
+      height: 21px;
+      background: linear-gradient(145deg, #fffaf0, #e8c89a);
+      opacity: 0;
+      clip-path: polygon(0 0, 28% 20%, 45% 0, 66% 25%, 88% 0, 100% 100%, 0 100%);
+      animation: shellCrack 0.62s ease forwards;
+    }
+
+    .egg.hatching::before {
+      left: 0;
+      rotate: -22deg;
+    }
+
+    .egg.hatching::after {
+      right: 0;
+      rotate: 22deg;
+      scale: -1 1;
+    }
+
+    @keyframes eggWobble {
+      0%, 100% { rotate: -2deg; }
+      50% { rotate: 3deg; }
+    }
+
+    @keyframes hatchPop {
+      0% { scale: 1; opacity: 1; }
+      45% { scale: 1.12; opacity: 1; }
+      100% { scale: 0.72; opacity: 0; translate: 0 14px; }
+    }
+
+    @keyframes shellCrack {
+      0% { opacity: 0; transform: translate(0, 0); }
+      30% { opacity: 1; }
+      100% { opacity: 0; transform: translate(var(--piece-x, -10px), 16px); }
+    }
+
+    .chick {
+      width: 52px;
+      height: 57px;
+      transform: translate(-50%, -77%);
+      z-index: 160;
+    }
+
+    .chick-sprite {
+      position: absolute;
+      inset: 0;
+      transform-origin: 50% 82%;
+      scale: var(--chick-dir, 1) 1;
+      animation: chickBreath 1.7s ease-in-out infinite;
+    }
+
+    .chick.playing .chick-sprite {
+      animation: chickPlay 0.66s ease-in-out infinite;
+    }
+
+    .chick.swinging .chick-sprite {
+      animation: chickSwingSmile 0.9s ease-in-out infinite;
+    }
+
+    .chick-body {
+      position: absolute;
+      left: 8px;
+      bottom: 10px;
+      width: 38px;
+      height: 39px;
+      border-radius: 56% 55% 49% 50%;
+      background:
+        radial-gradient(circle at 30% 22%, rgba(255, 255, 255, 0.72) 0 7px, transparent 8px),
+        linear-gradient(145deg, var(--chick-a, #fff17c), var(--chick-b, #ffc345));
+      box-shadow:
+        inset -5px -6px 0 rgba(128, 87, 39, 0.11),
+        inset 3px 4px 0 rgba(255, 255, 255, 0.28),
+        0 6px 8px rgba(78, 98, 53, 0.14);
+    }
+
+    .chick.special .chick-body {
+      background:
+        radial-gradient(circle at 30% 22%, rgba(255, 255, 255, 0.72) 0 7px, transparent 8px),
+        linear-gradient(145deg, var(--chick-a), var(--chick-b));
+    }
+
+    .chick-fluff {
+      position: absolute;
+      left: 18px;
+      top: 3px;
+      width: 18px;
+      height: 15px;
+      background:
+        radial-gradient(circle at 22% 68%, var(--chick-a, #fff17c) 0 5px, transparent 6px),
+        radial-gradient(circle at 50% 33%, var(--chick-a, #fff17c) 0 6px, transparent 7px),
+        radial-gradient(circle at 78% 68%, var(--chick-b, #ffc345) 0 5px, transparent 6px);
+      filter: drop-shadow(0 2px 0 rgba(118, 80, 35, 0.08));
+    }
+
+    .chick-eye {
+      position: absolute;
+      top: 20px;
+      width: 6px;
+      height: 8px;
+      border-radius: 50%;
+      background: #44352d;
+      box-shadow: inset 1.5px 1.2px 0 rgba(255, 255, 255, 0.9);
+    }
+
+    .chick-eye.left { left: 18px; }
+    .chick-eye.right { right: 16px; }
+
+    .chick-beak {
+      position: absolute;
+      left: 23px;
+      top: 27px;
+      width: 10px;
+      height: 8px;
+      background: linear-gradient(180deg, #ffbd54, #f1823a);
+      clip-path: polygon(0 12%, 100% 50%, 0 88%);
+    }
+
+    .chick-blush {
+      position: absolute;
+      top: 29px;
+      width: 8px;
+      height: 5px;
+      border-radius: 50%;
+      background: rgba(255, 111, 130, 0.42);
+    }
+
+    .chick-blush.left { left: 12px; }
+    .chick-blush.right { right: 10px; }
+
+    .chick-foot {
+      position: absolute;
+      bottom: 5px;
+      width: 14px;
+      height: 5px;
+      border-radius: 999px;
+      background: #d88935;
+    }
+
+    .chick-foot.left { left: 15px; }
+    .chick-foot.right { right: 12px; }
+
+    .chick-shadow {
+      width: 38px;
+      height: 9px;
+      bottom: 0;
+    }
+
+    @keyframes chickBreath {
+      0%, 100% { translate: 0 0; scale: var(--chick-dir, 1) 1; }
+      50% { translate: 0 -2px; scale: var(--chick-dir, 1) 1.035; }
+    }
+
+    @keyframes chickPlay {
+      0%, 100% { translate: 0 0; rotate: -3deg; }
+      50% { translate: 0 -6px; rotate: 4deg; }
+    }
+
+    @keyframes chickSwingSmile {
+      0%, 100% { translate: 0 0; rotate: -2deg; }
+      50% { translate: 0 -3px; rotate: 2deg; }
+    }
+
+    .slide-curve {
+      position: absolute;
+      left: 48%;
+      top: 24%;
+      width: 60%;
+      height: 72%;
+      z-index: 3;
+      overflow: visible;
+    }
+
+    .slide-curve-main {
+      fill: none;
+      stroke: #f26693;
+      stroke-width: 32;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      filter: drop-shadow(0 7px 0 rgba(165, 52, 88, 0.18));
+    }
+
+    .slide-curve-shine {
+      fill: none;
+      stroke: rgba(255, 255, 255, 0.48);
+      stroke-width: 8;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .hill-body {
+      bottom: 0;
+      height: 100%;
+    }
+
+    .hill-path {
+      left: 3%;
+      top: 5%;
+      width: 94%;
+      height: 88%;
+    }
+
+    .sand-facility .queue-pebbles i:nth-child(1) { left: -10%; bottom: 24%; }
+    .sand-facility .queue-pebbles i:nth-child(2) { left: -22%; bottom: 36%; }
+    .sand-facility .queue-pebbles i:nth-child(3) { left: -34%; bottom: 48%; }
+    .sand-facility .queue-pebbles i:nth-child(4) { left: -46%; bottom: 60%; }
+
+    .sand-pit {
+      position: absolute;
+      inset: 8% 2% 4%;
+      border-radius: 52% 48% 50% 54%;
+      background:
+        radial-gradient(circle at 28% 34%, rgba(255, 255, 255, 0.42) 0 7px, transparent 8px),
+        radial-gradient(circle at 72% 54%, rgba(198, 137, 72, 0.18) 0 11px, transparent 12px),
+        radial-gradient(circle at 44% 72%, rgba(198, 137, 72, 0.15) 0 8px, transparent 9px),
+        linear-gradient(145deg, #ffe3a4, #f0b867);
+      box-shadow:
+        inset 0 -9px 0 rgba(180, 112, 53, 0.13),
+        inset 0 7px 0 rgba(255, 255, 255, 0.34),
+        0 12px 18px rgba(91, 113, 61, 0.14);
+    }
+
+    .sand-castle {
+      position: absolute;
+      left: 45%;
+      top: 31%;
+      width: 52px;
+      height: 48px;
+      transform: translateX(-50%);
+      opacity: 0.82;
+      transition: scale 180ms ease, opacity 180ms ease;
+    }
+
+    .sand-facility.active .sand-castle {
+      scale: 1.12;
+      opacity: 1;
+      animation: sandCastlePop 0.7s ease-in-out infinite alternate;
+    }
+
+    .sand-castle::before {
+      content: "";
+      position: absolute;
+      left: 6px;
+      right: 6px;
+      bottom: 0;
+      height: 28px;
+      border-radius: 9px 9px 5px 5px;
+      background: linear-gradient(180deg, #ffd891, #d99951);
+      box-shadow: inset 0 -4px 0 rgba(142, 91, 52, 0.15);
+    }
+
+    .sand-castle i {
+      position: absolute;
+      bottom: 24px;
+      width: 16px;
+      height: 22px;
+      border-radius: 6px 6px 3px 3px;
+      background: linear-gradient(180deg, #ffe1a4, #d99b55);
+    }
+
+    .sand-castle i::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: -6px;
+      width: 16px;
+      height: 8px;
+      background: #ffe1a4;
+      clip-path: polygon(0 100%, 18% 0, 34% 100%, 50% 0, 66% 100%, 82% 0, 100% 100%);
+    }
+
+    .sand-castle i:nth-child(1) { left: 0; }
+    .sand-castle i:nth-child(2) { left: 18px; bottom: 28px; }
+    .sand-castle i:nth-child(3) { right: 0; }
+
+    .sand-bucket {
+      position: absolute;
+      right: 14%;
+      bottom: 24%;
+      width: 28px;
+      height: 30px;
+      border-radius: 5px 5px 12px 12px;
+      background: linear-gradient(180deg, #7bd7ff, #318dc7);
+      rotate: -11deg;
+      box-shadow: inset 0 -4px 0 rgba(25, 91, 143, 0.18);
+    }
+
+    .sand-bucket::before {
+      content: "";
+      position: absolute;
+      left: 4px;
+      top: -8px;
+      width: 20px;
+      height: 14px;
+      border: 4px solid #2d6d9e;
+      border-bottom: 0;
+      border-radius: 999px 999px 0 0;
+    }
+
+    .sand-shovel {
+      position: absolute;
+      left: 18%;
+      bottom: 26%;
+      width: 7px;
+      height: 48px;
+      border-radius: 999px;
+      background: #9b6d46;
+      rotate: 47deg;
+    }
+
+    .sand-shovel::after {
+      content: "";
+      position: absolute;
+      left: -8px;
+      bottom: -14px;
+      width: 24px;
+      height: 18px;
+      border-radius: 4px 4px 13px 13px;
+      background: linear-gradient(180deg, #ff8a68, #d85645);
+    }
+
+    @keyframes sandCastlePop {
+      100% { translate: 0 -3px; }
+    }
+
+    .hen {
+      width: 114px;
+      height: 106px;
+      transform: translate(-50%, -79%);
+    }
+
+    .hen-sprite {
+      animation: henBob 1.05s ease-in-out infinite;
+      scale: var(--hen-dir, 1) 1;
+    }
+
+    .hen-drawing {
+      width: 100%;
+      height: 100%;
+      overflow: visible;
+      filter: drop-shadow(0 7px 4px rgba(88, 92, 48, 0.14));
+    }
+
+    .hen-side {
+      opacity: 1;
+      transition: opacity 120ms ease;
+    }
+
+    .hen-round-body {
+      fill: #fff51e;
+      stroke: #111;
+      stroke-width: 7.5;
+      paint-order: stroke fill;
+    }
+
+    .hen-comb-shape {
+      fill: #ff1d2f;
+      stroke: #111;
+      stroke-width: 7;
+      stroke-linejoin: round;
+      paint-order: stroke fill;
+    }
+
+    .hen-beak-shape,
+    .hen-beak-open-shape {
+      fill: #fff047;
+      stroke: #111;
+      stroke-width: 7;
+      stroke-linejoin: round;
+      paint-order: stroke fill;
+    }
+
+    .hen-beak-line {
+      fill: none;
+      stroke: #111;
+      stroke-width: 5;
+      stroke-linecap: round;
+    }
+
+    .hen-beak-open {
+      opacity: 0;
+      transition: opacity 120ms ease;
+    }
+
+    .hen.smile .hen-beak-shape,
+    .hen.smile .hen-beak-line {
+      opacity: 0;
+    }
+
+    .hen.smile .hen-beak-open {
+      opacity: 1;
+    }
+
+    .hen-wing-shape {
+      fill: #fff047;
+      stroke: #111;
+      stroke-width: 7;
+      stroke-linejoin: round;
+      paint-order: stroke fill;
+    }
+
+    .hen-eye-shape {
+      fill: #111;
+    }
+
+    .hen-side-smile {
+      fill: none;
+      stroke: #111;
+      stroke-width: 6.5;
+      stroke-linecap: round;
+      opacity: 0;
+      transition: opacity 120ms ease;
+    }
+
+    .hen.smile .hen-side .hen-eye-shape {
+      opacity: 0;
+    }
+
+    .hen.smile .hen-side-smile {
+      opacity: 1;
+    }
+
+    .hen-blush-shape {
+      fill: rgba(255, 116, 129, 0.36);
+    }
+
+    .hen-foot-line {
+      fill: none;
+      stroke: #111;
+      stroke-width: 7;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .hen-shadow {
+      width: 86px;
+      height: 18px;
+    }
+
+    .chick {
+      width: 44px;
+      height: 45px;
+      transform: translate(-50%, -78%);
+      rotate: var(--rider-angle, 0deg);
+    }
+
+    .chick-sprite {
+      animation: chickTinyStep 1.1s ease-in-out infinite;
+      scale: var(--chick-dir, 1) 1;
+    }
+
+    .chick.playing .chick-sprite {
+      animation: chickTinyPlay 0.48s ease-in-out infinite;
+    }
+
+    .chick.swinging .chick-sprite {
+      animation: none;
+    }
+
+    .chick.digging .chick-sprite {
+      animation: chickDig 0.38s ease-in-out infinite;
+      transform-origin: 50% 88%;
+    }
+
+    .chick-drawing {
+      width: 100%;
+      height: 100%;
+      overflow: visible;
+      filter: drop-shadow(0 4px 3px rgba(67, 91, 47, 0.16));
+    }
+
+    .chick-tool {
+      position: absolute;
+      left: 58%;
+      top: 58%;
+      width: 9px;
+      height: 30px;
+      opacity: 0;
+      transform-origin: 50% 12%;
+      transition: opacity 120ms ease;
+      pointer-events: none;
+    }
+
+    .chick.digging.tool-shovel .chick-tool-shovel,
+    .chick.digging.tool-bucket .chick-tool-bucket {
+      opacity: 1;
+      animation: toolDig 0.38s ease-in-out infinite;
+    }
+
+    .chick-tool-shovel {
+      border-radius: 999px;
+      background: #8d5d35;
+      rotate: 40deg;
+    }
+
+    .chick-tool-shovel::after {
+      content: "";
+      position: absolute;
+      left: -7px;
+      bottom: -8px;
+      width: 22px;
+      height: 15px;
+      border-radius: 4px 4px 12px 12px;
+      background: linear-gradient(180deg, #ff8a68, #d85645);
+      border: 3px solid #111;
+    }
+
+    .chick-tool-bucket {
+      left: 63%;
+      top: 58%;
+      width: 21px;
+      height: 22px;
+      border: 3px solid #111;
+      border-radius: 5px 5px 11px 11px;
+      background: linear-gradient(180deg, #9fe9ff, #42aee2);
+      rotate: -18deg;
+    }
+
+    .chick-tool-bucket::before {
+      content: "";
+      position: absolute;
+      left: 3px;
+      top: -8px;
+      width: 11px;
+      height: 9px;
+      border: 3px solid #111;
+      border-bottom: 0;
+      border-radius: 999px 999px 0 0;
+    }
+
+    .chick-body-shape {
+      stroke: #111;
+      stroke-width: 8;
+      paint-order: stroke fill;
+    }
+
+    .chick-comb-shape {
+      fill: #ff2533;
+      stroke: #111;
+      stroke-width: 7;
+      stroke-linejoin: round;
+      paint-order: stroke fill;
+    }
+
+    .chick-beak-shape {
+      fill: #fff047;
+      stroke: #111;
+      stroke-width: 7;
+      stroke-linejoin: round;
+      paint-order: stroke fill;
+    }
+
+    .chick-beak-line {
+      fill: none;
+      stroke: #111;
+      stroke-width: 5;
+      stroke-linecap: round;
+    }
+
+    .chick-wing-shape {
+      fill: var(--chick-wing, #ffd74c);
+      stroke: #111;
+      stroke-width: 7;
+      stroke-linejoin: round;
+      paint-order: stroke fill;
+    }
+
+    .chick-eye-shape {
+      fill: #111;
+    }
+
+    .chick-foot-line {
+      fill: none;
+      stroke: #111;
+      stroke-width: 7;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .chick-shadow {
+      width: 31px;
+      height: 8px;
+      bottom: -1px;
+    }
+
+    @keyframes chickTinyStep {
+      0%, 100% { translate: 0 0; }
+      50% { translate: 0 -2px; }
+    }
+
+    @keyframes chickTinyPlay {
+      0%, 100% { translate: 0 0; rotate: -4deg; }
+      50% { translate: 0 -5px; rotate: 5deg; }
+    }
+
+    @keyframes chickDig {
+      0%, 100% { translate: -1px 0; rotate: -9deg; }
+      50% { translate: 1px 1px; rotate: 8deg; }
+    }
+
+    @keyframes toolDig {
+      0%, 100% { translate: 0 0; rotate: 32deg; }
+      50% { translate: 2px 3px; rotate: 54deg; }
+    }
+
+    /* Flat preschool-cartoon art pass: simple shapes, soft colors, bold outlines. */
+    .game {
+      background:
+        linear-gradient(180deg, #bfefff 0%, #dff8ff 38%, #9cdb6b 38%, #79ca52 100%);
+    }
+
+    .sky-glow {
+      background:
+        radial-gradient(circle at 14% 14%, #fff582 0 42px, transparent 43px),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.16), transparent 45%);
+    }
+
+    .cloud {
+      background: #fff;
+      box-shadow:
+        22px 10px 0 #fff,
+        54px -13px 0 #fff,
+        84px 3px 0 #fff,
+        0 0 0 4px rgba(255, 255, 255, 0.75);
+      filter: none;
+    }
+
+    .hill-far {
+      box-shadow:
+        inset 0 10px 0 rgba(255, 255, 255, 0.2),
+        inset 0 -6px 0 rgba(83, 166, 76, 0.18);
+    }
+
+    .hill-far.a {
+      background: #a8df76;
+    }
+
+    .hill-far.b {
+      background: #98d96d;
+    }
+
+    .hill-far.c {
+      background: #7fd262;
+    }
+
+    .fence {
+      opacity: 0.75;
+    }
+
+    .grass {
+      background:
+        repeating-linear-gradient(90deg, transparent 0 34px, rgba(255, 255, 255, 0.11) 34px 36px, transparent 36px 70px),
+        linear-gradient(180deg, #91dc64, #65c24e);
+      box-shadow: inset 0 8px 0 rgba(255, 255, 255, 0.18);
+    }
+
+    .grass::before {
+      display: none;
+    }
+
+    .hud,
+    .feedback {
+      border: 3px solid rgba(85, 121, 67, 0.22);
+      background: rgba(255, 255, 255, 0.78);
+      box-shadow: none;
+      backdrop-filter: none;
+    }
+
+    .stat-pill,
+    .home-link,
+    .egg-button {
+      border: 3px solid rgba(111, 77, 36, 0.24);
+      box-shadow: none;
+    }
+
+    .facility {
+      filter: none;
+    }
+
+    .queue-pebbles i {
+      width: 18px;
+      height: 10px;
+      background: #f7fff0;
+      border: 2px solid rgba(70, 137, 63, 0.22);
+      box-shadow: none;
+    }
+
+    .slide-platform,
+    .slide-platform::before {
+      background: #ffd65a;
+      border: 4px solid rgba(89, 75, 44, 0.35);
+      box-shadow: none;
+    }
+
+    .slide-leg,
+    .slide-stairs::before,
+    .slide-stairs::after {
+      background: #6bb7ff;
+      border: 3px solid rgba(43, 86, 133, 0.35);
+      box-shadow: none;
+    }
+
+    .slide-stairs span {
+      background: #e8f8ff;
+      border: 2px solid rgba(43, 86, 133, 0.28);
+      box-shadow: none;
+    }
+
+    .slide-curve-main {
+      stroke: #ff79a7;
+      filter:
+        drop-shadow(0 -3px 0 rgba(118, 57, 86, 0.35))
+        drop-shadow(0 3px 0 rgba(118, 57, 86, 0.35));
+    }
+
+    .slide-curve-shine {
+      stroke: rgba(255, 255, 255, 0.72);
+    }
+
+    .slide-landing {
+      background: #ffe59b;
+      border: 3px solid rgba(133, 102, 49, 0.22);
+    }
+
+    .hill-body {
+      background:
+        linear-gradient(116deg, transparent 0 16%, rgba(255, 255, 255, 0.2) 16% 23%, transparent 23% 100%),
+        linear-gradient(68deg, transparent 0 43%, rgba(255, 255, 255, 0.2) 43% 51%, transparent 51% 100%),
+        linear-gradient(116deg, transparent 0 70%, rgba(255, 255, 255, 0.2) 70% 78%, transparent 78% 100%),
+        #69ca5b;
+      box-shadow: inset 0 -8px 0 rgba(43, 137, 58, 0.22);
+    }
+
+    .hill-body::after {
+      display: none;
+    }
+
+    .hill-path path {
+      stroke: #f8fff1;
+      stroke-width: 12;
+      stroke-dasharray: 12 16;
+      filter: none;
+    }
+
+    .hill-flag,
+    .hill-flag::after {
+      box-shadow: none;
+    }
+
+    .swing-sand,
+    .sand-pit {
+      background: #f7c977;
+      border: 4px solid rgba(134, 93, 48, 0.28);
+      box-shadow: none;
+    }
+
+    .swing-leg,
+    .swing-beam {
+      background: #a96f42;
+      border: 4px solid rgba(81, 55, 35, 0.35);
+      box-shadow: none;
+    }
+
+    .swing-rope {
+      background: #5f4730;
+      box-shadow: none;
+    }
+
+    .swing-seat {
+      background: #55c8ff;
+      border: 4px solid rgba(37, 91, 136, 0.36);
+      box-shadow: none;
+    }
+
+    .sand-castle::before,
+    .sand-castle i {
+      background: #e4a756;
+      box-shadow: none;
+    }
+
+    .sand-bucket {
+      background: #55c8ff;
+      border: 3px solid rgba(37, 91, 136, 0.32);
+      box-shadow: none;
+    }
+
+    .sand-shovel::after {
+      background: #ff6c62;
+    }
+
+    .egg-shell {
+      background:
+        radial-gradient(circle at 31% 22%, #fff 0 8px, transparent 9px),
+        radial-gradient(circle at 64% 62%, #e7c083 0 3px, transparent 4px),
+        radial-gradient(circle at 37% 70%, #e1b875 0 2px, transparent 3px),
+        #fff1d0;
+      border: 4px solid rgba(87, 63, 45, 0.25);
+      box-shadow: none;
+    }
+
+    .hen-drawing,
+    .chick-drawing {
+      filter: none;
+    }
+
+    .hen-round-body,
+    .chick-body-shape {
+      stroke-width: 8.5;
+    }
+
+    .hen-comb-shape,
+    .hen-beak-shape,
+    .hen-beak-open-shape,
+    .hen-wing-shape,
+    .chick-comb-shape,
+    .chick-beak-shape,
+    .chick-wing-shape {
+      stroke-width: 7.5;
+    }
+
+    .hen-shadow,
+    .chick-shadow,
+    .egg-shadow {
+      background: rgba(69, 112, 49, 0.18);
+      filter: none;
+    }
+
+    @media (max-width: 720px) {
+      .game {
+        min-height: 620px;
+      }
+
+      .hud {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 6px;
+        padding: 10px 12px;
+        border-radius: 20px;
+      }
+
+      .hint {
+        width: 100%;
+        text-align: left;
+      }
+
+      .home-link {
+        min-height: 32px;
+      }
+
+      .egg-button {
+        min-width: 118px;
+        min-height: 58px;
+        padding: 10px 18px;
+      }
+
+      .hen {
+        width: 98px;
+        height: 92px;
+      }
+
+      .chick {
+        width: 39px;
+        height: 41px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .cloud,
+      .hen-sprite,
+      .hen-wing,
+      .egg-shell,
+      .chick-sprite,
+      .hill-flag::after {
+        animation-duration: 2.8s;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main id="game" class="game" aria-label="Happy Chick Farm">
+    <div class="sky-glow"></div>
+    <div class="cloud one"></div>
+    <div class="cloud two"></div>
+    <div class="cloud three"></div>
+    <div class="hills">
+      <div class="hill-far a"></div>
+      <div class="hill-far b"></div>
+      <div class="hill-far c"></div>
+    </div>
+    <div class="fence"></div>
+    <div class="grass"></div>
+    <div class="flowers" aria-hidden="true">
+      <i class="flower" style="left:7%; top:43%;"></i>
+      <i class="flower f2" style="left:17%; top:69%;"></i>
+      <i class="flower f3" style="left:31%; top:52%;"></i>
+      <i class="flower" style="left:48%; top:77%;"></i>
+      <i class="flower f2" style="left:61%; top:42%;"></i>
+      <i class="flower f3" style="left:74%; top:63%;"></i>
+      <i class="flower" style="left:88%; top:54%;"></i>
+      <i class="flower f2" style="left:94%; top:79%;"></i>
+    </div>
+
+    <section class="hud" aria-live="polite">
+      <a class="home-link" href="./" aria-label="返回主页选择">返回主页</a>
+      <div class="stats">
+        <span id="chickCount" class="stat-pill">Chicks: 0</span>
+        <span id="eggCount" class="stat-pill">Hatching: 0</span>
+      </div>
+      <div class="hint">Arrow keys move · Space/double-click to lay an egg · Chicks line up to play</div>
+    </section>
+    <div id="feedback" class="feedback" role="status" aria-live="polite"></div>
+
+    <div class="facilities" aria-hidden="true">
+      <div id="slideFacility" class="facility slide-facility">
+        <div class="queue-pebbles"><i></i><i></i><i></i><i></i></div>
+        <div class="slide-landing"></div>
+        <div class="slide-leg left"></div>
+        <div class="slide-leg right"></div>
+        <div class="slide-stairs"><span></span><span></span><span></span><span></span></div>
+        <div class="slide-platform"></div>
+        <svg class="slide-curve" viewBox="0 0 310 170" preserveAspectRatio="none" aria-hidden="true">
+          <path class="slide-curve-main" d="M20 18 C72 22, 72 70, 126 72 C188 74, 176 122, 288 138"></path>
+          <path class="slide-curve-shine" d="M29 25 C74 29, 79 67, 126 68 C178 70, 180 111, 272 125"></path>
+        </svg>
+      </div>
+
+      <div id="hillFacility" class="facility hill-facility">
+        <div class="queue-pebbles"><i></i><i></i><i></i><i></i></div>
+        <div class="hill-body"></div>
+        <svg class="hill-path" viewBox="0 0 760 220" preserveAspectRatio="none" aria-hidden="true">
+          <path d="M42 198 C88 168, 126 106, 190 48 C240 103, 277 168, 330 198"></path>
+          <path d="M248 198 C314 151, 348 83, 380 35 C420 83, 453 151, 512 198"></path>
+          <path d="M448 198 C512 159, 550 104, 586 52 C642 108, 672 165, 718 198"></path>
+        </svg>
+        <div class="hill-flag flag-left"></div>
+        <div class="hill-flag flag-mid"></div>
+        <div class="hill-flag flag-right"></div>
+      </div>
+
+      <div id="swingFacility" class="facility swing-facility">
+        <div class="queue-pebbles"><i></i><i></i><i></i><i></i></div>
+        <div class="swing-sand"></div>
+        <div class="swing-leg left"></div>
+        <div class="swing-leg right"></div>
+        <div class="swing-beam"></div>
+        <div id="swingMoving" class="swing-moving">
+          <div class="swing-rope left"></div>
+          <div class="swing-rope right"></div>
+          <div class="swing-seat"></div>
+        </div>
+      </div>
+
+      <div id="sandFacility" class="facility sand-facility">
+        <div class="queue-pebbles"><i></i><i></i><i></i><i></i></div>
+        <div class="sand-pit">
+          <div class="sand-castle">
+            <i></i><i></i><i></i>
+          </div>
+          <div class="sand-bucket"></div>
+          <div class="sand-shovel"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="actors" class="actors">
+      <div id="hen" class="hen" aria-hidden="true">
+        <div class="hen-shadow"></div>
+        <div class="hen-sprite">
+          <svg class="hen-drawing" viewBox="0 0 128 116" aria-hidden="true">
+            <g class="hen-side">
+              <path class="hen-foot-line" d="M49 88 L39 104 M49 88 L49 106 M49 88 L59 103"></path>
+              <path class="hen-foot-line" d="M79 89 L70 107 M79 89 L80 108 M79 89 L92 103"></path>
+              <path class="hen-beak-shape" d="M36 48 L8 41 L15 54 L8 68 L36 60 Z"></path>
+              <path class="hen-beak-line" d="M34 54 L15 54"></path>
+              <g class="hen-beak-open">
+                <path class="hen-beak-open-shape" d="M36 49 L7 36 L15 51 Z"></path>
+                <path class="hen-beak-open-shape" d="M36 59 L15 63 L7 78 Z"></path>
+              </g>
+              <circle class="hen-round-body" cx="62" cy="55" r="42"></circle>
+              <path class="hen-comb-shape" d="M45 16 C39 -3, 61 3, 59 18 C62 -6, 84 1, 76 22 C84 6, 102 17, 84 34 L47 34 Z"></path>
+              <path class="hen-wing-shape" d="M83 61 C105 55, 112 73, 98 82 C95 93, 82 83, 78 74 C69 72, 70 62, 83 61 Z"></path>
+              <circle class="hen-eye-shape" cx="56" cy="50" r="7"></circle>
+              <path class="hen-side-smile" d="M47 51 C53 38, 65 39, 71 51"></path>
+              <circle class="hen-blush-shape" cx="51" cy="64" r="5"></circle>
+            </g>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <button id="eggButton" class="egg-button" type="button" aria-label="Lay an egg">Lay Egg</button>
+  </main>
+
+  <script>
+    (() => {
+      "use strict";
+
+      const game = document.getElementById("game");
+      const actors = document.getElementById("actors");
+      const henEl = document.getElementById("hen");
+      const eggButton = document.getElementById("eggButton");
+      const chickCountEl = document.getElementById("chickCount");
+      const eggCountEl = document.getElementById("eggCount");
+      const feedbackEl = document.getElementById("feedback");
+
+      const state = {
+        width: 0,
+        height: 0,
+        groundTop: 260,
+        eggs: [],
+        chicks: [],
+        chickMap: new Map(),
+        keys: Object.create(null),
+        nextEggId: 1,
+        nextChickId: 1,
+        totalBorn: 0,
+        lastTime: performance.now(),
+        pointerDown: false,
+        pointerId: null,
+        pointerStart: null,
+        dragging: false,
+        feedbackTimer: 0
+      };
+
+      const hen = {
+        x: 190,
+        y: 420,
+        targetX: 190,
+        targetY: 420,
+        speed: 245,
+        dir: 1,
+        moving: false,
+        smileUntil: 0,
+        state: "idle",
+        facility: null,
+        route: [],
+        routeIndex: 0,
+        playStart: 0,
+        playDuration: 0,
+        hillSide: "left",
+        hillPeak: 1,
+        sandSlot: 0,
+        swingControls: false
+      };
+
+      const facilities = {
+        slide: {
+          id: "slide",
+          el: document.getElementById("slideFacility"),
+          queue: [],
+          busy: false,
+          current: null,
+          x: 0,
+          y: 0,
+          w: 240,
+          h: 190
+        },
+        hill: {
+          id: "hill",
+          el: document.getElementById("hillFacility"),
+          queue: [],
+          busy: false,
+          current: null,
+          x: 0,
+          y: 0,
+          w: 310,
+          h: 170
+        },
+        swing: {
+          id: "swing",
+          el: document.getElementById("swingFacility"),
+          movingEl: document.getElementById("swingMoving"),
+          queue: [],
+          busy: false,
+          current: null,
+          angle: 0,
+          x: 0,
+          y: 0,
+          w: 230,
+          h: 220
+        },
+        sand: {
+          id: "sand",
+          el: document.getElementById("sandFacility"),
+          queue: [],
+          busy: false,
+          current: null,
+          players: [],
+          capacity: 5,
+          x: 0,
+          y: 0,
+          w: 220,
+          h: 140
+        }
+      };
+
+      const specialPalettes = [
+        { a: "#ead9ff", b: "#8b6cff", c: "#b99cff" },
+        { a: "#ffd1ea", b: "#ff6fa8", c: "#ff9fc8" },
+        { a: "#c8f5ff", b: "#4fc4ef", c: "#92e6ff" },
+        { a: "#d5ffd6", b: "#58d68a", c: "#9bf0af" },
+        { a: "#ffe2b6", b: "#ff9d64", c: "#ffc27c" },
+        { a: "#d7d0ff", b: "#6e7cff", c: "#a6a5ff" },
+        { a: "#fff06c", b: "#ff7ecb", c: "#7ddcff", rainbow: true }
+      ];
+
+      function clamp(value, min, max) {
+        return Math.min(max, Math.max(min, value));
+      }
+
+      function rand(min, max) {
+        return min + Math.random() * (max - min);
+      }
+
+      function distance(a, b) {
+        return Math.hypot(a.x - b.x, a.y - b.y);
+      }
+
+      function randomGrassPoint() {
+        return {
+          x: rand(34, Math.max(35, state.width - 34)),
+          y: rand(state.groundTop + 42, Math.max(state.groundTop + 44, state.height - 34))
+        };
+      }
+
+      function clampHenPoint(x, y) {
+        return {
+          x: clamp(x, 44, Math.max(45, state.width - 44)),
+          y: clamp(y, state.groundTop + 36, Math.max(state.groundTop + 38, state.height - 34))
+        };
+      }
+
+      function clampActorPoint(x, y, minY = state.groundTop + 22) {
+        return {
+          x: clamp(x, 24, Math.max(25, state.width - 24)),
+          y: clamp(y, minY, Math.max(minY + 1, state.height - 24))
+        };
+      }
+
+      function setFacilityBox(facility, x, y, w, h) {
+        const safeX = clamp(x, 12, Math.max(13, state.width - w - 12));
+        const safeY = clamp(y, 118, Math.max(119, state.height - h - 38));
+        facility.x = safeX;
+        facility.y = safeY;
+        facility.w = w;
+        facility.h = h;
+        facility.el.style.left = `${safeX}px`;
+        facility.el.style.top = `${safeY}px`;
+        facility.el.style.width = `${w}px`;
+        facility.el.style.height = `${h}px`;
+      }
+
+      function resizeGame() {
+        const rect = game.getBoundingClientRect();
+        state.width = rect.width;
+        state.height = rect.height;
+        state.groundTop = state.height * 0.43;
+
+        const scale = clamp(Math.min(state.width / 1040, state.height / 720), 0.72, 1.08);
+        const slideW = 250 * scale;
+        const slideH = 210 * scale;
+        const hillW = Math.min(state.width * 0.86, 760 * scale);
+        const hillH = 214 * scale;
+        const swingW = 238 * scale;
+        const swingH = 226 * scale;
+        const sandW = 324 * scale;
+        const sandH = 202 * scale;
+
+        if (state.width < 760) {
+          setFacilityBox(facilities.slide, state.width * 0.05, state.height * 0.45, slideW, slideH);
+          setFacilityBox(facilities.swing, state.width - swingW - 16, state.height * 0.45, swingW, swingH);
+          setFacilityBox(facilities.hill, (state.width - hillW) / 2, state.height * 0.27, hillW, hillH);
+          setFacilityBox(facilities.sand, state.width * 0.04, state.height * 0.72, sandW, sandH);
+        } else {
+          setFacilityBox(facilities.slide, state.width * 0.055, state.height * 0.47, slideW, slideH);
+          setFacilityBox(facilities.hill, state.width * 0.5 - hillW / 2, state.height * 0.25, hillW, hillH);
+          setFacilityBox(facilities.swing, state.width * 0.78, state.height * 0.47, swingW, swingH);
+          setFacilityBox(facilities.sand, state.width * 0.16, state.height * 0.69, sandW, sandH);
+        }
+
+        const hp = clampHenPoint(hen.x, hen.y);
+        hen.x = hp.x;
+        hen.y = hp.y;
+        hen.targetX = clamp(hen.targetX, 44, state.width - 44);
+        hen.targetY = clamp(hen.targetY, state.groundTop + 36, state.height - 34);
+
+        state.eggs.forEach((egg) => {
+          const p = clampActorPoint(egg.x, egg.y);
+          egg.x = p.x;
+          egg.y = p.y;
+        });
+
+        state.chicks.forEach((chick) => {
+          const p = clampActorPoint(chick.x, chick.y, state.groundTop + 10);
+          chick.x = p.x;
+          chick.y = p.y;
+          if (chick.state === "route" && chick.facility) {
+            chick.route = buildRoute(facilities[chick.facility], chick);
+            chick.routeIndex = clamp(chick.routeIndex, 0, Math.max(0, chick.route.length - 1));
+          } else if (chick.state === "toQueue" && chick.facility) {
+            chick.queueTarget = getApproachPosition(facilities[chick.facility], chick);
+          }
+        });
+
+        Object.keys(facilities).forEach(updateQueueTargets);
+        renderAll();
+      }
+
+      function showFeedback(text) {
+        feedbackEl.textContent = text;
+        feedbackEl.classList.add("show");
+        window.clearTimeout(state.feedbackTimer);
+        state.feedbackTimer = window.setTimeout(() => {
+          feedbackEl.classList.remove("show");
+        }, 1600);
+      }
+
+      function makeEggElement() {
+        const el = document.createElement("div");
+        el.className = "egg";
+        el.innerHTML = `
+          <div class="egg-shadow"></div>
+          <div class="egg-shell"></div>
+          <div class="egg-countdown">3</div>
+        `;
+        return el;
+      }
+
+      function layEgg() {
+        const now = performance.now();
+        const p = clampActorPoint(hen.x, hen.y + 11);
+        const egg = {
+          id: state.nextEggId++,
+          x: p.x,
+          y: p.y,
+          hatchAt: now + 3000,
+          hatching: false,
+          born: false,
+          removeAt: 0,
+          el: makeEggElement()
+        };
+        hen.smileUntil = now + 1280;
+        actors.insertBefore(egg.el, henEl);
+        state.eggs.push(egg);
+        renderEgg(egg);
+        showFeedback("Cluck! An egg was laid!");
+        updateStats();
+      }
+
+      function pickSpecialPalette() {
+        return specialPalettes[Math.floor(Math.random() * specialPalettes.length)];
+      }
+
+      function makeChickElement(chick) {
+        const el = document.createElement("div");
+        const gradId = `chick-grad-${chick.id}`;
+        const rainbowId = `chick-rainbow-${chick.id}`;
+        const bodyFill = chick.rainbow ? `url(#${rainbowId})` : `url(#${gradId})`;
+        el.className = `chick tool-${chick.sandTool}${chick.special ? " special" : ""}${chick.rainbow ? " rainbow" : ""}`;
+        el.style.setProperty("--chick-a", chick.palette.a);
+        el.style.setProperty("--chick-b", chick.palette.b);
+        el.style.setProperty("--chick-wing", chick.palette.c);
+        el.innerHTML = `
+          <div class="chick-shadow"></div>
+          <div class="chick-sprite">
+            <svg class="chick-drawing" viewBox="0 0 104 92" aria-hidden="true">
+              <defs>
+                <radialGradient id="${gradId}" cx="35%" cy="28%" r="68%">
+                  <stop offset="0%" stop-color="#fffef0"></stop>
+                  <stop offset="34%" stop-color="${chick.palette.a}"></stop>
+                  <stop offset="100%" stop-color="${chick.palette.b}"></stop>
+                </radialGradient>
+                <linearGradient id="${rainbowId}" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#ff595e"></stop>
+                  <stop offset="18%" stop-color="#ffca3a"></stop>
+                  <stop offset="36%" stop-color="#8ac926"></stop>
+                  <stop offset="55%" stop-color="#33c7ff"></stop>
+                  <stop offset="74%" stop-color="#7b61ff"></stop>
+                  <stop offset="100%" stop-color="#ff7ad9"></stop>
+                </linearGradient>
+              </defs>
+              <path class="chick-foot-line" d="M44 72 L34 86 M44 72 L45 88 M44 72 L55 85"></path>
+              <path class="chick-foot-line" d="M64 73 L57 88 M64 73 L66 89 M64 73 L76 85"></path>
+              <path class="chick-beak-shape" d="M77 36 L103 30 L96 43 L103 56 L77 50 Z"></path>
+              <path class="chick-beak-line" d="M80 43 L96 43"></path>
+              <circle class="chick-body-shape" cx="51" cy="43" r="29" fill="${bodyFill}"></circle>
+              <path class="chick-comb-shape" d="M41 17 C38 4, 50 7, 50 18 C54 3, 68 8, 62 23 C70 10, 82 20, 68 31 L43 30 Z"></path>
+              <path class="chick-wing-shape" d="M72 50 C88 49, 91 62, 80 68 C77 75, 68 69, 67 61 C61 58, 63 51, 72 50 Z"></path>
+              <circle class="chick-eye-shape" cx="42" cy="39" r="6"></circle>
+            </svg>
+            <span class="chick-tool chick-tool-shovel"></span>
+            <span class="chick-tool chick-tool-bucket"></span>
+          </div>
+        `;
+        return el;
+      }
+
+      function createChick(x, y) {
+        state.totalBorn += 1;
+        const special = state.totalBorn % 6 === 0;
+        const palette = special
+          ? pickSpecialPalette()
+          : { a: "#fff51e", b: "#ffcf37", c: "#ffe34c" };
+        const rainbow = Boolean(palette.rainbow);
+
+        const p = clampActorPoint(x + rand(-8, 8), y + rand(-4, 7));
+        const chick = {
+          id: state.nextChickId++,
+          x: p.x,
+          y: p.y,
+          targetX: p.x,
+          targetY: p.y,
+          dir: 1,
+          speed: rand(44, 62),
+          state: "wander",
+          facility: null,
+          queueTarget: null,
+          route: [],
+          routeIndex: 0,
+          hillSide: "left",
+          birthAt: performance.now(),
+          expiresAt: performance.now() + 180000,
+          nextPlayCheck: performance.now() + rand(5500, 12000),
+          idleUntil: 0,
+          special,
+          rainbow,
+          sandTool: Math.random() < 0.7 ? "shovel" : "bucket",
+          palette,
+          el: null
+        };
+        chick.el = makeChickElement(chick);
+        actors.appendChild(chick.el);
+        state.chicks.push(chick);
+        state.chickMap.set(chick.id, chick);
+        chooseWanderTarget(chick);
+        renderChick(chick);
+
+        if (rainbow) {
+          showFeedback("Wow! A rainbow chick hatched!");
+        } else if (special) {
+          showFeedback(`Wow! Chick #${state.totalBorn} is colorful!`);
+        } else {
+          showFeedback("Great! A new chick hatched!");
+        }
+
+        if (Math.random() < 0.62) {
+          sendChickToFacility(chick, chooseFacility());
+        }
+        updateStats();
+      }
+
+      function chooseFacility() {
+        const ids = ["sand", "sand", "sand", "sand", "slide", "hill", "swing"];
+        return ids[Math.floor(Math.random() * ids.length)];
+      }
+
+      function sendChickToFacility(chick, facilityId) {
+        if (!chick || chick.state !== "wander") return;
+        const facility = facilities[facilityId];
+        if (!facility) return;
+
+        chick.facility = facilityId;
+        chick.state = "toQueue";
+        chick.queueTarget = getApproachPosition(facility, chick);
+        chick.route = [];
+        chick.routeIndex = 0;
+        chick.queued = false;
+        chick.el.classList.remove("playing", "swinging", "digging");
+        chick.el.style.setProperty("--rider-angle", "0deg");
+        if (facilityId === "hill") {
+          chick.hillSide = Math.random() < 0.5 ? "left" : "right";
+          chick.hillPeak = Math.floor(Math.random() * 3);
+          chick.queueTarget = getApproachPosition(facility, chick);
+        }
+      }
+
+      function updateQueueTargets(facilityId) {
+        const facility = facilities[facilityId];
+        if (!facility) return;
+
+        facility.queue = facility.queue.filter((id) => {
+          const chick = state.chickMap.get(id);
+          return chick && chick.facility === facility.id && chick.state === "waiting";
+        });
+        const sideCounts = { left: 0, right: 0 };
+        facility.queue.forEach((id, index) => {
+          const chick = state.chickMap.get(id);
+          if (!chick) return;
+          chick.queueTarget = getQueuePosition(facility, index, chick, sideCounts);
+          if (chick.state === "waiting" || chick.state === "toQueue") {
+            chick.targetX = chick.queueTarget.x;
+            chick.targetY = chick.queueTarget.y;
+          }
+        });
+      }
+
+      function getQueuePosition(facility, index, chick, sideCounts) {
+        if (facility.id === "slide") {
+          const row = index % 6;
+          const col = Math.floor(index / 6);
+          return clampActorPoint(
+            facility.x + facility.w * 0.16 - col * 28,
+            facility.y + facility.h * 0.86 + row * 24,
+            state.groundTop + 8
+          );
+        }
+
+        if (facility.id === "swing") {
+          const row = index % 6;
+          const col = Math.floor(index / 6);
+          return clampActorPoint(
+            facility.x - 22 - col * 28,
+            facility.y + facility.h * 0.83 + row * 24,
+            state.groundTop + 8
+          );
+        }
+
+        if (facility.id === "sand") {
+          const row = index % 5;
+          const col = Math.floor(index / 5);
+          return clampActorPoint(
+            facility.x - 16 - col * 27,
+            facility.y + facility.h * 0.72 + row * 22,
+            state.groundTop + 8
+          );
+        }
+
+        const peak = chick.hillPeak ?? 1;
+        const key = `peak${peak}`;
+        const peakIndex = sideCounts[key] || 0;
+        sideCounts[key] = peakIndex + 1;
+        const bases = [0.18, 0.5, 0.82];
+        const row = peakIndex % 4;
+        const col = Math.floor(peakIndex / 4);
+        return clampActorPoint(
+          facility.x + facility.w * bases[peak] - col * 24,
+          facility.y + facility.h * 0.92 + row * 19,
+          70
+        );
+      }
+
+      function getApproachPosition(facility, chick) {
+        if (facility.id === "slide") {
+          return clampActorPoint(facility.x + facility.w * 0.13, facility.y + facility.h * 0.84, state.groundTop + 8);
+        }
+        if (facility.id === "swing") {
+          return clampActorPoint(facility.x - 18, facility.y + facility.h * 0.82, state.groundTop + 8);
+        }
+        if (facility.id === "sand") {
+          return clampActorPoint(facility.x - 12, facility.y + facility.h * 0.72, state.groundTop + 8);
+        }
+        const peak = getHillPeak(facility, chick.hillPeak ?? 1);
+        const foot = chick.hillSide === "right" ? peak.rightFoot : peak.leftFoot;
+        return clampActorPoint(facility.x + facility.w * foot.x, facility.y + facility.h * foot.y, 70);
+      }
+
+      function processQueue(facilityId) {
+        const facility = facilities[facilityId];
+        if (!facility) return;
+
+        updateQueueTargets(facilityId);
+        if (facility.id === "sand") {
+          facility.players = facility.players.filter((id) => state.chickMap.has(id));
+          while (facility.queue.length && facility.players.length < facility.capacity) {
+            const chick = state.chickMap.get(facility.queue[0]);
+            if (!chick) {
+              facility.queue.shift();
+              continue;
+            }
+            if (chick.state === "waiting") {
+              startFacilityRoute(chick, facility);
+              continue;
+            }
+            return;
+          }
+          facility.busy = facility.players.length >= facility.capacity;
+          return;
+        }
+
+        if (facility.busy) return;
+
+        while (facility.queue.length) {
+          const chick = state.chickMap.get(facility.queue[0]);
+          if (!chick) {
+            facility.queue.shift();
+            continue;
+          }
+          if (chick.state === "waiting") {
+            startFacilityRoute(chick, facility);
+          }
+          return;
+        }
+      }
+
+      function startFacilityRoute(chick, facility) {
+        facility.queue.shift();
+        if (facility.id === "sand") {
+          chick.sandSlot = getOpenSandSlot(facility);
+          facility.players.push(chick.id);
+          facility.busy = facility.players.length >= facility.capacity;
+          facility.current = facility.players[0] || null;
+          facility.el.classList.add("active");
+        } else {
+          facility.busy = true;
+          facility.current = chick.id;
+        }
+        updateQueueTargets(facility.id);
+
+        chick.state = "route";
+        chick.facility = facility.id;
+        chick.queueTarget = null;
+        chick.route = buildRoute(facility, chick);
+        chick.routeIndex = 0;
+        chick.queued = false;
+        chick.hillGateReleased = false;
+        chick.hillGateIndex = facility.id === "hill" ? 2 : -1;
+        chick.el.classList.add("playing");
+      }
+
+      function buildRoute(facility, chick) {
+        if (facility.id === "slide") return buildSlideRoute(facility);
+        if (facility.id === "hill") return buildHillRoute(facility, chick);
+        if (facility.id === "swing") return buildSwingRoute(facility);
+        return buildSandRoute(facility, chick);
+      }
+
+      function buildSlideRoute(f) {
+        return [
+          { x: f.x + f.w * 0.16, y: f.y + f.h * 0.84, speed: 76 },
+          { x: f.x + f.w * 0.25, y: f.y + f.h * 0.66, speed: 72 },
+          { x: f.x + f.w * 0.34, y: f.y + f.h * 0.49, speed: 70 },
+          { x: f.x + f.w * 0.45, y: f.y + f.h * 0.27, speed: 68 },
+          { x: f.x + f.w * 0.59, y: f.y + f.h * 0.24, speed: 70 },
+          { x: f.x + f.w * 0.72, y: f.y + f.h * 0.36, speed: 152 },
+          { x: f.x + f.w * 0.69, y: f.y + f.h * 0.55, speed: 156 },
+          { x: f.x + f.w * 0.88, y: f.y + f.h * 0.58, speed: 164 },
+          { x: f.x + f.w * 1.05, y: f.y + f.h * 0.78, speed: 170 },
+          clampActorPoint(f.x + f.w + 46, f.y + f.h * 0.9, state.groundTop + 10)
+        ];
+      }
+
+      function getHillPeak(f, index) {
+        const peaks = [
+          {
+            leftFoot: { x: 0.07, y: 0.93 },
+            upLow: { x: 0.14, y: 0.74 },
+            top: { x: 0.25, y: 0.22 },
+            downLow: { x: 0.36, y: 0.74 },
+            rightFoot: { x: 0.43, y: 0.93 }
+          },
+          {
+            leftFoot: { x: 0.32, y: 0.93 },
+            upLow: { x: 0.42, y: 0.64 },
+            top: { x: 0.5, y: 0.15 },
+            downLow: { x: 0.59, y: 0.64 },
+            rightFoot: { x: 0.68, y: 0.93 }
+          },
+          {
+            leftFoot: { x: 0.57, y: 0.93 },
+            upLow: { x: 0.67, y: 0.7 },
+            top: { x: 0.77, y: 0.24 },
+            downLow: { x: 0.86, y: 0.7 },
+            rightFoot: { x: 0.94, y: 0.93 }
+          }
+        ];
+        return peaks[index % peaks.length];
+      }
+
+      function buildHillRoute(f, chick) {
+        const fromLeft = chick.hillSide !== "right";
+        const peak = getHillPeak(f, chick.hillPeak ?? 1);
+        const start = fromLeft ? peak.leftFoot : peak.rightFoot;
+        const upLow = fromLeft ? peak.upLow : peak.downLow;
+        const downLow = fromLeft ? peak.downLow : peak.upLow;
+        const end = fromLeft ? peak.rightFoot : peak.leftFoot;
+        const leaveX = fromLeft ? f.x + f.w * end.x + 34 : f.x + f.w * end.x - 34;
+
+        return [
+          { x: f.x + f.w * start.x, y: f.y + f.h * start.y, speed: 68 },
+          { x: f.x + f.w * upLow.x, y: f.y + f.h * upLow.y, speed: 62 },
+          { x: f.x + f.w * peak.top.x, y: f.y + f.h * peak.top.y, speed: 55 },
+          { x: f.x + f.w * downLow.x, y: f.y + f.h * downLow.y, speed: 76 },
+          { x: f.x + f.w * end.x, y: f.y + f.h * end.y, speed: 82 },
+          clampActorPoint(leaveX, f.y + f.h * 0.96, 70)
+        ];
+      }
+
+      function buildSwingRoute(f) {
+        const seat = getSwingSeatAtAngle(f, 0);
+        return [
+          { x: f.x + f.w * 0.35, y: f.y + f.h * 0.82, speed: 74 },
+          { x: seat.x, y: seat.y + 10, speed: 68 }
+        ];
+      }
+
+      function getOpenSandSlot(facility) {
+        const used = new Set();
+        facility.players.forEach((id) => {
+          const chick = state.chickMap.get(id);
+          if (chick && Number.isFinite(chick.sandSlot)) used.add(chick.sandSlot);
+        });
+        for (let i = 0; i < facility.capacity; i += 1) {
+          if (!used.has(i)) return i;
+        }
+        return facility.players.length % facility.capacity;
+      }
+
+      function getSandPlayPoint(f, slot) {
+        const spots = [
+          { x: 0.29, y: 0.64 },
+          { x: 0.44, y: 0.52 },
+          { x: 0.58, y: 0.64 },
+          { x: 0.36, y: 0.79 },
+          { x: 0.66, y: 0.79 }
+        ];
+        const spot = spots[slot % spots.length];
+        return {
+          x: f.x + f.w * spot.x,
+          y: f.y + f.h * spot.y
+        };
+      }
+
+      function buildSandRoute(f, chick) {
+        const play = getSandPlayPoint(f, chick.sandSlot || 0);
+        return [
+          { x: f.x + f.w * 0.22, y: f.y + f.h * 0.76, speed: 72 },
+          { x: play.x, y: play.y, speed: 58 }
+        ];
+      }
+
+      function releaseFacility(chick) {
+        const facility = facilities[chick.facility];
+        if (facility) {
+          facility.queue = facility.queue.filter((id) => id !== chick.id);
+        }
+        if (facility && facility.id === "sand") {
+          facility.players = facility.players.filter((id) => id !== chick.id && state.chickMap.has(id));
+          facility.busy = facility.players.length >= facility.capacity;
+          facility.current = facility.players[0] || null;
+          facility.el.classList.toggle("active", facility.players.length > 0);
+          chick.sandSlot = null;
+          processQueue(facility.id);
+          return;
+        }
+        if (facility && facility.current === chick.id) {
+          facility.busy = false;
+          facility.current = null;
+          if (facility.id === "swing") {
+            facility.movingEl.style.setProperty("--swing-angle", "0deg");
+            chick.el.style.setProperty("--rider-angle", "0deg");
+          }
+          processQueue(facility.id);
+        }
+      }
+
+      function setChickWander(chick) {
+        releaseFacility(chick);
+        chick.state = "wander";
+        chick.facility = null;
+        chick.route = [];
+        chick.routeIndex = 0;
+        chick.queueTarget = null;
+        chick.queued = false;
+        chick.el.classList.remove("playing", "swinging", "digging");
+        chick.el.style.setProperty("--rider-angle", "0deg");
+        chick.nextPlayCheck = performance.now() + rand(6000, 14000);
+        chooseWanderTarget(chick);
+      }
+
+      function removeChickAt(index) {
+        const chick = state.chicks[index];
+        if (!chick) return;
+
+        if (chick.facility && facilities[chick.facility]) {
+          const facility = facilities[chick.facility];
+          facility.queue = facility.queue.filter((id) => id !== chick.id);
+          if (facility.id === "sand") {
+            facility.players = facility.players.filter((id) => id !== chick.id && state.chickMap.has(id));
+            facility.busy = facility.players.length >= facility.capacity;
+            facility.current = facility.players[0] || null;
+            facility.el.classList.toggle("active", facility.players.length > 0);
+          } else if (facility.current === chick.id) {
+            facility.busy = false;
+            facility.current = null;
+            if (facility.id === "swing") {
+              facility.movingEl.style.setProperty("--swing-angle", "0deg");
+            }
+          }
+          updateQueueTargets(facility.id);
+          processQueue(facility.id);
+        }
+
+        chick.el.remove();
+        state.chickMap.delete(chick.id);
+        state.chicks.splice(index, 1);
+        updateStats();
+      }
+
+      function chooseWanderTarget(chick) {
+        const p = randomGrassPoint();
+        chick.targetX = p.x;
+        chick.targetY = p.y;
+      }
+
+      function moveToward(actor, target, speed, dt) {
+        const dx = target.x - actor.x;
+        const dy = target.y - actor.y;
+        const dist = Math.hypot(dx, dy);
+        if (dist < 0.01) return true;
+
+        if (Math.abs(dx) > 0.5) {
+          actor.dir = dx >= 0 ? 1 : -1;
+        }
+
+        const step = speed * dt / 1000;
+        if (dist <= step) {
+          actor.x = target.x;
+          actor.y = target.y;
+          return true;
+        }
+
+        actor.x += dx / dist * step;
+        actor.y += dy / dist * step;
+        return false;
+      }
+
+      function clampHenForState(x, y) {
+        const minY = hen.facility === "hill" && hen.state !== "idle"
+          ? Math.max(64, facilities.hill.y + facilities.hill.h * 0.06)
+          : state.groundTop + 36;
+        return {
+          x: clamp(x, 44, Math.max(45, state.width - 44)),
+          y: clamp(y, minY, Math.max(minY + 1, state.height - 34))
+        };
+      }
+
+      function stopHenFacilityPlay() {
+        if (hen.swingControls) {
+          facilities.swing.movingEl.style.setProperty("--swing-angle", "0deg");
+          facilities.swing.angle = 0;
+        }
+        if (hen.facility === "sand") {
+          facilities.sand.el.classList.toggle("active", facilities.sand.players.length > 0);
+        }
+        hen.state = "idle";
+        hen.facility = null;
+        hen.route = [];
+        hen.routeIndex = 0;
+        hen.swingControls = false;
+        henEl.classList.remove("playing", "swinging", "digging");
+      }
+
+      function startHenFacilityPlay(facility) {
+        if (!facility) return;
+        stopHenFacilityPlay();
+        hen.facility = facility.id;
+        hen.state = "route";
+        hen.routeIndex = 0;
+        hen.hillSide = Math.random() < 0.5 ? "left" : "right";
+        hen.hillPeak = Math.floor(Math.random() * 3);
+        hen.sandSlot = Math.floor(Math.random() * 5);
+        hen.route = buildRoute(facility, hen);
+        henEl.classList.add("playing");
+      }
+
+      function updateHenFacilityPlay(now, dt) {
+        const facility = facilities[hen.facility];
+        if (!facility) {
+          stopHenFacilityPlay();
+          return;
+        }
+
+        if (hen.state === "route") {
+          const point = hen.route[hen.routeIndex];
+          if (!point) {
+            finishHenFacilityRoute(now);
+            return;
+          }
+          const arrived = moveToward(hen, point, (point.speed || 70) * 1.42, dt);
+          if (arrived) {
+            hen.routeIndex += 1;
+            if (hen.routeIndex >= hen.route.length) {
+              finishHenFacilityRoute(now);
+            }
+          }
+          return;
+        }
+
+        if (hen.state === "swing") {
+          const elapsed = now - hen.playStart;
+          const angle = hen.swingControls
+            ? Math.sin(elapsed / 1000 * 2.35) * 13
+            : facility.angle;
+          const seat = getSwingSeatAtAngle(facility, angle);
+          hen.x = seat.x;
+          hen.y = seat.y + 24;
+          hen.dir = angle <= 0 ? 1 : -1;
+          if (hen.swingControls) {
+            facility.angle = angle;
+            facility.movingEl.style.setProperty("--swing-angle", `${angle}deg`);
+          }
+          if (elapsed >= hen.playDuration) {
+            if (hen.swingControls) {
+              facility.angle = 0;
+              facility.movingEl.style.setProperty("--swing-angle", "0deg");
+            }
+            stopHenFacilityPlay();
+            const exit = clampHenForState(facility.x + facility.w * 0.72, facility.y + facility.h * 0.86);
+            hen.x = exit.x;
+            hen.y = exit.y;
+            hen.targetX = exit.x;
+            hen.targetY = exit.y;
+          }
+          return;
+        }
+
+        if (hen.state === "dig") {
+          const elapsed = now - hen.playStart;
+          const play = getSandPlayPoint(facility, hen.sandSlot);
+          const wiggle = Math.sin(elapsed / 130);
+          hen.x = play.x + wiggle * 8;
+          hen.y = play.y - 12 + Math.cos(elapsed / 180) * 3;
+          hen.dir = wiggle >= 0 ? 1 : -1;
+          if (elapsed >= hen.playDuration) {
+            stopHenFacilityPlay();
+            const exit = clampHenForState(facility.x + facility.w * 0.78, facility.y + facility.h * 0.84);
+            hen.x = exit.x;
+            hen.y = exit.y;
+            hen.targetX = exit.x;
+            hen.targetY = exit.y;
+          }
+        }
+      }
+
+      function finishHenFacilityRoute(now) {
+        if (hen.facility === "swing") {
+          hen.state = "swing";
+          hen.playStart = now;
+          hen.playDuration = 3900;
+          hen.swingControls = !facilities.swing.current;
+          henEl.classList.add("swinging");
+          return;
+        }
+
+        if (hen.facility === "sand") {
+          hen.state = "dig";
+          hen.playStart = now;
+          hen.playDuration = 3300;
+          henEl.classList.add("digging");
+          facilities.sand.el.classList.add("active");
+          return;
+        }
+
+        stopHenFacilityPlay();
+        const p = clampHenForState(hen.x, hen.y);
+        hen.x = p.x;
+        hen.y = p.y;
+        hen.targetX = p.x;
+        hen.targetY = p.y;
+      }
+
+      function updateHen(now, dt) {
+        let vx = 0;
+        let vy = 0;
+        if (state.keys.ArrowLeft) vx -= 1;
+        if (state.keys.ArrowRight) vx += 1;
+        if (state.keys.ArrowUp) vy -= 1;
+        if (state.keys.ArrowDown) vy += 1;
+
+        const beforeX = hen.x;
+        const beforeY = hen.y;
+
+        if (vx || vy) {
+          stopHenFacilityPlay();
+          const len = Math.hypot(vx, vy);
+          const step = hen.speed * dt / 1000;
+          hen.x += vx / len * step;
+          hen.y += vy / len * step;
+          hen.targetX = hen.x;
+          hen.targetY = hen.y;
+          if (vx) hen.dir = vx > 0 ? 1 : -1;
+        } else if (hen.state !== "idle") {
+          updateHenFacilityPlay(now, dt);
+        } else {
+          const speed = state.dragging ? 580 : hen.speed;
+          moveToward(hen, { x: hen.targetX, y: hen.targetY }, speed, dt);
+        }
+
+        const p = clampHenForState(hen.x, hen.y);
+        hen.x = p.x;
+        hen.y = p.y;
+        hen.moving = Math.hypot(hen.x - beforeX, hen.y - beforeY) > 0.12;
+      }
+
+      function updateEggs(now) {
+        for (let i = state.eggs.length - 1; i >= 0; i -= 1) {
+          const egg = state.eggs[i];
+
+          if (!egg.hatching) {
+            const left = Math.max(0, egg.hatchAt - now);
+            const countdown = egg.el.querySelector(".egg-countdown");
+            countdown.textContent = String(Math.max(1, Math.ceil(left / 1000)));
+
+            if (left <= 0) {
+              egg.hatching = true;
+              egg.chickBornAt = now + 220;
+              egg.removeAt = now + 660;
+              egg.el.classList.add("hatching");
+              updateStats();
+            }
+          } else {
+            if (!egg.born && now >= egg.chickBornAt) {
+              egg.born = true;
+              createChick(egg.x, egg.y);
+            }
+            if (now >= egg.removeAt) {
+              egg.el.remove();
+              state.eggs.splice(i, 1);
+              updateStats();
+            }
+          }
+
+          renderEgg(egg);
+        }
+      }
+
+      function updateChicks(now, dt) {
+        for (let i = state.chicks.length - 1; i >= 0; i -= 1) {
+          const chick = state.chicks[i];
+          if (now >= chick.expiresAt) {
+            removeChickAt(i);
+            continue;
+          }
+
+          if (chick.state === "wander") {
+            updateWander(chick, now, dt);
+          } else if (chick.state === "toQueue") {
+            updateToQueue(chick, dt);
+          } else if (chick.state === "waiting") {
+            updateWaiting(chick, dt);
+          } else if (chick.state === "route") {
+            updateRoute(chick, now, dt);
+          } else if (chick.state === "swing") {
+            updateSwingChick(chick, now);
+          } else if (chick.state === "dig") {
+            updateDigChick(chick, now);
+          }
+
+          const p = clampActorPoint(chick.x, chick.y, getChickMinY(chick));
+          chick.x = p.x;
+          chick.y = p.y;
+          renderChick(chick);
+        }
+      }
+
+      function getChickMinY(chick) {
+        if (chick.facility === "hill" && chick.state !== "wander") {
+          return Math.max(64, facilities.hill.y + facilities.hill.h * 0.06);
+        }
+        return state.groundTop + 8;
+      }
+
+      function updateWander(chick, now, dt) {
+        if (now >= chick.nextPlayCheck) {
+          chick.nextPlayCheck = now + rand(7000, 16000);
+          if (Math.random() < 0.18) {
+            sendChickToFacility(chick, chooseFacility());
+            return;
+          }
+        }
+
+        if (now < chick.idleUntil) return;
+
+        const arrived = moveToward(chick, { x: chick.targetX, y: chick.targetY }, chick.speed, dt);
+        if (arrived) {
+          chick.idleUntil = now + rand(450, 1500);
+          chooseWanderTarget(chick);
+        }
+      }
+
+      function updateToQueue(chick, dt) {
+        const facility = facilities[chick.facility];
+        if (!facility) {
+          setChickWander(chick);
+          return;
+        }
+
+        if (chick.queued) {
+          chick.state = "waiting";
+          updateQueueTargets(facility.id);
+          return;
+        }
+
+        const target = chick.queueTarget || getApproachPosition(facility, chick);
+        const arrived = moveToward(chick, target, chick.speed * 1.15, dt);
+        if (arrived) {
+          chick.queued = true;
+          chick.state = "waiting";
+          facility.queue.push(chick.id);
+          updateQueueTargets(facility.id);
+          processQueue(facility.id);
+        }
+      }
+
+      function updateWaiting(chick, dt) {
+        const facility = facilities[chick.facility];
+        if (!facility || !facility.queue.includes(chick.id)) {
+          setChickWander(chick);
+          return;
+        }
+
+        const target = chick.queueTarget || { x: chick.targetX, y: chick.targetY };
+        if (distance(chick, target) > 1.5) {
+          moveToward(chick, target, chick.speed * 0.82, dt);
+        } else {
+          processQueue(facility.id);
+        }
+      }
+
+      function updateRoute(chick, now, dt) {
+        if (!chick.route.length) {
+          finishRoute(chick, now);
+          return;
+        }
+        const point = chick.route[chick.routeIndex];
+        const target = { x: point.x, y: point.y };
+        const speed = point.speed || chick.speed * 1.4;
+        const arrived = moveToward(chick, target, speed, dt);
+        if (arrived) {
+          chick.routeIndex += 1;
+          maybeReleaseHillGate(chick);
+          if (chick.routeIndex >= chick.route.length) {
+            finishRoute(chick, now);
+          }
+        }
+      }
+
+      function maybeReleaseHillGate(chick) {
+        if (chick.facility !== "hill" || chick.hillGateReleased) return;
+        const facility = facilities.hill;
+        if (facility.current !== chick.id) return;
+        if (chick.routeIndex >= chick.hillGateIndex + 1) {
+          chick.hillGateReleased = true;
+          facility.busy = false;
+          facility.current = null;
+          processQueue("hill");
+        }
+      }
+
+      function finishRoute(chick, now) {
+        if (chick.facility === "swing") {
+          chick.state = "swing";
+          chick.swingStart = now;
+          chick.swingDuration = 5200;
+          chick.el.classList.add("swinging");
+          return;
+        }
+
+        if (chick.facility === "sand") {
+          chick.state = "dig";
+          chick.digStart = now;
+          chick.digDuration = 4300;
+          chick.el.classList.add("digging");
+          facilities.sand.el.classList.toggle("active", facilities.sand.players.length > 0);
+          return;
+        }
+
+        setChickWander(chick);
+      }
+
+      function updateSwingChick(chick, now) {
+        const facility = facilities.swing;
+        if (facility.current !== chick.id) {
+          setChickWander(chick);
+          return;
+        }
+
+        const elapsed = now - chick.swingStart;
+        const angle = Math.sin(elapsed / 1000 * 2.35) * 13;
+        const seat = getSwingSeatAtAngle(facility, angle);
+        chick.x = seat.x;
+        chick.y = seat.y + 10;
+        chick.dir = angle <= 0 ? 1 : -1;
+        facility.angle = angle;
+        facility.movingEl.style.setProperty("--swing-angle", `${angle}deg`);
+        chick.el.style.setProperty("--rider-angle", `${angle}deg`);
+
+        if (elapsed >= chick.swingDuration) {
+          facility.angle = 0;
+          facility.movingEl.style.setProperty("--swing-angle", "0deg");
+          chick.el.style.setProperty("--rider-angle", "0deg");
+          const exit = clampActorPoint(facility.x + facility.w * 0.72, facility.y + facility.h * 0.84);
+          chick.x = exit.x;
+          chick.y = exit.y;
+          setChickWander(chick);
+        }
+      }
+
+      function updateDigChick(chick, now) {
+        const facility = facilities.sand;
+        if (!facility.players.includes(chick.id)) {
+          setChickWander(chick);
+          return;
+        }
+
+        const elapsed = now - chick.digStart;
+        const wiggle = Math.sin(elapsed / 120);
+        const play = getSandPlayPoint(facility, chick.sandSlot || 0);
+        chick.x = play.x + wiggle * 5;
+        chick.y = play.y + Math.cos(elapsed / 180) * 2;
+        chick.dir = wiggle >= 0 ? 1 : -1;
+
+        if (elapsed >= chick.digDuration) {
+          const exit = clampActorPoint(facility.x + facility.w * 0.78, facility.y + facility.h * 0.82);
+          chick.x = exit.x;
+          chick.y = exit.y;
+          setChickWander(chick);
+        }
+      }
+
+      function getSwingSeatAtAngle(facility, degree) {
+        const angle = degree * Math.PI / 180;
+        const pivotX = facility.x + facility.w * 0.5;
+        const pivotY = facility.y + facility.h * 0.19;
+        const length = facility.h * 0.57;
+        return {
+          x: pivotX - Math.sin(angle) * length,
+          y: pivotY + Math.cos(angle) * length
+        };
+      }
+
+      function renderAll() {
+        renderHen();
+        state.eggs.forEach(renderEgg);
+        state.chicks.forEach(renderChick);
+      }
+
+      function renderHen() {
+        const now = performance.now();
+        henEl.style.left = `${hen.x}px`;
+        henEl.style.top = `${hen.y}px`;
+        henEl.style.zIndex = String(Math.floor(hen.y) + 300);
+        henEl.style.setProperty("--hen-dir", -hen.dir);
+        henEl.classList.toggle("moving", hen.moving);
+        henEl.classList.toggle("smile", now < hen.smileUntil);
+      }
+
+      function renderEgg(egg) {
+        egg.el.style.left = `${egg.x}px`;
+        egg.el.style.top = `${egg.y}px`;
+        egg.el.style.zIndex = String(Math.floor(egg.y) + 120);
+      }
+
+      function renderChick(chick) {
+        chick.el.style.left = `${chick.x}px`;
+        chick.el.style.top = `${chick.y}px`;
+        chick.el.style.zIndex = String(Math.floor(chick.y) + 160);
+        chick.el.style.setProperty("--chick-dir", -chick.dir);
+        if (chick.state !== "swing") {
+          chick.el.style.setProperty("--rider-angle", "0deg");
+        }
+      }
+
+      function updateStats() {
+        const hatchingEggs = state.eggs.filter((egg) => !egg.hatching).length;
+        chickCountEl.textContent = `Chicks: ${state.chicks.length}`;
+        eggCountEl.textContent = `Hatching: ${hatchingEggs}`;
+      }
+
+      function pointerToGame(event) {
+        const rect = game.getBoundingClientRect();
+        return {
+          x: event.clientX - rect.left,
+          y: event.clientY - rect.top
+        };
+      }
+
+      function setHenTargetFromPointer(event) {
+        const p = pointerToGame(event);
+        const target = clampHenPoint(p.x, p.y);
+        hen.targetX = target.x;
+        hen.targetY = target.y;
+      }
+
+      function isPointOnFacility(point) {
+        return Boolean(getFacilityAtPoint(point));
+      }
+
+      function getFacilityAtPoint(point) {
+        return Object.values(facilities).find((facility) => (
+          point.x >= facility.x &&
+          point.x <= facility.x + facility.w &&
+          point.y >= facility.y &&
+          point.y <= facility.y + facility.h
+        )) || null;
+      }
+
+      window.addEventListener("keydown", (event) => {
+        if (["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Space"].includes(event.code)) {
+          event.preventDefault();
+        }
+        if (event.code === "Space" && !event.repeat) {
+          layEgg();
+          eggButton.classList.add("pressed");
+          window.setTimeout(() => eggButton.classList.remove("pressed"), 130);
+        }
+        state.keys[event.code] = true;
+      });
+
+      window.addEventListener("keyup", (event) => {
+        state.keys[event.code] = false;
+      });
+
+      game.addEventListener("pointerdown", (event) => {
+        if (event.target.closest("button") || event.target.closest(".hud")) return;
+        const p = pointerToGame(event);
+        const facility = getFacilityAtPoint(p);
+        if (facility) {
+          state.pointerDown = false;
+          state.pointerId = null;
+          state.pointerStart = null;
+          state.dragging = false;
+          startHenFacilityPlay(facility);
+          return;
+        }
+        stopHenFacilityPlay();
+        state.pointerDown = true;
+        state.pointerId = event.pointerId;
+        state.dragging = false;
+        state.pointerStart = p;
+        const target = clampHenPoint(p.x, p.y);
+        hen.targetX = target.x;
+        hen.targetY = target.y;
+        game.setPointerCapture(event.pointerId);
+      });
+
+      game.addEventListener("pointermove", (event) => {
+        if (!state.pointerDown || event.pointerId !== state.pointerId) return;
+        const p = pointerToGame(event);
+        if (state.pointerStart && distance(p, state.pointerStart) > 6) {
+          state.dragging = true;
+        }
+        setHenTargetFromPointer(event);
+      });
+
+      game.addEventListener("dblclick", (event) => {
+        if (event.target.closest("button") || event.target.closest(".hud")) return;
+        event.preventDefault();
+        layEgg();
+        eggButton.classList.add("pressed");
+        window.setTimeout(() => eggButton.classList.remove("pressed"), 130);
+      });
+
+      function endPointer(event) {
+        if (event.pointerId !== state.pointerId) return;
+        state.pointerDown = false;
+        state.pointerId = null;
+        state.pointerStart = null;
+        window.setTimeout(() => {
+          state.dragging = false;
+        }, 90);
+      }
+
+      game.addEventListener("pointerup", endPointer);
+      game.addEventListener("pointercancel", endPointer);
+
+      eggButton.addEventListener("click", () => {
+        layEgg();
+      });
+
+      window.addEventListener("resize", resizeGame);
+
+      function loop(now) {
+        const dt = Math.min(40, now - state.lastTime || 16);
+        state.lastTime = now;
+
+        updateHen(now, dt);
+        updateEggs(now);
+        updateChicks(now, dt);
+        renderAll();
+        requestAnimationFrame(loop);
+      }
+
+      resizeGame();
+      const start = randomGrassPoint();
+      hen.x = start.x;
+      hen.y = start.y;
+      hen.targetX = start.x;
+      hen.targetY = start.y;
+      renderHen();
+      updateStats();
+      requestAnimationFrame(loop);
+    })();
+  </script>
+</body>
+</html>

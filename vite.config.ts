@@ -1,4 +1,5 @@
 import { createHash, randomUUID } from 'node:crypto';
+import fs from 'node:fs/promises';
 import path from 'path';
 import { defineConfig, loadEnv, type Connect, type Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
@@ -7,6 +8,7 @@ const baseFromEnv = process.env.VITE_BASE || '/';
 const normalizedBase = baseFromEnv.endsWith('/') ? baseFromEnv : `${baseFromEnv}/`;
 
 const YOUDAO_ENDPOINT = 'https://openapi.youdao.com/api';
+const HAPPY_CHICKEN_FARM_PAGE = 'happy_chicken_farm.html';
 
 const buildInput = (query: string) => {
   if (query.length <= 20) {
@@ -104,6 +106,56 @@ const youdaoProxyPlugin = (appKey?: string, appSecret?: string): Plugin => ({
   }
 });
 
+const createRootHtmlPageMiddleware = (pageName: string): Connect.NextHandleFunction => {
+  const pagePath = path.resolve(__dirname, pageName);
+  const pageRoute = `/${pageName}`;
+
+  return async (req, res, next) => {
+    const requestPath = req.url?.split('?')[0];
+    if (!requestPath?.endsWith(pageRoute)) {
+      next();
+      return;
+    }
+
+    try {
+      const html = await fs.readFile(pagePath, 'utf8');
+      res.statusCode = 200;
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      res.end(html);
+    } catch {
+      next();
+    }
+  };
+};
+
+const rootHtmlPagePlugin = (pageName: string): Plugin => {
+  let outputDir = '';
+
+  return {
+    name: 'root-html-page',
+    configResolved(config) {
+      outputDir = path.resolve(config.root, config.build.outDir);
+    },
+    configureServer(server) {
+      server.middlewares.use(createRootHtmlPageMiddleware(pageName));
+    },
+    configurePreviewServer(server) {
+      server.middlewares.use(createRootHtmlPageMiddleware(pageName));
+    },
+    async writeBundle() {
+      const sourcePath = path.resolve(__dirname, pageName);
+      const outputPath = path.resolve(outputDir, pageName);
+
+      if (sourcePath === outputPath) {
+        return;
+      }
+
+      await fs.mkdir(path.dirname(outputPath), { recursive: true });
+      await fs.copyFile(sourcePath, outputPath);
+    }
+  };
+};
+
 export default defineConfig(({ mode }) => {
   const isOffline = mode === 'offline';
   const env = loadEnv(mode, process.cwd(), '');
@@ -120,7 +172,11 @@ export default defineConfig(({ mode }) => {
       port: 3000,
       host: '0.0.0.0',
     },
-    plugins: [react(), youdaoProxyPlugin(env.YOUDAO_APP_KEY, env.YOUDAO_APP_SECRET)],
+    plugins: [
+      react(),
+      youdaoProxyPlugin(env.YOUDAO_APP_KEY, env.YOUDAO_APP_SECRET),
+      rootHtmlPagePlugin(HAPPY_CHICKEN_FARM_PAGE)
+    ],
     resolve: {
       alias: {
         '@': path.resolve(__dirname, 'src'),
