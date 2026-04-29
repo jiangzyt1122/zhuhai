@@ -1613,8 +1613,8 @@
     }
 
     .chick {
-      width: 44px;
-      height: 45px;
+      width: 66px;
+      height: 68px;
       transform: translate(-50%, -78%);
       rotate: var(--rider-angle, 0deg);
     }
@@ -1753,8 +1753,8 @@
     }
 
     .chick-shadow {
-      width: 31px;
-      height: 8px;
+      width: 47px;
+      height: 12px;
       bottom: -1px;
     }
 
@@ -2039,8 +2039,8 @@
       }
 
       .chick {
-        width: 39px;
-        height: 41px;
+        width: 59px;
+        height: 62px;
       }
     }
 
@@ -2219,7 +2219,11 @@
         pointerDown: false,
         pointerId: null,
         pointerStart: null,
+        pointerStartedAt: 0,
         dragging: false,
+        lastTapAt: 0,
+        lastTapPoint: null,
+        suppressNextDblClickUntil: 0,
         feedbackTimer: 0,
         dayPhase: "day",
         phaseStartedAt: performance.now(),
@@ -2385,7 +2389,7 @@
         const farmH = 206 * scale;
         const hillFarmGap = 28 * scale;
 
-        if (state.width < 760) {
+        if (state.width < 700) {
           const farmX = state.width - farmW - 12;
           const sideBySideHillW = farmX - 12 - hillFarmGap;
           setFacilityBox(facilities.slide, state.width * 0.05, state.height * 0.45, slideW, slideH);
@@ -2401,6 +2405,34 @@
             setFacilityBox(facilities.farm, farmX, hillY + hillH + 18 * scale, farmW, farmH);
           }
           setFacilityBox(facilities.sand, state.width * 0.04, state.height * 0.72, sandW, sandH);
+        } else if (state.width <= 1120) {
+          const isPortrait = state.height >= state.width;
+          const tabletGap = 24 * scale;
+          const farmX = state.width - farmW - 18;
+          const maxHillW = farmX - 24 - tabletGap;
+          const hillW = Math.min(baseHillW, state.width * (isPortrait ? 0.55 : 0.52), maxHillW);
+          const hillX = isPortrait
+            ? 24
+            : Math.max(18, farmX - tabletGap - hillW);
+          const hillY = state.height * (isPortrait ? 0.23 : 0.22);
+          const farmY = state.height * (isPortrait ? 0.31 : 0.30);
+
+          setFacilityBox(facilities.hill, hillX, hillY, hillW, hillH);
+          setFacilityBox(facilities.farm, farmX, farmY, farmW, farmH);
+
+          const slideX = 28;
+          const slideY = state.height * (isPortrait ? 0.50 : 0.55);
+          const swingX = state.width - swingW - 26;
+          const swingY = Math.max(
+            state.height * (isPortrait ? 0.53 : 0.58),
+            facilities.farm.y + facilities.farm.h + 22 * scale
+          );
+          const sandX = (state.width - sandW) / 2;
+          const sandY = state.height * (isPortrait ? 0.70 : 0.69);
+
+          setFacilityBox(facilities.slide, slideX, slideY, slideW, slideH);
+          setFacilityBox(facilities.swing, swingX, swingY, swingW, swingH);
+          setFacilityBox(facilities.sand, sandX, sandY, sandW, sandH);
         } else {
           const farmX = Math.min(state.width - farmW - 18, state.width * 0.68);
           const hillRight = farmX - hillFarmGap;
@@ -2728,6 +2760,16 @@
         renderEgg(egg);
         showFeedback("Cluck! An egg was laid!");
         updateStats();
+      }
+
+      function pulseEggButton() {
+        eggButton.classList.add("pressed");
+        window.setTimeout(() => eggButton.classList.remove("pressed"), 130);
+      }
+
+      function layEggFromScreenGesture() {
+        layEgg();
+        pulseEggButton();
       }
 
       function pickSpecialPalette() {
@@ -3727,8 +3769,7 @@
         }
         if (event.code === "Space" && !event.repeat) {
           layEgg();
-          eggButton.classList.add("pressed");
-          window.setTimeout(() => eggButton.classList.remove("pressed"), 130);
+          pulseEggButton();
         }
         state.keys[event.code] = true;
       });
@@ -3738,14 +3779,21 @@
       });
 
       game.addEventListener("pointerdown", (event) => {
-        if (event.target.closest("button") || event.target.closest(".hud")) return;
+        if (event.target.closest("button") || event.target.closest(".hud")) {
+          state.lastTapAt = 0;
+          state.lastTapPoint = null;
+          return;
+        }
         const p = pointerToGame(event);
         const facility = getFacilityAtPoint(p);
         if (facility) {
           state.pointerDown = false;
           state.pointerId = null;
           state.pointerStart = null;
+          state.pointerStartedAt = 0;
           state.dragging = false;
+          state.lastTapAt = 0;
+          state.lastTapPoint = null;
           if (facility.id === "farm") {
             startHenFarmRest(true);
           } else if (!isBedtime()) {
@@ -3753,19 +3801,20 @@
           }
           return;
         }
+        state.pointerDown = true;
+        state.pointerId = event.pointerId;
+        state.dragging = false;
+        state.pointerStart = p;
+        state.pointerStartedAt = performance.now();
+        game.setPointerCapture(event.pointerId);
         if (isBedtime()) return;
         if (isHenAtFarm()) {
           wakeHenForDay();
         }
         stopHenFacilityPlay();
-        state.pointerDown = true;
-        state.pointerId = event.pointerId;
-        state.dragging = false;
-        state.pointerStart = p;
         const target = clampHenPoint(p.x, p.y);
         hen.targetX = target.x;
         hen.targetY = target.y;
-        game.setPointerCapture(event.pointerId);
       });
 
       game.addEventListener("pointermove", (event) => {
@@ -3774,22 +3823,57 @@
         if (state.pointerStart && distance(p, state.pointerStart) > 6) {
           state.dragging = true;
         }
+        if (isBedtime()) return;
         setHenTargetFromPointer(event);
       });
 
       game.addEventListener("dblclick", (event) => {
         if (event.target.closest("button") || event.target.closest(".hud")) return;
+        if (performance.now() < state.suppressNextDblClickUntil) return;
         event.preventDefault();
-        layEgg();
-        eggButton.classList.add("pressed");
-        window.setTimeout(() => eggButton.classList.remove("pressed"), 130);
+        layEggFromScreenGesture();
       });
+
+      function handleTouchTap(point) {
+        const now = performance.now();
+        const isDoubleTap = state.lastTapPoint &&
+          now - state.lastTapAt <= 360 &&
+          distance(point, state.lastTapPoint) <= 38;
+
+        if (isDoubleTap) {
+          state.lastTapAt = 0;
+          state.lastTapPoint = null;
+          state.suppressNextDblClickUntil = now + 520;
+          layEggFromScreenGesture();
+          return;
+        }
+
+        state.lastTapAt = now;
+        state.lastTapPoint = point;
+      }
 
       function endPointer(event) {
         if (event.pointerId !== state.pointerId) return;
+        const p = pointerToGame(event);
+        const target = event.target;
+        const canTapScreen = event.type === "pointerup" &&
+          !target.closest("button") &&
+          !target.closest(".hud") &&
+          !isPointOnFacility(p);
+        const wasTouchTap = (event.pointerType === "touch" || event.pointerType === "pen") &&
+          state.pointerStart &&
+          canTapScreen &&
+          !state.dragging &&
+          performance.now() - state.pointerStartedAt <= 460 &&
+          distance(p, state.pointerStart) <= 14;
+
         state.pointerDown = false;
         state.pointerId = null;
         state.pointerStart = null;
+        state.pointerStartedAt = 0;
+        if (wasTouchTap) {
+          handleTouchTap(p);
+        }
         window.setTimeout(() => {
           state.dragging = false;
         }, 90);
