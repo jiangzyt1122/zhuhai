@@ -52,6 +52,21 @@ const getPoiLngLat = (
   return toAMapLngLat(poi.latitude, poi.longitude, poi.coordinateSystem ?? COORDINATE_SYSTEM);
 };
 
+const isHongKongPOI = (poi: POI) => {
+  const address = poi.address.toLowerCase();
+  const hasHongKongAddress =
+    address.includes('hong kong') ||
+    address.includes('kowloon') ||
+    address.includes('hong kong island');
+  const isNearHongKong =
+    poi.latitude >= 22.1 &&
+    poi.latitude <= 22.6 &&
+    poi.longitude >= 113.8 &&
+    poi.longitude <= 114.5;
+
+  return hasHongKongAddress || isNearHongKong;
+};
+
 export const POIMap: React.FC<POIMapProps> = ({ pois, selectedPOI, visitedIds, onSelectPOI }) => {
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<any>(null);
@@ -280,23 +295,25 @@ export const POIMap: React.FC<POIMapProps> = ({ pois, selectedPOI, visitedIds, o
       return;
     }
 
+    const hongKongPois = pois.filter(isHongKongPOI);
     const schoolPois = pois.filter((poi) =>
       Boolean(poi.schoolFeatures || poi.facultyStrength || poi.overallEvaluation)
     );
+    const initialPois = hongKongPois.length > 0 ? hongKongPois : schoolPois;
 
-    if (schoolPois.length === 0) {
+    if (initialPois.length === 0) {
       return;
     }
 
-    const schoolMarkers = schoolPois
+    const initialMarkers = initialPois
       .map((poi) => markersRef.current.get(poi.id))
       .filter((marker): marker is any => Boolean(marker));
 
-    if (schoolMarkers.length === 0) {
+    if (initialMarkers.length === 0) {
       return;
     }
 
-    mapRef.current.setFitView(schoolMarkers, false, [80, 120, 80, 120]);
+    mapRef.current.setFitView(initialMarkers, false, [80, 120, 80, 120]);
     hasAppliedInitialSchoolViewRef.current = true;
   }, [mapReady, pois, adjustedCoords]);
 

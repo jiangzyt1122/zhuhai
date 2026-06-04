@@ -62,6 +62,21 @@ const createFallbackCommuteInfo = (poi: POI): CommuteInfo => {
   };
 };
 
+const isHongKongPOI = (poi: POI) => {
+  const address = poi.address.toLowerCase();
+  const hasHongKongAddress =
+    address.includes('hong kong') ||
+    address.includes('kowloon') ||
+    address.includes('hong kong island');
+  const isNearHongKong =
+    poi.latitude >= 22.1 &&
+    poi.latitude <= 22.6 &&
+    poi.longitude >= 113.8 &&
+    poi.longitude <= 114.5;
+
+  return hasHongKongAddress || isNearHongKong;
+};
+
 interface SummaryCardProps {
   poi: POI | null;
   onOpenDetail: () => void;
@@ -93,6 +108,7 @@ export const SummaryCard: React.FC<SummaryCardProps> = ({
   const theme = poi ? getPoiTheme(poi.poiType, poi.category) : null;
   const isSchoolPOI = Boolean(poi?.schoolFeatures || poi?.facultyStrength || poi?.overallEvaluation);
   const summaryText = poi ? poi.overallEvaluation || poi.commend || poi.brief : '';
+  const shouldShowPreferenceControls = poi ? !isHongKongPOI(poi) : false;
 
   useEffect(() => {
     if (!poi || !isSchoolPOI) {
@@ -309,35 +325,37 @@ export const SummaryCard: React.FC<SummaryCardProps> = ({
           </div>
         </div>
 
-        <div
-          className="mt-4 pt-4 border-t border-gray-100 grid grid-cols-1 gap-3"
-          onClick={(event) => event.stopPropagation()}
-        >
-          <label className="flex flex-col gap-1 text-sm text-gray-700">
-            <span className="font-medium">是否能上</span>
-            <select
-              name="是否能上"
-              value={preference.canAttend}
-              onChange={handleCanAttendChange}
-              className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:border-blue-500"
-            >
-              <option value="">未选择</option>
-              <option value="是">是</option>
-              <option value="否">否</option>
-            </select>
-          </label>
-          <label className="flex flex-col gap-1 text-sm text-gray-700">
-            <span className="font-medium">备注</span>
-            <input
-              name="备注"
-              type="text"
-              value={preference.note}
-              onChange={handleNoteChange}
-              placeholder="输入备注"
-              className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:border-blue-500"
-            />
-          </label>
-        </div>
+        {shouldShowPreferenceControls && (
+          <div
+            className="mt-4 pt-4 border-t border-gray-100 grid grid-cols-1 gap-3"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <label className="flex flex-col gap-1 text-sm text-gray-700">
+              <span className="font-medium">是否能上</span>
+              <select
+                name="是否能上"
+                value={preference.canAttend}
+                onChange={handleCanAttendChange}
+                className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:border-blue-500"
+              >
+                <option value="">未选择</option>
+                <option value="是">是</option>
+                <option value="否">否</option>
+              </select>
+            </label>
+            <label className="flex flex-col gap-1 text-sm text-gray-700">
+              <span className="font-medium">备注</span>
+              <input
+                name="备注"
+                type="text"
+                value={preference.note}
+                onChange={handleNoteChange}
+                placeholder="输入备注"
+                className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:border-blue-500"
+              />
+            </label>
+          </div>
+        )}
       </div>
     </div>
   );

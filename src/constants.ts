@@ -1,8 +1,8 @@
 import { POI } from './types';
 import { poiImageMap } from './poiImages';
 
-export const DEFAULT_MAP_CENTER: [number, number] = [40.040153, 116.369081];
-export const DEFAULT_MAP_CENTER_COORDINATE_SYSTEM: 'wgs84' | 'gcj02' = 'gcj02';
+export const DEFAULT_MAP_CENTER: [number, number] = [22.3046, 114.1706];
+export const DEFAULT_MAP_CENTER_COORDINATE_SYSTEM: 'wgs84' | 'gcj02' = 'wgs84';
 export const HOME_MARKER = {
   name: '家',
   latitude: 40.040153,
@@ -1355,7 +1355,699 @@ const restaurants = [
       '老派酒楼风格，口味偏传统，非常适合爸妈。'
     ]
   },
-  
+  {
+    name: '兰芳园 Lan Fong Yuen',
+    shortName: '兰芳园',
+    category: '茶餐廳與冰室',
+    address: '2 Gage Street, Central, Hong Kong Island',
+    latitude: 22.28264,
+    longitude: 114.1538,
+    coordinateSystem: 'wgs84',
+    noteLinks: [
+      'https://www.discoverhongkong.com/eng/place-to-go/travel.guide-lan-fong-yuen.html'
+    ],
+    restaurantFeatures: [
+      '中环老字号茶餐厅，以丝袜奶茶和港式小食出名',
+      '店面紧凑、翻台快，适合当作中环半日游的短暂停靠',
+      '能让孩子直观看到老香港茶餐厅的节奏和点单方式'
+    ],
+    recommendedDishes: [
+      '丝袜奶茶',
+      '葱油鸡扒捞丁',
+      '猪扒包',
+      '西多士'
+    ],
+    whatToPlay: [
+      '在中环街巷散步时顺路体验老茶餐厅',
+      '观察香港茶餐厅的快节奏点单和拼桌文化',
+      '把奶茶、小食作为上环至中环步行路线的补给点'
+    ],
+    mustNotMiss: [
+      '丝袜奶茶',
+      '葱油鸡扒捞丁',
+      '结志街一带老中环街景'
+    ],
+    whatToPrepare: [
+      '高峰时段可能需要排队',
+      '店内空间较小，轻装前往更舒服',
+      '小朋友可优先选择非咖啡因饮品或分食小食'
+    ],
+    notesForParents: [
+      '更适合作为短暂停留的本地风味体验，不适合长时间慢坐。',
+      '中环坡路较多，带低龄孩子时建议把它安排在体力充足的时段。'
+    ]
+  },
+  {
+    name: '澳洲牛奶公司 Australia Dairy Company',
+    shortName: '澳洲牛奶公司',
+    category: '茶餐廳與冰室',
+    address: '47 Parkes Street, Jordan, Kowloon',
+    latitude: 22.3046126,
+    longitude: 114.1705943,
+    coordinateSystem: 'wgs84',
+    noteLinks: [
+      'https://www.discoverhongkong.com/eng/place-to-go/travel.guide-australia-dairy-company.html'
+    ],
+    restaurantFeatures: [
+      '佐敦经典快节奏茶餐厅，以炒蛋多士和通粉闻名',
+      '服务和用餐节奏非常快，适合体验香港街坊早餐文化',
+      '菜单集中，翻台效率高，等待和用餐都偏短'
+    ],
+    recommendedDishes: [
+      '炒蛋多士',
+      '火腿通粉',
+      '炖奶',
+      '冻奶茶'
+    ],
+    whatToPlay: [
+      '体验佐敦街坊早餐的高效率节奏',
+      '让孩子试试经典炒蛋多士和通粉组合',
+      '饭后可步行串联庙街或油麻地方向'
+    ],
+    mustNotMiss: [
+      '炒蛋多士',
+      '火腿通粉',
+      '炖奶'
+    ],
+    whatToPrepare: [
+      '提前想好点单，现场节奏很快',
+      '不适合推车或大件行李入内',
+      '避开正早餐和午餐尖峰会更轻松'
+    ],
+    notesForParents: [
+      '这家更像一次香港效率体验，孩子如果怕吵或需要慢慢吃，建议错峰。',
+      '餐点口味简单，通常比重口味餐厅更适合孩子接受。'
+    ]
+  },
+  {
+    name: '金华冰厅 Kam Wah Cafe',
+    shortName: '金华冰厅',
+    category: '茶餐廳與冰室',
+    address: '45-47 Bute Street, Mong Kok, Kowloon',
+    latitude: 22.3222989,
+    longitude: 114.1697498,
+    coordinateSystem: 'wgs84',
+    noteLinks: [
+      'https://www.discoverhongkong.com/eng/place-to-go/travel.guide-kam-wah-cafe.html'
+    ],
+    restaurantFeatures: [
+      '旺角经典冰厅，菠萝油和蛋挞是招牌',
+      '适合作为旺角逛街路线中的甜点或早餐停靠点',
+      '传统冰厅环境，热闹但停留时间不宜过长'
+    ],
+    recommendedDishes: [
+      '菠萝油',
+      '蛋挞',
+      '奶茶',
+      '西多士'
+    ],
+    whatToPlay: [
+      '在旺角街区行程中安排一次经典菠萝油补给',
+      '观察面包出炉和冰厅柜台陈列',
+      '搭配花园街、通菜街一带短途步行'
+    ],
+    mustNotMiss: [
+      '热菠萝油',
+      '蛋挞',
+      '旺角街头氛围'
+    ],
+    whatToPrepare: [
+      '菠萝油趁热吃口感最好',
+      '旺角人流密集，注意看护孩子',
+      '甜点偏油偏甜，适合分食'
+    ],
+    notesForParents: [
+      '适合当作“吃一点、看一看”的轻量 POI，不建议安排成正餐主轴。',
+      '旺角周边较拥挤，建议避开孩子疲惫或午睡前后。'
+    ]
+  },
+  {
+    name: '一乐烧鹅 Yat Lok Restaurant',
+    shortName: '一乐烧鹅',
+    category: '燒臘名店',
+    address: 'G/F, Conwell House, 34-38 Stanley Street, Central, Hong Kong Island',
+    latitude: 22.282528,
+    longitude: 114.155321,
+    coordinateSystem: 'wgs84',
+    noteLinks: [
+      'https://www.discoverhongkong.com/eng/place-to-go/travel.guide-yat-lok-restaurant.html'
+    ],
+    restaurantFeatures: [
+      '中环烧鹅名店，游客和本地客都常去',
+      '烧味饭和粉面出餐快，适合中环路线中的正餐',
+      '店内空间有限，节奏偏快'
+    ],
+    recommendedDishes: [
+      '烧鹅饭',
+      '烧鹅濑粉',
+      '烧味双拼',
+      '例汤'
+    ],
+    whatToPlay: [
+      '体验香港烧味店的柜台和斩件出餐',
+      '把中环街巷散步和烧味正餐串起来',
+      '让孩子尝试米饭或粉面搭配烧鹅'
+    ],
+    mustNotMiss: [
+      '烧鹅',
+      '烧鹅饭',
+      '士丹利街周边街景'
+    ],
+    whatToPrepare: [
+      '烧鹅皮油脂较多，可给孩子分瘦肉部分',
+      '高峰可能排队，建议错峰',
+      '座位紧凑，减少随身物品'
+    ],
+    notesForParents: [
+      '作为正餐比纯小吃更稳，但环境不是慢餐厅。',
+      '孩子不习惯烧鹅酱汁时，可以先分少量尝试。'
+    ]
+  },
+  {
+    name: '九记牛腩 Kau Kee',
+    shortName: '九记牛腩',
+    category: '粉麵名店',
+    address: '21 Gough Street, Central, Hong Kong',
+    latitude: 22.2842291,
+    longitude: 114.1525371,
+    coordinateSystem: 'wgs84',
+    noteLinks: [
+      'https://guide.michelin.com/en/hong-kong-region/hong-kong/restaurant/kau-kee'
+    ],
+    restaurantFeatures: [
+      '中环老牌牛腩面店，以清汤牛腩和咖喱牛筋腩出名',
+      '排队名店，适合对香港面食有兴趣的家庭',
+      '口味鲜明，咖喱款对孩子可能偏重'
+    ],
+    recommendedDishes: [
+      '清汤牛腩面',
+      '咖喱牛筋腩面',
+      '上汤牛腩伊面',
+      '净牛腩'
+    ],
+    whatToPlay: [
+      '体验中环老店排队和拼桌文化',
+      '比较清汤和咖喱两种港式牛腩风味',
+      '饭后顺路走歌赋街、荷李活道一带'
+    ],
+    mustNotMiss: [
+      '清汤牛腩',
+      '咖喱牛筋腩',
+      '歌赋街老店氛围'
+    ],
+    whatToPrepare: [
+      '建议错峰，热门时段排队较久',
+      '咖喱款偏浓，给孩子可优先选清汤',
+      '店内节奏快，不适合久坐'
+    ],
+    notesForParents: [
+      '如果孩子接受面食和牛肉，这家可以作为中环路线的特色正餐。',
+      '排队时间不确定，低龄孩子同行时建议准备备用餐点。'
+    ]
+  },
+  {
+    name: '麦文记面家 Mak Man Kee Noodle Shop',
+    shortName: '麦文记面家',
+    category: '粉麵名店',
+    address: 'G/F, 51 Parkes Street, Jordan, Kowloon',
+    latitude: 22.3046844,
+    longitude: 114.1705344,
+    coordinateSystem: 'wgs84',
+    noteLinks: [
+      'https://www.discoverhongkong.com/eng/place-to-go/travel.guide-mak-man-kee-noodle-shop.html'
+    ],
+    restaurantFeatures: [
+      '佐敦传统面家，以云吞面和虾籽捞面出名',
+      '竹升面风格鲜明，面条爽口弹牙',
+      '位置靠近澳洲牛奶公司，适合做佐敦美食点位串联'
+    ],
+    recommendedDishes: [
+      '云吞面',
+      '虾籽捞面',
+      '净云吞',
+      '蚝油芥兰'
+    ],
+    whatToPlay: [
+      '体验传统港式面家的细蓉份量和点单方式',
+      '和附近茶餐厅形成同街区对比',
+      '让孩子试试云吞、面条和青菜的简单组合'
+    ],
+    mustNotMiss: [
+      '云吞面',
+      '虾籽捞面',
+      '白加士街美食集中区'
+    ],
+    whatToPrepare: [
+      '面食份量不算大，亲子家庭可多点一份分食',
+      '虾籽捞面对小朋友可能偏咸',
+      '注意虾和海鲜过敏'
+    ],
+    notesForParents: [
+      '这家比排队大店更适合作为稳妥的港式面食正餐。',
+      '如果同一天已经安排澳洲牛奶公司，可把这里作为备选而不是硬塞进同一餐。'
+    ]
+  },
+  {
+    name: '爱文生 Oi Man Sang',
+    shortName: '爱文生',
+    category: '大排檔小菜',
+    address: 'Shop B-C, G/F, No.1 Shek Kip Mei Street, Sham Shui Po',
+    latitude: 22.326688,
+    longitude: 114.1622648,
+    coordinateSystem: 'wgs84',
+    noteLinks: [
+      'https://www.cathaypacific.com/cx/en_JP/inspiration/hong-kong/best-dai-pai-dong.html'
+    ],
+    restaurantFeatures: [
+      '深水埗大排档代表，主打镬气小炒、海鲜和啫啫煲',
+      '街头烟火气强，适合晚餐体验本地热闹氛围',
+      '菜式选择多，但口味整体偏重'
+    ],
+    recommendedDishes: [
+      '椒盐鲜鱿',
+      '豉椒炒蚬',
+      '啫啫鸡煲',
+      '避风塘炒蟹'
+    ],
+    whatToPlay: [
+      '感受深水埗夜晚的大排档氛围',
+      '看明火快炒和热闹上菜节奏',
+      '搭配深水埗街区散步或鸭寮街周边行程'
+    ],
+    mustNotMiss: [
+      '镬气小炒',
+      '啫啫煲',
+      '深水埗街头氛围'
+    ],
+    whatToPrepare: [
+      '晚餐高峰较嘈杂，低龄孩子建议早一点到',
+      '菜式偏咸偏油，可点青菜和白饭平衡',
+      '户外或半户外环境要注意天气'
+    ],
+    notesForParents: [
+      '这家更适合想体验香港街头餐饮文化的家庭，不适合追求安静用餐。',
+      '带孩子建议少点辣炒、避开太晚时段。'
+    ]
+  },
+  {
+    name: '坤记煲仔小菜 Kwan Kee Clay Pot Rice',
+    shortName: '坤记煲仔小菜',
+    category: '煲仔飯小菜',
+    address: "Shop 1, G/F, Wo Yick Mansion, 263 Queen's Road West, Sai Ying Pun",
+    latitude: 22.2870664,
+    longitude: 114.1430352,
+    coordinateSystem: 'wgs84',
+    noteLinks: [
+      'https://guide.michelin.com/jp/en/hong-kong-region/hong-kong/restaurant/kwan-kee-clay-pot-rice-queen-s-road-west'
+    ],
+    restaurantFeatures: [
+      '西营盘煲仔饭名店，主打饭焦和传统腊味煲仔饭',
+      '适合冬天或傍晚安排，等待时间通常比快餐厅长',
+      '小菜和煲仔饭都适合多人分食'
+    ],
+    recommendedDishes: [
+      '腊味煲仔饭',
+      '滑鸡煲仔饭',
+      '白鳝煲仔饭',
+      '煲仔饭饭焦'
+    ],
+    whatToPlay: [
+      '体验煲仔饭从上桌到拌酱油的过程',
+      '让孩子观察砂锅和饭焦的口感变化',
+      '搭配西营盘、上环一带慢走路线'
+    ],
+    mustNotMiss: [
+      '煲仔饭饭焦',
+      '腊味煲仔饭',
+      '西营盘街区氛围'
+    ],
+    whatToPrepare: [
+      '煲仔饭现做需要等待',
+      '砂锅上桌很烫，孩子不要直接触碰',
+      '腊味偏咸，可搭配青菜和白饭分食'
+    ],
+    notesForParents: [
+      '比快节奏茶餐厅更适合坐下来吃一顿，但要预留等待时间。',
+      '热砂锅安全要特别注意，孩子坐位尽量离上菜动线远一点。'
+    ]
+  },
+  {
+    name: '太平馆餐厅 Tai Ping Koon Restaurant',
+    shortName: '太平馆餐厅',
+    category: '港式西餐',
+    address: 'G/F, 40 Granville Road, Tsim Sha Tsui, Kowloon',
+    latitude: 22.30013,
+    longitude: 114.17461,
+    coordinateSystem: 'wgs84',
+    noteLinks: [
+      'https://www.discoverhongkong.com/eng/place-to-go/travel.guide-tai-ping-koon-restaurant.html'
+    ],
+    restaurantFeatures: [
+      '老香港豉油西餐代表，氛围比普通茶餐厅更适合慢餐',
+      '瑞士鸡翼、梳乎厘等菜式有明显时代感',
+      '尖沙咀位置方便串联海港城、K11 或星光大道'
+    ],
+    recommendedDishes: [
+      '瑞士鸡翼',
+      '干炒牛河',
+      '梳乎厘',
+      '焗饭'
+    ],
+    whatToPlay: [
+      '体验老香港西餐厅的餐牌和用餐氛围',
+      '把尖沙咀逛街或海滨行程和正餐连接起来',
+      '让孩子试试比较温和的焗饭、鸡翼和甜品'
+    ],
+    mustNotMiss: [
+      '瑞士鸡翼',
+      '梳乎厘',
+      '老派西餐厅空间'
+    ],
+    whatToPrepare: [
+      '正餐时段建议提前规划等位时间',
+      '甜品出品可能需要时间，孩子饿了先点主食',
+      '尖沙咀人流密集，餐前餐后预留步行时间'
+    ],
+    notesForParents: [
+      '这家比快餐式茶餐厅更适合家庭慢慢吃，适合作为尖沙咀一天里的主餐。',
+      '菜式偏传统，适合让孩子体验香港本地化西餐。'
+    ]
+  },
+  {
+    name: '佳佳甜品 Kai Kai Dessert',
+    shortName: '佳佳甜品',
+    category: '港式點心與甜點',
+    address: 'G/F, 113-115 Parkes Street, Jordan, Kowloon',
+    latitude: 22.3066552,
+    longitude: 114.1708651,
+    coordinateSystem: 'wgs84',
+    noteLinks: [
+      'https://www.discoverhongkong.com/eng/place-to-go/travel.guide-kai-kai-dessert.html'
+    ],
+    restaurantFeatures: [
+      '佐敦港式糖水店，芝麻糊、杏仁露和腐竹糖水出名',
+      '适合晚饭后作为轻量甜品点位',
+      '品类多，冷热糖水都能选择'
+    ],
+    recommendedDishes: [
+      '芝麻糊',
+      '杏仁露',
+      '腐竹白果糖水',
+      '汤圆糖水'
+    ],
+    whatToPlay: [
+      '体验港式糖水的冷热选择',
+      '和佐敦、庙街夜晚路线搭配',
+      '让孩子认识芝麻糊、杏仁露等传统甜品'
+    ],
+    mustNotMiss: [
+      '芝麻糊',
+      '杏仁露',
+      '腐竹白果糖水'
+    ],
+    whatToPrepare: [
+      '甜品适合分食，避免孩子一次吃太甜',
+      '晚间可能排队',
+      '注意坚果或杏仁相关过敏'
+    ],
+    notesForParents: [
+      '适合作为一天行程的收尾点，不建议空腹只吃甜品。',
+      '如果孩子不习惯中式糖水，可先点一份分着试。'
+    ]
+  },
+  {
+    name: "甘牌燒鵝 Kam's Roast Goose",
+    shortName: '甘牌燒鵝',
+    category: '燒臘名店',
+    address: '226 Hennessy Road, Wan Chai, Hong Kong',
+    latitude: 22.277672,
+    longitude: 114.1752605,
+    coordinateSystem: 'wgs84',
+    restaurantFeatures: [
+      '灣仔燒鵝名店，曾獲米其林一星，主打皮脆肉嫩的燒鵝',
+      '比大型酒樓更像專門店，適合作為港島行程中的燒臘正餐',
+      '位置靠近灣仔站，交通方便但熱門時段容易排隊'
+    ],
+    recommendedDishes: [
+      '燒鵝飯',
+      '燒鵝瀨粉',
+      '叉燒',
+      '燒味雙拼'
+    ],
+    whatToPlay: [
+      '體驗香港燒臘專門店的斬件與燒味飯節奏',
+      '把灣仔街區散步和燒鵝正餐串聯',
+      '讓孩子從飯、粉、燒味中挑相對容易接受的組合'
+    ],
+    mustNotMiss: [
+      '招牌燒鵝',
+      '燒味飯',
+      '灣仔軒尼詩道街景'
+    ],
+    whatToPrepare: [
+      '高峰時段建議錯峰或預留排隊時間',
+      '燒鵝油脂較多，可給孩子分瘦肉部分',
+      '座位節奏偏快，不適合久坐'
+    ],
+    notesForParents: [
+      '適合作為港島一天裏的特色正餐，不建議和另一家燒鵝店排在同一餐段。',
+      '孩子口味清淡時，可以搭配白飯或湯粉分食。'
+    ]
+  },
+  {
+    name: '鏞記酒家 Yung Kee Restaurant',
+    shortName: '鏞記酒家',
+    category: '燒臘名店',
+    address: '32-40 Wellington Street, Central, Hong Kong',
+    latitude: 22.2815504,
+    longitude: 114.1556225,
+    coordinateSystem: 'wgs84',
+    restaurantFeatures: [
+      '創立於1942年的中環老字號酒家，以燒鵝和叉燒聞名',
+      '環境比快節奏燒味店更正式，適合家庭慢慢吃一餐',
+      '中環位置方便串聯蘭芳園、九記牛腩、沾仔記等美食點'
+    ],
+    recommendedDishes: [
+      '燒鵝',
+      '蜜汁叉燒',
+      '皮蛋酸薑',
+      '老火湯'
+    ],
+    whatToPlay: [
+      '體驗老香港酒家的餐桌服務和經典菜式',
+      '把威靈頓街一帶做成中環美食步行路線',
+      '讓孩子嘗試叉燒、白飯和湯類等接受度較高的選項'
+    ],
+    mustNotMiss: [
+      '燒鵝',
+      '蜜汁叉燒',
+      '中環老字號酒樓氛圍'
+    ],
+    whatToPrepare: [
+      '正餐時段建議提前確認等位或訂座',
+      '菜式適合多人分食',
+      '價格和用餐時間都比街坊燒味店更高'
+    ],
+    notesForParents: [
+      '如果希望孩子能坐下來好好吃一餐，鏞記比排隊小店更穩。',
+      '同一天若安排甘牌或一樂，建議三選一即可。'
+    ]
+  },
+  {
+    name: '一點心 One Dim Sum',
+    shortName: '一點心',
+    category: '港式點心與甜點',
+    address: 'Shop 1-2, G/F, 209A-209B Tung Choi Street, Prince Edward, Hong Kong',
+    latitude: 22.3254652,
+    longitude: 114.169201,
+    coordinateSystem: 'wgs84',
+    restaurantFeatures: [
+      '太子人氣點心店，價格相對親民，適合體驗港式點心',
+      '點心品類集中，出餐節奏比大酒樓更快',
+      '靠近旺角和太子，可與金華冰廳、肥姐小食店串聯'
+    ],
+    recommendedDishes: [
+      '蝦餃',
+      '燒賣',
+      '叉燒包',
+      '腸粉'
+    ],
+    whatToPlay: [
+      '讓孩子認識蒸籠點心和港式早茶菜式',
+      '用小份點心分食，降低踩雷成本',
+      '搭配太子至旺角短途步行'
+    ],
+    mustNotMiss: [
+      '蝦餃',
+      '燒賣',
+      '叉燒包'
+    ],
+    whatToPrepare: [
+      '熱門時段可能排隊',
+      '注意蝦和海鮮過敏',
+      '點心適合少量多樣分食'
+    ],
+    notesForParents: [
+      '點心對孩子通常友好，但蝦餃、燒賣等要留意過敏。',
+      '如果孩子胃口小，可以先點少量，再按接受度加單。'
+    ]
+  },
+  {
+    name: 'Bakehouse Central',
+    shortName: 'Bakehouse',
+    category: '港式點心與甜點',
+    address: '5 Staunton Street, Central, Hong Kong',
+    latitude: 22.2817291,
+    longitude: 114.153143,
+    coordinateSystem: 'wgs84',
+    restaurantFeatures: [
+      '人氣烘焙店，中環店以酸種葡撻和麵包聞名',
+      '適合作為中環半日遊的甜點補給點',
+      '出爐時段常排隊，買到即可外帶邊走邊吃'
+    ],
+    recommendedDishes: [
+      '酸種葡撻',
+      '牛角包',
+      '酸種麵包',
+      '咖啡'
+    ],
+    whatToPlay: [
+      '在中環街巷散步時安排甜點補給',
+      '讓孩子比較葡撻和港式蛋撻的不同口感',
+      '外帶後到附近街區或公園短暫休息'
+    ],
+    mustNotMiss: [
+      '酸種葡撻',
+      '中環士丹頓街街景',
+      '出爐麵包香氣'
+    ],
+    whatToPrepare: [
+      '熱門時段排隊較長',
+      '葡撻趁熱吃最好',
+      '甜點偏酥脆，低齡孩子食用時注意碎屑'
+    ],
+    notesForParents: [
+      '適合作為輕量補給，不適合替代正餐。',
+      '如果行程中也有泰昌餅家，可把兩家做成蛋撻對比。'
+    ]
+  },
+  {
+    name: '泰昌餅家 Tai Cheong Bakery',
+    shortName: '泰昌餅家',
+    category: '港式點心與甜點',
+    address: '35 Lyndhurst Terrace, Central, Hong Kong',
+    latitude: 22.2826251,
+    longitude: 114.1536001,
+    coordinateSystem: 'wgs84',
+    restaurantFeatures: [
+      '中環老字號餅店，傳統港式酥皮蛋撻代表',
+      '外帶方便，適合與中環街巷路線結合',
+      '比坐下用餐更輕，適合作為孩子下午小點'
+    ],
+    recommendedDishes: [
+      '蛋撻',
+      '沙翁',
+      '雞批',
+      '老婆餅'
+    ],
+    whatToPlay: [
+      '體驗傳統港式餅店的櫥窗和出爐點心',
+      '把蛋撻作為中環上坡路線中的短暫補給',
+      '和 Bakehouse 葡撻做口感比較'
+    ],
+    mustNotMiss: [
+      '酥皮蛋撻',
+      '擺花街老中環氛圍',
+      '外帶熱食體驗'
+    ],
+    whatToPrepare: [
+      '蛋撻趁熱吃，小心內餡燙口',
+      '甜點適合分食',
+      '店面停留時間短，提前想好購買數量'
+    ],
+    notesForParents: [
+      '這是非常適合孩子接受的香港甜點點位。',
+      '注意剛出爐蛋撻溫度，先放涼一點再給低齡孩子。'
+    ]
+  },
+  {
+    name: '沾仔記 Tsim Chai Kee',
+    shortName: '沾仔記',
+    category: '粉麵名店',
+    address: '98 Wellington Street, Central, Hong Kong',
+    latitude: 22.2829668,
+    longitude: 114.1544754,
+    coordinateSystem: 'wgs84',
+    restaurantFeatures: [
+      '中環雲吞麵名店，主打大顆鮮蝦雲吞與彈牙麵條',
+      '價格和節奏都適合快速正餐',
+      '與九記牛腩相距不遠，可作為中環粉麵備選'
+    ],
+    recommendedDishes: [
+      '鮮蝦雲吞麵',
+      '鯪魚球麵',
+      '牛肉麵',
+      '淨雲吞'
+    ],
+    whatToPlay: [
+      '體驗香港雲吞麵的細蓉與大雲吞特色',
+      '比較牛腩麵和雲吞麵兩種中環粉麵路線',
+      '讓孩子從雲吞、麵條和清湯開始嘗試'
+    ],
+    mustNotMiss: [
+      '鮮蝦雲吞',
+      '彈牙麵條',
+      '威靈頓街美食集中區'
+    ],
+    whatToPrepare: [
+      '注意蝦過敏',
+      '高峰時段翻台快，適合快速用餐',
+      '小朋友可點淨雲吞或清湯麵分食'
+    ],
+    notesForParents: [
+      '如果九記排隊過長，沾仔記是同區更輕便的粉麵選擇。',
+      '海鮮過敏家庭要避開鮮蝦雲吞。'
+    ]
+  },
+  {
+    name: '肥姐小食店 Fei Jie Snack Shop',
+    shortName: '肥姐小食店',
+    category: '街頭小吃',
+    address: '55 Dundas Street, Mong Kok, Hong Kong',
+    latitude: 22.3157788,
+    longitude: 114.1717315,
+    coordinateSystem: 'wgs84',
+    restaurantFeatures: [
+      '旺角人氣街頭小吃店，以冰鎮滷味和串串聞名',
+      '停留時間短，適合旺角逛街時順路打卡',
+      '口味較重，對孩子更像街頭文化觀察點'
+    ],
+    recommendedDishes: [
+      '滷水墨魚',
+      '生腸',
+      '雞腎',
+      '冰鎮串串'
+    ],
+    whatToPlay: [
+      '感受旺角街頭小吃排隊和即買即食氛圍',
+      '觀察港式滷味攤的品類和售賣方式',
+      '和金華冰廳形成旺角小吃路線'
+    ],
+    mustNotMiss: [
+      '冰鎮滷味',
+      '登打士街街頭氛圍',
+      '旺角夜晚人流'
+    ],
+    whatToPrepare: [
+      '口味偏重，孩子不一定適合直接吃',
+      '街邊停留注意人流和交通',
+      '建議少量嘗試，不作為正餐'
+    ],
+    notesForParents: [
+      '這家更適合大人嘗鮮和孩子觀察街頭飲食文化。',
+      '低齡孩子或腸胃敏感時，可以只打卡不進食。'
+    ]
+  },
 ];
 
 const malls = [
@@ -1728,6 +2420,17 @@ const beijingKindergartens = [
 const makeId = (prefix: string, name: string) =>
   `${prefix}-${name.replace(/[()（）\s]/g, '')}`;
 
+const getCoordinateSystem = (item: unknown) => {
+  if (!item || typeof item !== 'object' || !('coordinateSystem' in item)) {
+    return undefined;
+  }
+
+  const coordinateSystem = (item as { coordinateSystem?: unknown }).coordinateSystem;
+  return coordinateSystem === 'wgs84' || coordinateSystem === 'gcj02'
+    ? coordinateSystem
+    : undefined;
+};
+
 const makeBase = (
   item: {
     name: string;
@@ -1736,6 +2439,7 @@ const makeBase = (
     latitude: number;
     longitude: number;
     city?: string;
+    address?: string;
     image?: string;
     images?: string[];
   },
@@ -1754,7 +2458,7 @@ const makeBase = (
   shortName: item.shortName,
   category: item.category,
   poiType,
-  address: `${item.city ?? DEFAULT_CITY} · ${item.category}`,
+  address: item.address ?? `${item.city ?? DEFAULT_CITY} · ${item.category}`,
   latitude: item.latitude,
   longitude: item.longitude,
   brief,
@@ -1775,7 +2479,7 @@ export const ZHUHAI_POIS: POI[] = [
       item.schoolFeatures[0],
       item.overallEvaluation,
       item.noteLinks,
-      item.coordinateSystem
+      getCoordinateSystem(item)
     ),
     backgroundInfo: undefined,
     schoolFeatures: item.schoolFeatures,
@@ -1792,7 +2496,7 @@ export const ZHUHAI_POIS: POI[] = [
       item.whatToPlay[0] ?? item.name,
       item.notesForParents.join('；'),
       item.noteLinks ?? [],
-      item.coordinateSystem
+      getCoordinateSystem(item)
     ),
     playTimeHours: item.playTimeHours,
     whatToPlay: item.whatToPlay,
@@ -1808,7 +2512,7 @@ export const ZHUHAI_POIS: POI[] = [
       item.restaurantFeatures[0] ?? item.name,
       item.notesForParents.join('；'),
       item.noteLinks ?? [],
-      item.coordinateSystem
+      getCoordinateSystem(item)
     ),
     restaurantFeatures: item.restaurantFeatures,
     recommendedDishes: item.recommendedDishes,
@@ -1825,7 +2529,7 @@ export const ZHUHAI_POIS: POI[] = [
       item.backgroundIntro,
       item.whyGoodForFamily.join('；'),
       item.noteLinks ?? [],
-      item.coordinateSystem
+      getCoordinateSystem(item)
     ),
     backgroundIntro: item.backgroundIntro,
     whyGoodForFamily: item.whyGoodForFamily,
@@ -1839,7 +2543,7 @@ export const ZHUHAI_POIS: POI[] = [
       item.backgroundInfo,
       item.notesForParents.join('；'),
       item.noteLinks ?? [],
-      item.coordinateSystem
+      getCoordinateSystem(item)
     ),
     backgroundInfo: item.backgroundInfo,
     openTime: item.openTime,
