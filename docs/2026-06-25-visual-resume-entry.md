@@ -11,6 +11,7 @@
 - 保持互动简历作为独立 Vite 子应用，不把 Tailwind 4 简历界面直接混入主应用 Tailwind 3 React 树。
 - 主应用构建时先构建互动简历嵌入版本，再构建主应用。
 - 主应用本地开发服务支持访问 `/visual-resume/` 已构建产物。
+- GitHub Pages 发布使用 `offline-dist`，Pages 构建必须把互动简历产物写入 `offline-dist/visual-resume/`。
 
 ## 字段与数据
 
@@ -23,4 +24,5 @@
 - 首页出现独立「互动简历」入口。
 - 点击入口打开 `/visual-resume/`。
 - `npm run build` 会构建主应用和互动简历入口所需的子应用产物。
+- `npm run build:pages` 的产物中包含 `offline-dist/visual-resume/index.html`。
 - 不新增持久化业务字段。
