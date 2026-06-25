@@ -8,6 +8,7 @@ type AppSection = 'entry' | 'english' | 'explore';
 const App: React.FC = () => {
   const [activeSection, setActiveSection] = useState<AppSection>('entry');
   const chickenFarmHref = `${import.meta.env.BASE_URL}happy_chicken_farm.html`;
+  const visualResumeHref = `${import.meta.env.BASE_URL}visual-resume/`;
 
   if (activeSection === 'english') {
     return <EnglishLearningHub onBack={() => setActiveSection('entry')} />;
@@ -20,6 +21,7 @@ const App: React.FC = () => {
   return (
     <EntryPortal
       chickenFarmHref={chickenFarmHref}
+      visualResumeHref={visualResumeHref}
       onOpenEnglish={() => setActiveSection('english')}
       onOpenExplore={() => setActiveSection('explore')}
     />

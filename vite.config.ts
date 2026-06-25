@@ -9,6 +9,8 @@ const normalizedBase = baseFromEnv.endsWith('/') ? baseFromEnv : `${baseFromEnv}
 
 const YOUDAO_ENDPOINT = 'https://openapi.youdao.com/api';
 const HAPPY_CHICKEN_FARM_PAGE = 'happy_chicken_farm.html';
+const VISUAL_RESUME_ROUTE = 'visual-resume';
+const VISUAL_RESUME_DIST_DIR = 'visual-resume';
 
 const buildInput = (query: string) => {
   if (query.length <= 20) {
@@ -156,6 +158,78 @@ const rootHtmlPagePlugin = (pageName: string): Plugin => {
   };
 };
 
+const getContentType = (filePath: string) => {
+  const ext = path.extname(filePath).toLowerCase();
+  if (ext === '.html') return 'text/html; charset=utf-8';
+  if (ext === '.css') return 'text/css; charset=utf-8';
+  if (ext === '.js' || ext === '.mjs') return 'text/javascript; charset=utf-8';
+  if (ext === '.json') return 'application/json; charset=utf-8';
+  if (ext === '.svg') return 'image/svg+xml';
+  if (ext === '.png') return 'image/png';
+  if (ext === '.jpg' || ext === '.jpeg') return 'image/jpeg';
+  if (ext === '.webp') return 'image/webp';
+  return 'application/octet-stream';
+};
+
+const createStaticSubAppMiddleware = (
+  routeName: string,
+  directoryName: string
+): Connect.NextHandleFunction => {
+  const routePrefix = `/${routeName}`;
+  const sourceDir = path.resolve(__dirname, directoryName);
+
+  return async (req, res, next) => {
+    const requestPath = decodeURIComponent(req.url?.split('?')[0] ?? '');
+
+    if (requestPath === routePrefix) {
+      res.statusCode = 308;
+      res.setHeader('Location', `${routePrefix}/`);
+      res.end();
+      return;
+    }
+
+    if (!requestPath.startsWith(`${routePrefix}/`)) {
+      next();
+      return;
+    }
+
+    const requestedFile = requestPath.slice(routePrefix.length + 1) || 'index.html';
+    const normalizedFile = path.normalize(requestedFile);
+
+    if (normalizedFile.startsWith('..') || path.isAbsolute(normalizedFile)) {
+      res.statusCode = 403;
+      res.end('Forbidden');
+      return;
+    }
+
+    let filePath = path.resolve(sourceDir, normalizedFile);
+
+    try {
+      const fileStat = await fs.stat(filePath);
+      if (fileStat.isDirectory()) {
+        filePath = path.join(filePath, 'index.html');
+      }
+
+      const file = await fs.readFile(filePath);
+      res.statusCode = 200;
+      res.setHeader('Content-Type', getContentType(filePath));
+      res.end(file);
+    } catch {
+      next();
+    }
+  };
+};
+
+const staticSubAppPlugin = (routeName: string, directoryName: string): Plugin => ({
+  name: `static-sub-app-${routeName}`,
+  configureServer(server) {
+    server.middlewares.use(createStaticSubAppMiddleware(routeName, directoryName));
+  },
+  configurePreviewServer(server) {
+    server.middlewares.use(createStaticSubAppMiddleware(routeName, directoryName));
+  }
+});
+
 export default defineConfig(({ mode }) => {
   const isOffline = mode === 'offline';
   const env = loadEnv(mode, process.cwd(), '');
@@ -175,7 +249,8 @@ export default defineConfig(({ mode }) => {
     plugins: [
       react(),
       youdaoProxyPlugin(env.YOUDAO_APP_KEY, env.YOUDAO_APP_SECRET),
-      rootHtmlPagePlugin(HAPPY_CHICKEN_FARM_PAGE)
+      rootHtmlPagePlugin(HAPPY_CHICKEN_FARM_PAGE),
+      staticSubAppPlugin(VISUAL_RESUME_ROUTE, VISUAL_RESUME_DIST_DIR)
     ],
     resolve: {
       alias: {

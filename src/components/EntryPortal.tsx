@@ -1,10 +1,11 @@
 import React from 'react';
-import { ArrowRight, BookOpen, Compass, Egg } from 'lucide-react';
+import { ArrowRight, BookOpen, Compass, Egg, FileText } from 'lucide-react';
 
 interface EntryPortalProps {
   onOpenEnglish: () => void;
   onOpenExplore: () => void;
   chickenFarmHref: string;
+  visualResumeHref: string;
 }
 
 const portalSections = [
@@ -37,13 +38,24 @@ const portalSections = [
     text: 'text-lime-50',
     border: 'border-white/20',
     icon: Egg
+  },
+  {
+    id: 'resume',
+    title: '互动简历',
+    subtitle: 'Visual Resume',
+    description: 'A4 简历、可视化编辑和 AI 招聘官互动',
+    accent: 'from-[#0f172a] via-[#334155] to-[#d97706]',
+    text: 'text-orange-50',
+    border: 'border-white/20',
+    icon: FileText
   }
 ] as const;
 
 export const EntryPortal: React.FC<EntryPortalProps> = ({
   onOpenEnglish,
   onOpenExplore,
-  chickenFarmHref
+  chickenFarmHref,
+  visualResumeHref
 }) => {
   return (
     <div className="relative min-h-dvh overflow-x-hidden overflow-y-auto bg-slate-950 text-white">
@@ -60,15 +72,15 @@ export const EntryPortal: React.FC<EntryPortalProps> = ({
             Choose Your Entry
           </p>
           <h1 className="mx-auto mt-3 max-w-3xl text-3xl font-black tracking-tight text-white sm:text-5xl">
-            一个入口页，三个方向
+            一个入口页，四个方向
           </h1>
           <p className="mx-auto mt-3 max-w-2xl text-sm leading-6 text-white/70 sm:text-base">
-            英语、地图和小鸡农场，从这里出发。
+            英语、地图、小鸡农场和互动简历，从这里出发。
           </p>
         </div>
 
         <div className="mx-auto mt-6 flex w-full max-w-6xl flex-1 items-center">
-          <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-5">
+          <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 sm:gap-5">
             {portalSections.map((section) => {
               const Icon = section.icon;
               const onClick = section.id === 'english' ? onOpenEnglish : onOpenExplore;
@@ -105,11 +117,11 @@ export const EntryPortal: React.FC<EntryPortalProps> = ({
                 </>
               );
 
-              if (section.id === 'chicken') {
+              if (section.id === 'chicken' || section.id === 'resume') {
                 return (
                   <a
                     key={section.id}
-                    href={chickenFarmHref}
+                    href={section.id === 'chicken' ? chickenFarmHref : visualResumeHref}
                     className={cardClassName}
                   >
                     {cardContent}

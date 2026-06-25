@@ -1,0 +1,6 @@
+{
+  "name": "Interactive Visual Resume",
+  "description": "A print-perfect visual web resume featuring multiple professional themes (Swiss Minimalist, Executive Navy, Emerald Creative, Tech Dark), customizable layout controls, A4 document sizing, and an integrated Gemini-powered Recruiter AI assistant.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

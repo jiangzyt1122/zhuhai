@@ -7,7 +7,8 @@
     "dev": "vite",
     "build:dict-index": "node scripts/generate-dictionary-index.mjs",
     "build:pages": "vite build --mode offline",
-    "build": "vite build",
+    "build:resume": "npm --prefix interactive-visual-resume run build:embedded",
+    "build": "npm run build:resume && vite build",
     "preview": "vite preview"
   },
   "dependencies": {

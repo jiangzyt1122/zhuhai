@@ -1,0 +1,132 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,450&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-serif: "Playfair Display", Georgia, serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  --font-sans: "Plus Jakarta Sans", "Inter", ui-sans-serif, system-ui, sans-serif;
+  
+  --animate-fade-in: fade-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  --animate-slide-up: slide-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Print Specific Utility Classes with Perfect A4 Flow */
+@media print {
+  /* 1. Reset root background and color */
+  html, body {
+    overflow: visible !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* 2. Absolute high-specificity destruction of non-printable components */
+  .no-print {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    height: 0 !important;
+    width: 0 !important;
+    overflow: hidden !important;
+    position: absolute !important;
+    pointer-events: none !important;
+  }
+
+  /* 3. Non-destructive layout flattening to bypass CSS Flexbox/Grid page-break limits */
+  html body,
+  #root,
+  #root > .min-h-screen,
+  #root > .min-h-screen > .flex-grow {
+    display: block !important;
+    position: static !important;
+    overflow: visible !important;
+    height: auto !important;
+    min-height: 0 !important;
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    background: transparent !important;
+  }
+
+  /* 4. Elegant Document Flow for Perfect Multi-page Breaks on A4 Sheet */
+  #printable-resume-page,
+  #printable-resume-page.print-page {
+    display: block !important;
+    position: relative !important; /* Critical: static relative flow allows browsers to compute automatic page breaks without overlapping! */
+    top: auto !important;
+    left: auto !important;
+    width: 210mm !important; /* Exact standard A4 width */
+    min-height: 297mm !important;
+    height: auto !important;
+    padding: 18mm 20mm !important; /* Elegant grid spacing margin on print paper */
+    margin: 0 auto !important; /* Center on printing canvas */
+    border: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    overflow: visible !important;
+    page-break-inside: auto !important;
+    page-break-after: avoid !important;
+    page-break-before: avoid !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* 5. Force background graphics to render (colors, SVGs, underlines) */
+  #printable-resume-page * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    text-shadow: none !important;
+  }
+
+  /* 6. Section safety breaks */
+  h2, .section-title {
+    page-break-inside: avoid !important;
+    page-break-after: avoid !important;
+  }
+  
+  .experience-item, .project-item, .education-item {
+    page-break-inside: avoid !important; /* Prevent items from cutting weirdly in half */
+  }
+
+  /* 7. Classic page setup configuration */
+  @page {
+    size: A4 portrait;
+    margin: 0 !important; /* Handled gracefully by resume-page internal padding */
+  }
+}
+
+/* Custom gorgeous scrollbar for clean UI sidebar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(156, 163, 175, 0.3);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(156, 163, 175, 0.5);
+}
