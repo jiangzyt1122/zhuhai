@@ -6,8 +6,9 @@
   "scripts": {
     "dev": "vite",
     "build:dict-index": "node scripts/generate-dictionary-index.mjs",
-    "build:pages": "vite build --mode offline && npm --prefix interactive-visual-resume run build:pages",
-    "build:resume": "npm --prefix interactive-visual-resume run build:embedded",
+    "install:resume": "npm --prefix interactive-visual-resume ci",
+    "build:pages": "vite build --mode offline && npm run install:resume && npm --prefix interactive-visual-resume run build:pages",
+    "build:resume": "npm run install:resume && npm --prefix interactive-visual-resume run build:embedded",
     "build": "npm run build:resume && vite build",
     "preview": "vite preview"
   },
