@@ -40,7 +40,8 @@
       position: relative;
       width: 100vw;
       height: 100vh;
-      min-height: 520px;
+      height: 100dvh;
+      min-height: 0;
       overflow: hidden;
       touch-action: none;
       background:
@@ -397,6 +398,8 @@
       position: absolute;
       right: clamp(16px, 3vw, 36px);
       bottom: clamp(16px, 3vw, 34px);
+      right: max(env(safe-area-inset-right, 0px), clamp(16px, 3vw, 36px));
+      bottom: max(env(safe-area-inset-bottom, 0px), clamp(16px, 3vw, 34px));
       z-index: 1100;
       min-width: 136px;
       min-height: 64px;
@@ -2006,10 +2009,6 @@
     }
 
     @media (max-width: 720px) {
-      .game {
-        min-height: 620px;
-      }
-
       .hud {
         align-items: flex-start;
         flex-direction: column;
@@ -2041,6 +2040,49 @@
       .chick {
         width: 59px;
         height: 62px;
+      }
+    }
+
+    @media (max-height: 560px) {
+      .hud {
+        top: 8px;
+        align-items: center;
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 6px;
+        padding: 7px 9px;
+        border-radius: 17px;
+      }
+
+      .stats {
+        gap: 6px;
+        font-size: clamp(12px, 2.8vw, 16px);
+      }
+
+      .stat-pill,
+      .home-link {
+        min-height: 28px;
+        padding: 3px 9px;
+      }
+
+      .hint {
+        display: none;
+      }
+
+      .feedback {
+        top: 58px;
+        padding: 7px 12px;
+        font-size: clamp(12px, 3vw, 15px);
+      }
+
+      .egg-button {
+        right: max(env(safe-area-inset-right, 0px), 10px);
+        bottom: max(env(safe-area-inset-bottom, 0px), 10px);
+        min-width: 104px;
+        min-height: 48px;
+        padding: 8px 15px;
+        font-size: clamp(17px, 5.6vh, 22px);
+        font-size: clamp(17px, 5.6dvh, 22px);
       }
     }
 
